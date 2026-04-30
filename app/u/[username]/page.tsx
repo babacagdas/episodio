@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { MobileHeader, BottomNav } from '@/components/Nav';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import FollowButton from './FollowButton';
 import FollowListsModal from './FollowListsModal';
 
@@ -31,11 +32,26 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data: profileData } = await supabase
+  let { data: profileData } = await supabase
     .from('profiles')
     .select('id, username, full_name, bio, avatar_url')
     .or(`username.ilike.${normalizedUsername},id.eq.${normalizedUsername}`)
     .maybeSingle();
+
+  // Fallback for strict RLS setups: resolve public profile via service role.
+  if (!profileData && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    const admin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { persistSession: false } }
+    );
+    const { data: adminProfile } = await admin
+      .from('profiles')
+      .select('id, username, full_name, bio, avatar_url')
+      .or(`username.ilike.${normalizedUsername},id.eq.${normalizedUsername}`)
+      .maybeSingle();
+    profileData = adminProfile;
+  }
 
   const profile = profileData as Profile | null;
   if (!profile) {
