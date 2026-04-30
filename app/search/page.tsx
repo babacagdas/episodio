@@ -192,16 +192,13 @@ export default function Search() {
     try {
       const [showRes, profileRes] = await Promise.all([
         fetch(`/api/search?q=${encodeURIComponent(q)}`),
-        createClient()
-          .from('profiles')
-          .select('id, username, full_name, bio, avatar_url')
-          .or(`username.ilike.%${q}%,full_name.ilike.%${q}%`)
-          .limit(8),
+        fetch(`/api/profiles/search?q=${encodeURIComponent(q)}`),
       ]);
 
       const shows: Show[] = await showRes.json();
+      const profileResults: UserSearchProfile[] = await profileRes.json();
       setResults(shows);
-      setProfiles((profileRes.data ?? []) as UserSearchProfile[]);
+      setProfiles(profileResults);
     } finally {
       setLoading(false);
     }
