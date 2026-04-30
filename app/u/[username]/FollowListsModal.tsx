@@ -111,12 +111,18 @@ export default function FollowListsModal({
       .insert({ follower_id: currentUserId, following_id: targetUserId });
     if (!error) {
       setFollowingMap((prev) => ({ ...prev, [targetUserId]: true }));
+      const { data: actorProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', currentUserId)
+        .single();
+      const actorUsername = actorProfile?.username ?? null;
       await supabase.from('notifications').insert({
         user_id: targetUserId,
         actor_id: currentUserId,
         type: 'follow',
-        message: 'Seni takip etmeye başladı.',
-        link: '/profile',
+        message: actorUsername ? `@${actorUsername} seni takip etmeye başladı.` : 'Seni takip etmeye başladı.',
+        link: actorUsername ? `/u/${actorUsername}` : '/profile',
       });
     }
   }

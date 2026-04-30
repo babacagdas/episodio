@@ -34,12 +34,18 @@ export default function FollowButton({ targetUserId, initialFollowing }: Props) 
         .insert({ follower_id: user.id, following_id: targetUserId });
       if (!error) {
         setFollowing(true);
+        const { data: actorProfile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single();
+        const actorUsername = actorProfile?.username ?? null;
         await supabase.from('notifications').insert({
           user_id: targetUserId,
           actor_id: user.id,
           type: 'follow',
-          message: 'Seni takip etmeye başladı.',
-          link: '/profile',
+          message: actorUsername ? `@${actorUsername} seni takip etmeye başladı.` : 'Seni takip etmeye başladı.',
+          link: actorUsername ? `/u/${actorUsername}` : '/profile',
         });
       }
     }

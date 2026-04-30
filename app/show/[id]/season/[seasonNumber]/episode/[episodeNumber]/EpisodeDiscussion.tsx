@@ -23,6 +23,13 @@ interface EpisodeReply {
   created_at: string;
 }
 
+interface ProfileLite {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
 interface Props {
   showId: number;
   seasonNumber: number;
@@ -43,6 +50,7 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
   const [replySubmitting, setReplySubmitting] = useState(false);
+  const [profilesById, setProfilesById] = useState<Record<string, ProfileLite>>({});
 
   useEffect(() => {
     const supabase = createClient();
@@ -66,8 +74,10 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
       return;
     }
 
-    setComments((data ?? []) as EpisodeComment[]);
-    await Promise.all([loadLikes((data ?? []) as EpisodeComment[]), loadReplies((data ?? []) as EpisodeComment[])]);
+    const commentList = (data ?? []) as EpisodeComment[];
+    setComments(commentList);
+    const replies = await loadReplies(commentList);
+    await Promise.all([loadLikes(commentList), loadProfiles(commentList, replies)]);
     setLoaded(true);
   }
 
@@ -147,7 +157,7 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
   async function loadReplies(commentList: EpisodeComment[]) {
     if (commentList.length === 0) {
       setRepliesByComment({});
-      return;
+      return [] as EpisodeReply[];
     }
 
     const ids = commentList.map((c) => c.id);
@@ -158,14 +168,40 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
       .in('comment_id', ids)
       .order('created_at', { ascending: true });
 
-    if (replyError) return;
+    if (replyError) return [] as EpisodeReply[];
 
     const grouped: Record<string, EpisodeReply[]> = {};
-    (data ?? []).forEach((row: EpisodeReply) => {
+    const replyRows = (data ?? []) as EpisodeReply[];
+    replyRows.forEach((row: EpisodeReply) => {
       if (!grouped[row.comment_id]) grouped[row.comment_id] = [];
       grouped[row.comment_id].push(row);
     });
     setRepliesByComment(grouped);
+    return replyRows;
+  }
+
+  async function loadProfiles(commentList: EpisodeComment[], replies: EpisodeReply[]) {
+    const ids = Array.from(new Set([
+      ...commentList.map((comment) => comment.user_id),
+      ...replies.map((reply) => reply.user_id),
+    ]));
+    if (ids.length === 0) {
+      setProfilesById({});
+      return;
+    }
+
+    const supabase = createClient();
+    const { data, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, username, full_name, avatar_url')
+      .in('id', ids);
+
+    if (profileError) return;
+    const map: Record<string, ProfileLite> = {};
+    (data ?? []).forEach((profile) => {
+      map[profile.id] = profile as ProfileLite;
+    });
+    setProfilesById(map);
   }
 
   async function toggleLike(commentId: string) {
@@ -322,11 +358,16 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
       ) : (
         <div className="space-y-4">
           {comments.map((comment) => {
-            const name = `Kullanıcı ${comment.user_id.slice(0, 6)}`;
+            const commentProfile = profilesById[comment.user_id];
+            const name = commentProfile?.full_name || commentProfile?.username || `Kullanıcı ${comment.user_id.slice(0, 6)}`;
             return (
               <div key={comment.id} className="bg-[#141414] border border-white/5 rounded-xl p-4 flex gap-3">
                 <div className="w-9 h-9 rounded-full bg-[#1A1A1A] border border-white/10 shrink-0 overflow-hidden flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white/20 text-lg">person</span>
+                  {commentProfile?.avatar_url ? (
+                    <img src={commentProfile.avatar_url} alt={name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="material-symbols-outlined text-white/20 text-lg">person</span>
+                  )}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
@@ -358,14 +399,17 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
 
                   {(repliesByComment[comment.id] ?? []).length > 0 && (
                     <div className="mt-3 space-y-2 border-l border-white/10 pl-3">
-                      {(repliesByComment[comment.id] ?? []).map((reply) => (
+                      {(repliesByComment[comment.id] ?? []).map((reply) => {
+                        const replyProfile = profilesById[reply.user_id];
+                        const replyName = replyProfile?.full_name || replyProfile?.username || `Kullanıcı ${reply.user_id.slice(0, 6)}`;
+                        return (
                         <div key={reply.id} className="text-xs">
                           <p className="text-white/45">
-                            Kullanıcı {reply.user_id.slice(0, 6)} • {new Date(reply.created_at).toLocaleDateString('tr-TR')}
+                            {replyName} • {new Date(reply.created_at).toLocaleDateString('tr-TR')}
                           </p>
                           <p className="text-white/65 mt-1">{reply.content}</p>
                         </div>
-                      ))}
+                      )})}
                     </div>
                   )}
 
