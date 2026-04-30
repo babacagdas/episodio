@@ -29,14 +29,28 @@ interface WatchlistRow {
 export default async function UserProfilePage({ params }: { params: Promise<PageParams> }) {
   const { username } = await params;
   const normalizedUsername = decodeURIComponent(username).trim().replace(/^@+/, '');
+  const loweredUsername = normalizedUsername.toLowerCase();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let { data: profileData } = await supabase
+  let profileData: Profile | null = null;
+
+  // Use safe step-by-step lookup instead of OR filter parsing.
+  const { data: byUsername } = await supabase
     .from('profiles')
     .select('id, username, full_name, bio, avatar_url')
-    .or(`username.ilike.${normalizedUsername},id.eq.${normalizedUsername}`)
+    .eq('username', loweredUsername)
     .maybeSingle();
+  profileData = (byUsername as Profile | null) ?? null;
+
+  if (!profileData) {
+    const { data: byId } = await supabase
+      .from('profiles')
+      .select('id, username, full_name, bio, avatar_url')
+      .eq('id', normalizedUsername)
+      .maybeSingle();
+    profileData = (byId as Profile | null) ?? null;
+  }
 
   // Fallback for strict RLS setups: resolve public profile via service role.
   if (!profileData && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -45,15 +59,24 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
       process.env.SUPABASE_SERVICE_ROLE_KEY,
       { auth: { persistSession: false } }
     );
-    const { data: adminProfile } = await admin
+    const { data: adminByUsername } = await admin
       .from('profiles')
       .select('id, username, full_name, bio, avatar_url')
-      .or(`username.ilike.${normalizedUsername},id.eq.${normalizedUsername}`)
+      .eq('username', loweredUsername)
       .maybeSingle();
-    profileData = adminProfile;
+    profileData = (adminByUsername as Profile | null) ?? null;
+
+    if (!profileData) {
+      const { data: adminById } = await admin
+        .from('profiles')
+        .select('id, username, full_name, bio, avatar_url')
+        .eq('id', normalizedUsername)
+        .maybeSingle();
+      profileData = (adminById as Profile | null) ?? null;
+    }
   }
 
-  const profile = profileData as Profile | null;
+  const profile = profileData;
   if (!profile) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] text-white flex items-center justify-center">
