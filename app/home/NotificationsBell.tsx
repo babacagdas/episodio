@@ -9,6 +9,7 @@ interface NotificationItem {
   message: string;
   link: string | null;
   actor_id: string | null;
+  type: string;
   is_read: boolean;
   created_at: string;
   actor?: {
@@ -46,7 +47,7 @@ export default function NotificationsBell() {
 
     const { data } = await supabase
       .from('notifications')
-      .select('id, message, link, actor_id, is_read, created_at')
+      .select('id, message, link, actor_id, type, is_read, created_at')
       .eq('user_id', authData.user.id)
       .order('created_at', { ascending: false })
       .limit(20);
@@ -137,6 +138,16 @@ export default function NotificationsBell() {
           ) : (
             <div className="space-y-2">
               {items.map((item) => {
+                const actorProfilePath =
+                  item.actor?.username
+                    ? `/u/${item.actor.username}`
+                    : item.actor_id
+                      ? `/u/${item.actor_id}`
+                      : null;
+                const targetHref =
+                  item.type === 'follow'
+                    ? (actorProfilePath ?? item.link ?? '/home')
+                    : (item.link ?? actorProfilePath ?? '/home');
                 const content = (
                   <div className={`rounded-xl px-3 py-2 border ${item.is_read ? 'border-white/5 bg-white/[0.02]' : 'border-[#E50914]/30 bg-[#E50914]/10'}`}>
                     <div className="flex items-center gap-2">
@@ -156,9 +167,9 @@ export default function NotificationsBell() {
                   </div>
                 );
 
-                if (item.link) {
+                if (targetHref) {
                   return (
-                    <Link key={item.id} href={item.link} onClick={() => setOpen(false)}>
+                    <Link key={item.id} href={targetHref} onClick={() => setOpen(false)}>
                       {content}
                     </Link>
                   );
