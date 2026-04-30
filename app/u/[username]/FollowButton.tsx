@@ -45,7 +45,7 @@ export default function FollowButton({ targetUserId, initialFollowing }: Props) 
           actor_id: user.id,
           type: 'follow',
           message: actorUsername ? `@${actorUsername} seni takip etmeye başladı.` : 'Seni takip etmeye başladı.',
-          link: actorUsername ? `/u/${actorUsername}` : '/profile',
+          link: actorUsername ? `/u/${actorUsername}` : `/u/${user.id}`,
         });
       }
     }

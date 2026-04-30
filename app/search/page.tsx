@@ -36,10 +36,10 @@ function ShowCard({ show }: { show: Show }) {
 
 interface UserSearchProfile {
   id: string;
-  username: string;
-  full_name: string;
-  bio: string;
-  avatar_url: string;
+  username: string | null;
+  full_name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
 }
 
 interface PopularList {
@@ -64,15 +64,16 @@ function ProfileCard({
   onToggleFollow?: (profile: UserSearchProfile) => void;
 }) {
   const displayName = profile.full_name || profile.username || 'Kullanıcı';
+  const profilePath = `/u/${profile.username ?? profile.id}`;
   return (
     <div className="glass-card p-4 flex items-center gap-3 hover:border-white/20 transition-colors">
-      <Link href={`/u/${profile.username}`} className="w-11 h-11 rounded-full bg-[#1A1A1A] border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
+      <Link href={profilePath} className="w-11 h-11 rounded-full bg-[#1A1A1A] border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
         {profile.avatar_url ? <img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-white/20">person</span>}
       </Link>
       <div className="min-w-0 flex-1">
-        <Link href={`/u/${profile.username}`}>
+        <Link href={profilePath}>
           <p className="text-sm text-white font-semibold truncate">{displayName}</p>
-          <p className="text-xs text-white/35 truncate">@{profile.username}</p>
+          <p className="text-xs text-white/35 truncate">@{profile.username ?? profile.id.slice(0, 8)}</p>
         </Link>
         {profile.bio && <p className="text-xs text-white/40 truncate mt-1">{profile.bio}</p>}
       </div>
@@ -241,7 +242,7 @@ export default function Search() {
         actor_id: currentUserId,
         type: 'follow',
         message: actorUsername ? `@${actorUsername} seni takip etmeye başladı.` : 'Seni takip etmeye başladı.',
-        link: actorUsername ? `/u/${actorUsername}` : '/profile',
+        link: actorUsername ? `/u/${actorUsername}` : `/u/${currentUserId}`,
       });
     }
   }, [currentUserId, followingMap]);

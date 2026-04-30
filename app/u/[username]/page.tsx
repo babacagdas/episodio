@@ -34,8 +34,8 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   const { data: profileData } = await supabase
     .from('profiles')
     .select('id, username, full_name, bio, avatar_url')
-    .ilike('username', normalizedUsername)
-    .single();
+    .or(`username.ilike.${normalizedUsername},id.eq.${normalizedUsername}`)
+    .maybeSingle();
 
   const profile = profileData as Profile | null;
   if (!profile) {

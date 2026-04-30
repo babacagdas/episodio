@@ -6,9 +6,9 @@ import { createClient } from '@/lib/supabase/client';
 
 interface ProfileListItem {
   id: string;
-  username: string;
-  full_name: string;
-  avatar_url: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
 }
 
 interface Props {
@@ -122,7 +122,7 @@ export default function FollowListsModal({
         actor_id: currentUserId,
         type: 'follow',
         message: actorUsername ? `@${actorUsername} seni takip etmeye başladı.` : 'Seni takip etmeye başladı.',
-        link: actorUsername ? `/u/${actorUsername}` : '/profile',
+        link: actorUsername ? `/u/${actorUsername}` : `/u/${currentUserId}`,
       });
     }
   }
@@ -174,19 +174,20 @@ export default function FollowListsModal({
               ) : (
                 items.map((item) => {
                   const displayName = item.full_name || item.username || 'Kullanıcı';
+                  const profilePath = `/u/${item.username ?? item.id}`;
                   const isSelf = item.id === currentUserId;
                   return (
                     <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/[0.03]">
-                      <Link href={`/u/${item.username}`} className="w-10 h-10 rounded-full bg-[#1A1A1A] border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
+                      <Link href={profilePath} className="w-10 h-10 rounded-full bg-[#1A1A1A] border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
                         {item.avatar_url ? (
                           <img src={item.avatar_url} alt={displayName} className="w-full h-full object-cover" />
                         ) : (
                           <span className="material-symbols-outlined text-white/20">person</span>
                         )}
                       </Link>
-                      <Link href={`/u/${item.username}`} className="min-w-0 flex-1">
+                      <Link href={profilePath} className="min-w-0 flex-1">
                         <p className="text-sm text-white font-semibold truncate">{displayName}</p>
-                        <p className="text-xs text-white/35 truncate">@{item.username}</p>
+                        <p className="text-xs text-white/35 truncate">@{item.username ?? item.id.slice(0, 8)}</p>
                       </Link>
                       {!isSelf && (
                         <button
