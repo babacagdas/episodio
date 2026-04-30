@@ -294,7 +294,7 @@ export default function ProfileContent() {
               {profile.bio && <p className="text-sm text-white/50 mt-2 max-w-md">{profile.bio}</p>}
               {!profile.bio && user?.email && <p className="text-sm text-white/20 mt-1">{user.email}</p>}
             </div>
-            <div className="flex gap-3 mt-4 md:mt-0 pb-2">
+            <div className="flex flex-wrap justify-center md:justify-end gap-3 mt-4 md:mt-0 pb-2">
               <button onClick={openEdit} className="px-5 py-2 bg-transparent border border-white/20 rounded-full text-sm font-semibold text-white hover:bg-white/5 transition-colors">Profili Düzenle</button>
               {user && (
                 <button
@@ -315,7 +315,7 @@ export default function ProfileContent() {
 
       {/* Stats */}
       <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-6">
-        <div className="flex items-center gap-8">
+        <div className="flex flex-wrap items-center gap-5 sm:gap-8">
           {[
             { val: watchlist.length, label: 'Listede' },
             { val: 0, label: 'İzlendi' },
@@ -326,7 +326,7 @@ export default function ProfileContent() {
               <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
             </div>
           ))}
-          <div className="w-px h-8 bg-white/10 mx-2" />
+          <div className="hidden sm:block w-px h-8 bg-white/10 mx-2" />
           {user && (
             <FollowListsModal
               profileId={user.id}

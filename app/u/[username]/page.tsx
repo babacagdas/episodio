@@ -183,7 +183,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
         </section>
 
         <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-6">
-          <div className="flex items-center gap-8">
+          <div className="flex flex-wrap items-center gap-5 sm:gap-8">
             <div className="text-center">
               <span className="block text-2xl font-bold text-white">{watchlist.length}</span>
               <span className="text-[11px] text-white/30 uppercase tracking-wider">Listede</span>

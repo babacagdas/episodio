@@ -8,8 +8,14 @@ interface NotificationItem {
   id: string;
   message: string;
   link: string | null;
+  actor_id: string | null;
   is_read: boolean;
   created_at: string;
+  actor?: {
+    username: string | null;
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
 }
 
 function formatTimeAgo(date: string) {
@@ -40,12 +46,37 @@ export default function NotificationsBell() {
 
     const { data } = await supabase
       .from('notifications')
-      .select('id, message, link, is_read, created_at')
+      .select('id, message, link, actor_id, is_read, created_at')
       .eq('user_id', authData.user.id)
       .order('created_at', { ascending: false })
       .limit(20);
 
-    setItems((data ?? []) as NotificationItem[]);
+    const baseItems = (data ?? []) as NotificationItem[];
+    const actorIds = Array.from(
+      new Set(baseItems.map((item) => item.actor_id).filter((value): value is string => !!value))
+    );
+
+    let actorMap: Record<string, NotificationItem['actor']> = {};
+    if (actorIds.length > 0) {
+      const { data: actorProfiles } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .in('id', actorIds);
+      (actorProfiles ?? []).forEach((profile) => {
+        actorMap[profile.id] = {
+          username: profile.username ?? null,
+          full_name: profile.full_name ?? null,
+          avatar_url: profile.avatar_url ?? null,
+        };
+      });
+    }
+
+    setItems(
+      baseItems.map((item) => ({
+        ...item,
+        actor: item.actor_id ? actorMap[item.actor_id] ?? null : null,
+      }))
+    );
     setLoading(false);
   }
 
@@ -83,7 +114,7 @@ export default function NotificationsBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[340px] max-h-[420px] overflow-y-auto bg-[#141414] border border-white/10 rounded-2xl shadow-2xl p-3 z-50">
+        <div className="absolute right-0 mt-2 w-[min(340px,calc(100vw-1.5rem))] max-h-[420px] overflow-y-auto bg-[#141414] border border-white/10 rounded-2xl shadow-2xl p-3 z-50">
           <div className="flex items-center justify-between px-2 py-1 mb-2">
             <p className="text-sm font-semibold text-white">Bildirimler</p>
             {unreadCount > 0 && (
@@ -108,7 +139,19 @@ export default function NotificationsBell() {
               {items.map((item) => {
                 const content = (
                   <div className={`rounded-xl px-3 py-2 border ${item.is_read ? 'border-white/5 bg-white/[0.02]' : 'border-[#E50914]/30 bg-[#E50914]/10'}`}>
-                    <p className="text-sm text-white/85">{item.message}</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full overflow-hidden bg-[#1A1A1A] border border-white/10 flex items-center justify-center shrink-0">
+                        {item.actor?.avatar_url ? (
+                          <img src={item.actor.avatar_url} alt={item.actor.full_name ?? item.actor.username ?? 'Kullanıcı'} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="material-symbols-outlined text-[15px] text-white/30">person</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-white/55 truncate">
+                        {item.actor?.full_name || item.actor?.username || 'Kullanıcı'}
+                      </p>
+                    </div>
+                    <p className="text-sm text-white/85 mt-1">{item.message}</p>
                     <p className="text-[11px] text-white/35 mt-1">{formatTimeAgo(item.created_at)} önce</p>
                   </div>
                 );
