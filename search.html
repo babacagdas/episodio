@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Episodio - Search</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-container": "#c59300",
+                        "on-secondary-fixed": "#261a00",
+                        "primary-fixed-dim": "#ffb4aa",
+                        "on-tertiary-fixed": "#001b3c",
+                        "tertiary-fixed-dim": "#a7c8ff",
+                        "on-tertiary-container": "#f8f9ff",
+                        "primary-fixed": "#ffdad5",
+                        "tertiary-container": "#0072d7",
+                        "surface": "#200e0c",
+                        "surface-container-highest": "#462f2c",
+                        "on-tertiary": "#003061",
+                        "surface-tint": "#ffb4aa",
+                        "inverse-surface": "#ffdad5",
+                        "secondary-fixed-dim": "#f6be39",
+                        "on-secondary": "#402d00",
+                        "tertiary": "#a7c8ff",
+                        "on-surface-variant": "#e9bcb6",
+                        "surface-variant": "#462f2c",
+                        "on-secondary-container": "#433000",
+                        "on-primary-fixed-variant": "#930007",
+                        "on-background": "#ffdad5",
+                        "on-primary-container": "#fff7f6",
+                        "error": "#ffb4ab",
+                        "primary": "#ffb4aa",
+                        "background": "#200e0c",
+                        "outline": "#af8782",
+                        "surface-dim": "#200e0c",
+                        "on-tertiary-fixed-variant": "#004689",
+                        "on-primary": "#690003",
+                        "on-primary-fixed": "#410001",
+                        "on-secondary-fixed-variant": "#5c4300",
+                        "inverse-primary": "#c0000c",
+                        "surface-container-low": "#2a1614",
+                        "secondary": "#f6be39",
+                        "primary-container": "#e50914",
+                        "secondary-fixed": "#ffdfa0",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "outline-variant": "#5e3f3b",
+                        "inverse-on-surface": "#412b28",
+                        "tertiary-fixed": "#d5e3ff",
+                        "surface-container-high": "#3a2522",
+                        "surface-container": "#2e1a18",
+                        "surface-container-lowest": "#1a0908",
+                        "on-error-container": "#ffdad6",
+                        "on-surface": "#ffdad5",
+                        "surface-bright": "#4a3330"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "lg": "40px",
+                        "xl": "64px",
+                        "md": "24px",
+                        "gutter": "16px",
+                        "margin-desktop": "48px",
+                        "xs": "4px",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "sm": "12px"
+                    },
+                    fontFamily: {
+                        "display-xl": ["Be Vietnam Pro"],
+                        "headline-lg": ["Be Vietnam Pro"],
+                        "body-lg": ["Be Vietnam Pro"],
+                        "label-bold": ["Be Vietnam Pro"],
+                        "label-sm": ["Be Vietnam Pro"],
+                        "headline-md": ["Be Vietnam Pro"],
+                        "body-md": ["Be Vietnam Pro"]
+                    },
+                    fontSize: {
+                        "display-xl": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "800" }],
+                        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "700" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+                        "label-bold": ["14px", { lineHeight: "20px", fontWeight: "700" }],
+                        "label-sm": ["12px", { lineHeight: "16px", fontWeight: "500" }],
+                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "700" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-[#0A0A0A] text-on-surface font-body-md min-h-screen antialiased flex flex-col items-center">
+<!-- Top Nav (Desktop Adapted) -->
+<header class="bg-[#0A0A0A]/80 backdrop-blur-2xl border-b border-white/5 flex justify-between items-center w-full px-8 py-5 fixed top-0 z-50">
+<div class="flex items-center gap-12">
+<div class="text-2xl font-black text-white uppercase tracking-tighter font-['Be_Vietnam_Pro']">
+                EPISODIO<span class="text-[#E50914]">.</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-gray-400 hover:text-white transition-colors font-label-bold uppercase tracking-wider" href="#">Home</a>
+<a class="text-white border-b-2 border-[#E50914] pb-1 font-label-bold uppercase tracking-wider" href="#">Search</a>
+<a class="text-gray-400 hover:text-white transition-colors font-label-bold uppercase tracking-wider" href="#">Watchlist</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<button class="material-symbols-outlined text-gray-400 hover:text-white transition-colors shrink-0">
+                notifications
+            </button>
+<div class="h-10 w-10 rounded-full overflow-hidden bg-[#141414] border border-white/10 shrink-0 cursor-pointer hover:border-white/30 transition-colors">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="Close up portrait of young woman with dramatic cinematic rim lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDMp2Tsw0JcUMl-g9reZiYW0rja8EIGMn1hNa30DJUcXGOfLq18XOiwEEI_DjUAtP3hRa-XEnDDZrGOZXX4WkfKOnFF3ss0R8GrfMWt3pFkJnVBRFJoVoq000H-VlsT2x6oegMWeInE2fSemQJ1WI7lZVXKgNkC87jIyl5uGkeQiEsF_lKXrjUhxUBdWO_JrxceUpmoljg8rAcG7SpY78bwCFwBC4Wk20kLly_3Z33rbnnfj8pZAz2rVb5gxxb1e_YqeCqQp1XMi_Z"/>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="w-full max-w-7xl px-8 pt-32 pb-24 flex-1 flex flex-col gap-12 items-center">
+<!-- Search Input - Wide Centered -->
+<section class="w-full max-w-3xl flex flex-col gap-6 items-center">
+<div class="w-full relative group">
+<div class="absolute -inset-1 bg-gradient-to-r from-[#D4A017]/30 via-[#E50914]/20 to-[#D4A017]/30 blur-2xl rounded-2xl opacity-40 group-focus-within:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+<div class="relative flex items-center w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 focus-within:border-[#D4A017]/50 focus-within:bg-white/10">
+<span class="material-symbols-outlined absolute left-6 text-on-surface-variant group-focus-within:text-[#D4A017] transition-colors text-2xl">search</span>
+<input class="w-full bg-transparent text-white font-body-lg text-lg placeholder:text-on-surface-variant/50 py-6 pl-16 pr-16 focus:outline-none focus:ring-0 border-none h-16" placeholder="Movies, shows, or genres..." type="text"/>
+<button class="absolute right-6 text-on-surface-variant hover:text-white opacity-0 group-focus-within:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">cancel</span>
+</button>
+</div>
+</div>
+<!-- Genre Filters -->
+<div class="flex flex-wrap justify-center gap-3">
+<button class="shrink-0 px-6 py-2.5 rounded-full font-label-bold text-sm bg-[#D4A017] text-[#0A0A0A] shadow-[0_0_20px_rgba(212,160,23,0.4)] transition-transform hover:scale-105 active:scale-95">Drama</button>
+<button class="shrink-0 px-6 py-2.5 rounded-full font-label-bold text-sm bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hover:scale-105 active:scale-95">Comedy</button>
+<button class="shrink-0 px-6 py-2.5 rounded-full font-label-bold text-sm bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hover:scale-105 active:scale-95">Thriller</button>
+<button class="shrink-0 px-6 py-2.5 rounded-full font-label-bold text-sm bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hover:scale-105 active:scale-95">Sci-Fi</button>
+<button class="shrink-0 px-6 py-2.5 rounded-full font-label-bold text-sm bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hover:scale-105 active:scale-95">Turkish</button>
+<button class="shrink-0 px-6 py-2.5 rounded-full font-label-bold text-sm bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all hover:scale-105 active:scale-95">Korean</button>
+</div>
+</section>
+<!-- Content Area -->
+<div class="w-full flex flex-col gap-12 mt-8">
+<!-- Recent Searches -->
+<section class="w-full">
+<h2 class="font-headline-md text-2xl mb-6 text-white/90">Recent Searches</h2>
+<div class="flex flex-wrap gap-4">
+<div class="flex items-center gap-2 px-4 py-2 rounded-full bg-[#141414] border border-white/5 text-on-surface-variant hover:text-white hover:bg-white/10 cursor-pointer transition-colors group">
+<span class="material-symbols-outlined text-[18px] opacity-70 group-hover:opacity-100 group-hover:text-[#E50914]">history</span>
+<span class="font-label-bold text-sm">The Bear</span>
+</div>
+<div class="flex items-center gap-2 px-4 py-2 rounded-full bg-[#141414] border border-white/5 text-on-surface-variant hover:text-white hover:bg-white/10 cursor-pointer transition-colors group">
+<span class="material-symbols-outlined text-[18px] opacity-70 group-hover:opacity-100 group-hover:text-[#E50914]">history</span>
+<span class="font-label-bold text-sm">Cyberpunk</span>
+</div>
+<div class="flex items-center gap-2 px-4 py-2 rounded-full bg-[#141414] border border-white/5 text-on-surface-variant hover:text-white hover:bg-white/10 cursor-pointer transition-colors group">
+<span class="material-symbols-outlined text-[18px] opacity-70 group-hover:opacity-100 group-hover:text-[#E50914]">history</span>
+<span class="font-label-bold text-sm">A24 Films</span>
+</div>
+<div class="flex items-center gap-2 px-4 py-2 rounded-full bg-[#141414] border border-white/5 text-on-surface-variant hover:text-white hover:bg-white/10 cursor-pointer transition-colors group">
+<span class="material-symbols-outlined text-[18px] opacity-70 group-hover:opacity-100 group-hover:text-[#E50914]">history</span>
+<span class="font-label-bold text-sm">Sci-Fi 2024</span>
+</div>
+</div>
+</section>
+<!-- Trending Now -->
+<section class="w-full">
+<div class="flex justify-between items-end mb-6">
+<h2 class="font-headline-md text-3xl text-white/90">Trending Now</h2>
+<button class="font-label-bold text-sm text-[#D4A017] uppercase tracking-wider hover:text-white transition-colors flex items-center gap-1">
+                        See All <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+<!-- Card 1 -->
+<div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-[#141414] border border-white/5 group cursor-pointer shadow-lg hover:shadow-[#E50914]/20 hover:border-white/20 transition-all duration-300">
+<img alt="Trending Show" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="Cinematic wide shot of a neon lit futuristic city street at night in cyberpunk style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAFHAXxHBRZHDYMPT-0AsygEeC-WUWSn1TorcUrX_k6sJc3aZMLfvDrWiWAXWO0k9EpbBM6j_S32CF0PtYOJbajGragtBdysgKUOjcpeA2yTL7a9itHhwdG9EgRJ8pt7oAMnv8zi_0NZ4NZUAxfg571g5eGsE6JqU5trWHVA8HlHdcoR0ziPPQVB-y5divdRnE2dKVlWgl5Oapa5HcEdgoZ8NL15Wl1prsgHinG_FOL9PplYQxtWvWWdBfY1bL5BiWb0OOq5c16zXp"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
+<div class="absolute top-3 left-3 bg-[#E50914] text-white font-label-sm text-xs uppercase font-bold px-2.5 py-1 rounded shadow-md tracking-wider">Top 10</div>
+<div class="absolute bottom-0 left-0 w-full p-5 flex flex-col gap-1.5">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-[#D4A017]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-bold text-base text-white shadow-sm">9.4</span>
+</div>
+<h3 class="font-headline-md text-xl text-white truncate drop-shadow-md">Neon Genesis</h3>
+<div class="font-label-sm text-sm text-white/60 truncate">Sci-Fi • Thriller • 1 Season</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-[#141414] border border-white/5 group cursor-pointer shadow-lg hover:shadow-[#D4A017]/20 hover:border-white/20 transition-all duration-300">
+<img alt="Trending Show" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="Vintage clapperboard on dark background with dramatic spotlighting and smoke effect" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAm0mPOrLs_0FbhjqlFPiLOKYiKjrzf81sTVQvBXP6YQjH-ENXfjDIbGOSfH09HQWeItgr38lpZfZaDJVQp0ySXAHTvlPeSnRhZxsob7hjqzFv3qt3TGkWDprP4HTXjloObfrS6SfX5DISPITMdBFs-oaVWixnvZIvf2y9ZcJphuc1xjkwDXRIDa1GKq9ARGOtIHipFKUDLS_ZQNrcLU5ZcRYT28BhrxHqC8qH7mj3YT_WOQV2t5QTsYdI6H9AmL1pmQCcRUPjQRkwp"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
+<div class="absolute top-3 left-3 bg-[#1A1A1A]/80 backdrop-blur text-white font-label-sm text-xs uppercase font-bold px-2.5 py-1 rounded shadow-md tracking-wider border border-white/10">New Ep</div>
+<div class="absolute bottom-0 left-0 w-full p-5 flex flex-col gap-1.5">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-[#D4A017]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-bold text-base text-white shadow-sm">8.9</span>
+</div>
+<h3 class="font-headline-md text-xl text-white truncate drop-shadow-md">The Director's Cut</h3>
+<div class="font-label-sm text-sm text-white/60 truncate">Drama • Documentary</div>
+<!-- Watch Progress -->
+<div class="w-full h-1.5 bg-white/10 mt-2 rounded-full overflow-hidden">
+<div class="h-full bg-[#E50914] w-[30%]"></div>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-[#141414] border border-white/5 group cursor-pointer shadow-lg hover:shadow-white/10 hover:border-white/20 transition-all duration-300">
+<img alt="Trending Show" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="Dark silhouette of a lone figure standing in a foggy forest with cool blue moonlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDYDsSRf2GCcTicz6JaLz4hlRq4V-Z3vIHqUrQyF1u7SjscJgJR4BEhM5Gk0wFJj3vuOTUp1ZjLrb2_giuZbPjqJoGi_30hpqMzGNgnmOLykiob5IQ1j4ZsiAI6xE0gHvBcgQwYDbBc2iE0BdmdXHCu8oLNMd63KKoGhd9x-mPrEsh3osCQRRCJlLQ-Fc4QcDolKmzRVMJiIA3zIIpRoXk4YUT-g1wA2yJT_hxwFQPCFKefTUCzyiKoxlBdkVua6Z1EAItLk8C4ul21"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
+<div class="absolute bottom-0 left-0 w-full p-5 flex flex-col gap-1.5">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-[#D4A017]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-bold text-base text-white shadow-sm">8.5</span>
+</div>
+<h3 class="font-headline-md text-xl text-white truncate drop-shadow-md">Silent Pines</h3>
+<div class="font-label-sm text-sm text-white/60 truncate">Mystery • Thriller</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="relative aspect-[2/3] rounded-xl overflow-hidden bg-[#141414] border border-white/5 group cursor-pointer shadow-lg hover:shadow-[#D4A017]/20 hover;border-white/20 transition-all duration-300">
+<img alt="Trending Show" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="Opulent interior of a royal palace room with golden details and deep red velvet drapes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLkbDsl1twKkpqS5iIvHN3SJ7e9vtMIUO3wUveci1ISPqT0Pl6Tmge8nDlB4Sn16VGqDrv6PD7fsZllH69SYT2wnAo-KtwcgaKwCZGInwekrWYN_nd5BuaauPScO_WHTNR92vFJ2BihdsZfuFZ2zKmPhgWeb_jIrZqUlHzp9eVD8eRfUFPBrZ_3aRsEoSxRMixg4QMx2H-Ky_Zu0uAO1nl_4NStV6rV9XTUGw7GfAww-jtxqLF6V1v_NrFpQDR467AtscZFBmFufeL"/>
+<div class="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent opacity-90 group-hover:opacity-100 transition-opacity"></div>
+<div class="absolute bottom-0 left-0 w-full p-5 flex flex-col gap-1.5">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-[#D4A017]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-bold text-base text-white shadow-sm">9.1</span>
+</div>
+<h3 class="font-headline-md text-xl text-white truncate drop-shadow-md">Empire's Fall</h3>
+<div class="font-label-sm text-sm text-white/60 truncate">Historical • Drama</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>

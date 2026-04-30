@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Episodio - Create Account</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-container": "#c59300",
+                      "on-secondary-fixed": "#261a00",
+                      "primary-fixed-dim": "#ffb4aa",
+                      "on-tertiary-fixed": "#001b3c",
+                      "tertiary-fixed-dim": "#a7c8ff",
+                      "on-tertiary-container": "#f8f9ff",
+                      "primary-fixed": "#ffdad5",
+                      "tertiary-container": "#0072d7",
+                      "surface": "#200e0c",
+                      "surface-container-highest": "#462f2c",
+                      "on-tertiary": "#003061",
+                      "surface-tint": "#ffb4aa",
+                      "inverse-surface": "#ffdad5",
+                      "secondary-fixed-dim": "#f6be39",
+                      "on-secondary": "#402d00",
+                      "tertiary": "#a7c8ff",
+                      "on-surface-variant": "#e9bcb6",
+                      "surface-variant": "#462f2c",
+                      "on-secondary-container": "#433000",
+                      "on-primary-fixed-variant": "#930007",
+                      "on-background": "#ffdad5",
+                      "on-primary-container": "#fff7f6",
+                      "error": "#ffb4ab",
+                      "primary": "#ffb4aa",
+                      "background": "#200e0c",
+                      "outline": "#af8782",
+                      "surface-dim": "#200e0c",
+                      "on-tertiary-fixed-variant": "#004689",
+                      "on-primary": "#690003",
+                      "on-primary-fixed": "#410001",
+                      "on-secondary-fixed-variant": "#5c4300",
+                      "inverse-primary": "#c0000c",
+                      "surface-container-low": "#2a1614",
+                      "secondary": "#f6be39",
+                      "primary-container": "#e50914",
+                      "secondary-fixed": "#ffdfa0",
+                      "on-error": "#690005",
+                      "error-container": "#93000a",
+                      "outline-variant": "#5e3f3b",
+                      "inverse-on-surface": "#412b28",
+                      "tertiary-fixed": "#d5e3ff",
+                      "surface-container-high": "#3a2522",
+                      "surface-container": "#2e1a18",
+                      "surface-container-lowest": "#1a0908",
+                      "on-error-container": "#ffdad6",
+                      "on-surface": "#ffdad5",
+                      "surface-bright": "#4a3330"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "lg": "40px",
+                      "xl": "64px",
+                      "md": "24px",
+                      "gutter": "16px",
+                      "margin-desktop": "48px",
+                      "xs": "4px",
+                      "base": "8px",
+                      "margin-mobile": "20px",
+                      "sm": "12px"
+              },
+              "fontFamily": {
+                      "display-xl": [
+                              "Be Vietnam Pro"
+                      ],
+                      "headline-lg": [
+                              "Be Vietnam Pro"
+                      ],
+                      "body-lg": [
+                              "Be Vietnam Pro"
+                      ],
+                      "label-bold": [
+                              "Be Vietnam Pro"
+                      ],
+                      "label-sm": [
+                              "Be Vietnam Pro"
+                      ],
+                      "headline-md": [
+                              "Be Vietnam Pro"
+                      ],
+                      "body-md": [
+                              "Be Vietnam Pro"
+                      ]
+              },
+              "fontSize": {
+                      "display-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "800"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-bold": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-[#0A0A0A] text-on-surface min-h-screen flex items-center justify-center relative overflow-hidden font-body-md text-body-md selection:bg-primary-container selection:text-white">
+<div class="absolute inset-0 z-0 opacity-40">
+<div class="absolute top-0 left-1/4 w-3/4 h-3/4 bg-primary-container rounded-full mix-blend-screen filter blur-[150px] opacity-20"></div>
+<div class="absolute bottom-0 right-1/4 w-1/2 h-1/2 bg-secondary-container rounded-full mix-blend-screen filter blur-[150px] opacity-10"></div>
+<div class="absolute inset-0 bg-[#0A0A0A]/80 backdrop-blur-3xl"></div>
+</div>
+<main class="relative z-10 w-full max-w-md px-6 py-12 flex flex-col items-center justify-center h-full">
+<div class="w-full bg-surface-container/60 backdrop-blur-2xl border border-white/5 rounded-xl p-8 md:p-10 shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col gap-8">
+<div class="flex flex-col items-center gap-4">
+<span class="font-display-xl text-display-xl text-white uppercase tracking-tighter">EPISODIO<span class="text-[#E50914]">.</span></span>
+<p class="text-on-surface-variant text-sm uppercase tracking-[0.2em]">Create your account</p>
+</div>
+<form class="flex flex-col gap-6" onsubmit="event.preventDefault(); window.location.href='profile.html';">
+<div class="flex flex-col gap-4">
+<div class="flex flex-col gap-2">
+<label class="sr-only" for="email">Email</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-on-surface-variant pointer-events-none">email</span>
+<input class="w-full bg-surface-container-high border border-outline-variant/30 rounded-lg py-4 pl-12 pr-4 text-on-surface placeholder:text-on-surface-variant focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none transition-colors font-body-md text-body-md" id="email" placeholder="Email address" type="email"/>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="sr-only" for="new-password">Password</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-on-surface-variant pointer-events-none">lock</span>
+<input class="w-full bg-surface-container-high border border-outline-variant/30 rounded-lg py-4 pl-12 pr-12 text-on-surface placeholder:text-on-surface-variant focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none transition-colors font-body-md text-body-md" id="new-password" placeholder="Create a password" type="password"/>
+<button aria-label="Toggle password visibility" class="absolute right-4 text-on-surface-variant hover:text-on-surface transition-colors flex items-center justify-center" type="button">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="sr-only" for="confirm-password">Confirm password</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-4 text-on-surface-variant pointer-events-none">lock</span>
+<input class="w-full bg-surface-container-high border border-outline-variant/30 rounded-lg py-4 pl-12 pr-12 text-on-surface placeholder:text-on-surface-variant focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none transition-colors font-body-md text-body-md" id="confirm-password" placeholder="Confirm password" type="password"/>
+</div>
+</div>
+</div>
+<button class="w-full bg-primary-container text-on-primary-container font-label-bold text-label-bold py-4 rounded-lg flex items-center justify-center hover:opacity-90 active:scale-[0.98] transition-all" type="submit">
+Create account
+</button>
+</form>
+<div class="relative flex items-center py-2">
+<div class="flex-grow border-t border-outline-variant/30"></div>
+<span class="flex-shrink-0 px-4 font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">or continue with</span>
+<div class="flex-grow border-t border-outline-variant/30"></div>
+</div>
+<div class="flex flex-col gap-3">
+<button class="w-full bg-transparent border border-outline-variant/50 hover:bg-surface-container-high rounded-lg py-3.5 flex items-center justify-center gap-3 transition-colors text-on-surface font-label-bold text-label-bold group" type="button">
+<img alt="Google Logo" class="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBT3sAJsalk6H1fYQvUefoafIBDc4A9C_NXvKIbKWpyylyCA-LUPm64Xk4VePYOsM-_G_zoq0qRW7Wy0y9t9woAnLSDNCIzd4v2QwuSENcgluOhERHr1Y816X20AT7CkzEN4vkkfh-V-yLAKN_9eUXgEQFFVkWuZLYBPs3wTnFfgPsLLve-6cf-ettvTiWOQu5UJbg5-RBE5xuEXkcLMUp4kzmNuEmL43VTylWjrfhO0czI5D3hLdmswcyh1sDVPNaP8pcmGEVcL8LO"/>
+Google
+</button>
+<button class="w-full bg-transparent border border-outline-variant/50 hover:bg-surface-container-high rounded-lg py-3.5 flex items-center justify-center gap-3 transition-colors text-on-surface font-label-bold text-label-bold group" type="button">
+<span class="material-symbols-outlined opacity-80 group-hover:opacity-100 transition-opacity text-[20px]">ios</span>
+Apple
+</button>
+</div>
+<div class="text-center mt-2">
+<p class="font-body-md text-body-md text-on-surface-variant">
+Already have an account?
+<a class="text-primary-container font-label-bold hover:text-primary transition-colors ml-1" href="signin.html">Sign In</a>
+</p>
+</div>
+</div>
+</main>
+</body>
+</html>
