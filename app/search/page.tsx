@@ -350,18 +350,19 @@ export default function Search() {
                   {popularLists.length === 0 ? (
                     <p className="text-sm text-white/30">Bu hafta henüz popüler liste yok.</p>
                   ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 items-start">
                       {popularLists.map((list) => (
-                        <ListPreviewCard
-                          key={list.id}
-                          id={list.id}
-                          name={list.name}
-                          description={list.description}
-                          visibility={list.visibility}
-                          posters={list.posters}
-                          itemCount={list.itemCount}
-                          likeCount={list.likeCount}
-                        />
+                        <div key={list.id} className="scale-[0.92] origin-top md:scale-100">
+                          <ListPreviewCard
+                            id={list.id}
+                            name={list.name}
+                            description={list.description}
+                            visibility={list.visibility}
+                            posters={list.posters}
+                            itemCount={list.itemCount}
+                            likeCount={list.likeCount}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}
