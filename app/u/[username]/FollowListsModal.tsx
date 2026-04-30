@@ -47,37 +47,9 @@ export default function FollowListsModal({
   async function loadList(nextTab: 'followers' | 'following') {
     setLoading(true);
     setTab(nextTab);
-    const supabase = createClient();
-
-    const relationField = nextTab === 'followers' ? 'follower_id' : 'following_id';
-    const filterField = nextTab === 'followers' ? 'following_id' : 'follower_id';
-
-    const { data: relations } = await supabase
-      .from('follows')
-      .select(`${relationField}`)
-      .eq(filterField, profileId)
-      .limit(100);
-
-    const ids = (relations ?? [])
-      .map((row: Record<string, string>) => row[relationField])
-      .filter(Boolean);
-
-    if (ids.length === 0) {
-      setItems([]);
-      setLoading(false);
-      return;
-    }
-
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, username, full_name, avatar_url')
-      .in('id', ids);
-
-    const ordered: ProfileListItem[] = ids
-      .map((id) => (profiles ?? []).find((profile) => profile.id === id))
-      .filter(Boolean) as ProfileListItem[];
-
-    setItems(ordered);
+    const response = await fetch(`/api/follows/list?profileId=${encodeURIComponent(profileId)}&tab=${nextTab}`);
+    const data: ProfileListItem[] = await response.json();
+    setItems(data ?? []);
     setLoading(false);
   }
 
