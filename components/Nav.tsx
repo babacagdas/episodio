@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { ReactNode } from 'react';
 
 const navItems = [
   { href: '/home', icon: 'home', label: 'Home' },
@@ -9,13 +10,13 @@ const navItems = [
   { href: '/profile', icon: 'person', label: 'Profile' },
 ];
 
-export function MobileHeader() {
+export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
   return (
     <header className="bg-[#0A0A0A]/70 backdrop-blur-xl flex justify-between items-center w-full px-6 py-4 top-0 z-50 border-b border-white/5 sticky md:hidden">
       <span className="text-xl font-black text-white uppercase tracking-tighter font-['Be_Vietnam_Pro']">
         EPISODIO<span className="text-[#E50914]">.</span>
       </span>
-      <span className="material-symbols-outlined text-white cursor-pointer">notifications</span>
+      {rightElement ?? <span className="material-symbols-outlined text-white cursor-pointer">notifications</span>}
     </header>
   );
 }

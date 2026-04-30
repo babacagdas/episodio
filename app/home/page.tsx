@@ -21,7 +21,7 @@ async function TrendingGrid() {
 export default async function Home() {
   return (
     <div className="font-body-md text-body-md antialiased pb-24 md:pb-0">
-      <MobileHeader />
+      <MobileHeader rightElement={<NotificationsBell />} />
       <Sidebar />
 
       <main className="md:ml-[240px] px-margin-mobile md:px-12 py-8 max-w-[1440px] mx-auto overflow-x-hidden">
