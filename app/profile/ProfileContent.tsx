@@ -303,9 +303,11 @@ export default function ProfileContent() {
                     await supabase.auth.signOut();
                     window.location.href = '/';
                   }}
-                  className="px-5 py-2 bg-transparent border border-white/10 rounded-full text-sm font-semibold text-white/40 hover:text-white hover:border-white/20 transition-colors"
+                  className="w-10 h-10 rounded-full bg-transparent border border-white/10 text-white/40 hover:text-white hover:border-white/20 transition-colors flex items-center justify-center"
+                  aria-label="Çıkış yap"
+                  title="Çıkış yap"
                 >
-                  Çıkış
+                  <span className="material-symbols-outlined text-[18px]">logout</span>
                 </button>
               )}
             </div>
@@ -315,26 +317,28 @@ export default function ProfileContent() {
 
       {/* Stats */}
       <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-6">
-        <div className="flex flex-wrap items-center gap-5 sm:gap-8">
+        <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:items-center gap-4 sm:gap-8">
           {[
             { val: watchlist.length, label: 'Listede' },
             { val: 0, label: 'İzlendi' },
             { val: 0, label: 'Yorum' },
           ].map(({ val, label }) => (
             <div key={label} className="text-center">
-              <span className="block text-2xl font-bold text-white">{val}</span>
-              <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
+              <span className="block text-lg sm:text-2xl font-bold text-white">{val}</span>
+              <span className="text-[10px] sm:text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
             </div>
           ))}
-          <div className="hidden sm:block w-px h-8 bg-white/10 mx-2" />
-          {user && (
-            <FollowListsModal
-              profileId={user.id}
-              currentUserId={user.id}
-              followersCount={followersCount}
-              followingCount={followingCount}
-            />
-          )}
+          <div className="col-span-3 mt-2 sm:mt-0 sm:col-span-1 sm:hidden h-px bg-white/10" />
+          <div className="col-span-3 sm:col-span-1">
+            {user && (
+              <FollowListsModal
+                profileId={user.id}
+                currentUserId={user.id}
+                followersCount={followersCount}
+                followingCount={followingCount}
+              />
+            )}
+          </div>
         </div>
       </section>
 
