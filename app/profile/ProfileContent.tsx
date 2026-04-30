@@ -7,6 +7,7 @@ import { useWatchlist } from '@/lib/useWatchlist';
 import { useLists } from '@/lib/useLists';
 import ListPreviewCard from '@/components/ListPreviewCard';
 import { CardSkeleton } from '@/components/Skeletons';
+import FollowListsModal from '@/app/u/[username]/FollowListsModal';
 import type { User } from '@supabase/supabase-js';
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
@@ -36,6 +37,8 @@ export default function ProfileContent() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
@@ -56,6 +59,13 @@ export default function ProfileContent() {
         await supabase.from('profiles').insert({ id: data.user.id, ...initial });
         setProfile(initial);
       }
+
+      const [followersRes, followingRes] = await Promise.all([
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', data.user.id),
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', data.user.id),
+      ]);
+      setFollowersCount(followersRes.count ?? 0);
+      setFollowingCount(followingRes.count ?? 0);
     });
   }, []);
 
@@ -317,14 +327,14 @@ export default function ProfileContent() {
             </div>
           ))}
           <div className="w-px h-8 bg-white/10 mx-2" />
-          <div className="text-center">
-            <span className="block text-2xl font-bold text-white">0</span>
-            <span className="text-[11px] text-white/30 uppercase tracking-wider">Takipçi</span>
-          </div>
-          <div className="text-center">
-            <span className="block text-2xl font-bold text-white">0</span>
-            <span className="text-[11px] text-white/30 uppercase tracking-wider">Takip</span>
-          </div>
+          {user && (
+            <FollowListsModal
+              profileId={user.id}
+              currentUserId={user.id}
+              followersCount={followersCount}
+              followingCount={followingCount}
+            />
+          )}
         </div>
       </section>
 

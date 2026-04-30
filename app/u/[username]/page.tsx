@@ -27,13 +27,14 @@ interface WatchlistRow {
 
 export default async function UserProfilePage({ params }: { params: Promise<PageParams> }) {
   const { username } = await params;
+  const normalizedUsername = decodeURIComponent(username).trim().replace(/^@+/, '');
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const { data: profileData } = await supabase
     .from('profiles')
     .select('id, username, full_name, bio, avatar_url')
-    .eq('username', username)
+    .ilike('username', normalizedUsername)
     .single();
 
   const profile = profileData as Profile | null;
