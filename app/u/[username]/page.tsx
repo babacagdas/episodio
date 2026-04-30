@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import FollowButton from './FollowButton';
 import FollowListsModal from './FollowListsModal';
+import ListPreviewCard from '@/components/ListPreviewCard';
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 
@@ -24,6 +25,13 @@ interface WatchlistRow {
   show_id: number;
   show_name: string;
   poster_path: string | null;
+}
+
+interface PublicListRow {
+  id: string;
+  name: string;
+  description: string | null;
+  visibility: 'public' | 'private';
 }
 
 export default async function UserProfilePage({ params }: { params: Promise<PageParams> }) {
@@ -90,7 +98,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     );
   }
 
-  const [{ data: watchlistData }, followersRes, followingRes, relationRes] = await Promise.all([
+  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes] = await Promise.all([
     supabase
       .from('watchlist')
       .select('show_id, show_name, poster_path')
@@ -107,6 +115,19 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
           .eq('following_id', profile.id)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    supabase
+      .from('lists')
+      .select('id, name, description, visibility')
+      .eq('user_id', profile.id)
+      .eq('visibility', 'public')
+      .order('created_at', { ascending: false })
+      .limit(12),
+    supabase
+      .from('list_items')
+      .select('list_id, poster_path'),
+    supabase
+      .from('list_likes')
+      .select('list_id'),
   ]);
 
   const watchlist = (watchlistData ?? []) as WatchlistRow[];
@@ -115,6 +136,21 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   const isOwnProfile = user?.id === profile.id;
   const isFollowing = !!relationRes.data;
   const displayName = profile.full_name || profile.username || 'Kullanıcı';
+  const publicLists = (listsRes.data ?? []) as PublicListRow[];
+  const listIdSet = new Set(publicLists.map((list) => list.id));
+  const itemCounts: Record<string, number> = {};
+  const postersByListId: Record<string, string[]> = {};
+  (itemsRes.data ?? []).forEach((row: { list_id: string; poster_path: string | null }) => {
+    if (!listIdSet.has(row.list_id)) return;
+    itemCounts[row.list_id] = (itemCounts[row.list_id] ?? 0) + 1;
+    if (!postersByListId[row.list_id]) postersByListId[row.list_id] = [];
+    if (row.poster_path && postersByListId[row.list_id].length < 4) postersByListId[row.list_id].push(row.poster_path);
+  });
+  const likesByListId: Record<string, number> = {};
+  (likesRes.data ?? []).forEach((row: { list_id: string }) => {
+    if (!listIdSet.has(row.list_id)) return;
+    likesByListId[row.list_id] = (likesByListId[row.list_id] ?? 0) + 1;
+  });
 
   return (
     <div className="font-body-md text-body-md antialiased pb-24 md:pb-0">
@@ -188,6 +224,30 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                   </Link>
                 );
               })}
+            </div>
+          )}
+        </section>
+
+        <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-2 mb-16">
+          <h2 className="text-white font-semibold mb-4">Listeler</h2>
+          {publicLists.length === 0 ? (
+            <div className="glass-card p-5 text-sm text-white/40">
+              Bu kullanıcının herkese açık listesi yok.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {publicLists.map((list) => (
+                <ListPreviewCard
+                  key={list.id}
+                  id={list.id}
+                  name={list.name}
+                  description={list.description}
+                  visibility={list.visibility}
+                  posters={postersByListId[list.id] ?? []}
+                  itemCount={itemCounts[list.id] ?? 0}
+                  likeCount={likesByListId[list.id] ?? 0}
+                />
+              ))}
             </div>
           )}
         </section>
