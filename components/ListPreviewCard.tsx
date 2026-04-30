@@ -12,6 +12,7 @@ interface Props {
   posters?: string[];
   itemCount?: number;
   likeCount?: number;
+  className?: string;
 }
 
 export default function ListPreviewCard({
@@ -22,9 +23,10 @@ export default function ListPreviewCard({
   posters = [],
   itemCount = 0,
   likeCount = 0,
+  className = '',
 }: Props) {
   return (
-    <Link href={`/list/${id}`} className="rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:border-white/25 transition-colors">
+    <Link href={`/list/${id}`} className={`rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:border-white/25 transition-colors ${className}`}>
       <div className="aspect-square rounded-lg overflow-hidden border border-white/10 bg-[#111] mb-3 grid grid-cols-2 grid-rows-2 gap-[1px]">
         {Array.from({ length: 4 }).map((_, idx) => {
           const posterPath = posters[idx];

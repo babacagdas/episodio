@@ -361,6 +361,7 @@ export default function Search() {
                             posters={list.posters}
                             itemCount={list.itemCount}
                             likeCount={list.likeCount}
+                            className="border-transparent bg-transparent p-2 hover:border-transparent md:border-white/10 md:bg-white/[0.03] md:p-4 md:hover:border-white/25"
                           />
                         </div>
                       ))}
