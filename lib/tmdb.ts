@@ -42,9 +42,15 @@ export interface Episode {
   air_date: string;
 }
 
+function getTmdbApiKey(): string {
+  return process.env.TMDB_API_KEY ?? process.env.NEXT_PUBLIC_TMDB_API_KEY ?? '';
+}
+
 export async function getShowDetail(id: string): Promise<ShowDetail> {
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) throw new Error('TMDB API key eksik');
   const res = await fetch(
-    `https://api.themoviedb.org/3/tv/${id}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=tr-TR`,
+    `https://api.themoviedb.org/3/tv/${id}?api_key=${apiKey}&language=tr-TR`,
     { next: { revalidate: 86400 } }
   );
   if (!res.ok) throw new Error('Dizi detayı alınamadı');
@@ -52,8 +58,10 @@ export async function getShowDetail(id: string): Promise<ShowDetail> {
 }
 
 export async function getSeasonEpisodes(showId: string, seasonNumber: number): Promise<Episode[]> {
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) return [];
   const res = await fetch(
-    `https://api.themoviedb.org/3/tv/${showId}/season/${seasonNumber}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=tr-TR`,
+    `https://api.themoviedb.org/3/tv/${showId}/season/${seasonNumber}?api_key=${apiKey}&language=tr-TR`,
     { next: { revalidate: 86400 } }
   );
   if (!res.ok) return [];
@@ -63,8 +71,10 @@ export async function getSeasonEpisodes(showId: string, seasonNumber: number): P
 
 export async function searchShows(query: string): Promise<Show[]> {
   if (!query.trim()) return [];
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) return [];
   const res = await fetch(
-    `https://api.themoviedb.org/3/search/tv?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=tr-TR&query=${encodeURIComponent(query)}`,
+    `https://api.themoviedb.org/3/search/tv?api_key=${apiKey}&language=tr-TR&query=${encodeURIComponent(query)}`,
     { cache: 'no-store' }
   );
   if (!res.ok) return [];
@@ -73,8 +83,10 @@ export async function searchShows(query: string): Promise<Show[]> {
 }
 
 export async function getSimilarShows(id: string): Promise<Show[]> {
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) return [];
   const res = await fetch(
-    `https://api.themoviedb.org/3/tv/${id}/similar?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=tr-TR`,
+    `https://api.themoviedb.org/3/tv/${id}/similar?api_key=${apiKey}&language=tr-TR`,
     { next: { revalidate: 86400 } }
   );
   if (!res.ok) return [];
@@ -83,11 +95,13 @@ export async function getSimilarShows(id: string): Promise<Show[]> {
 }
 
 export async function getTrendingShows(): Promise<Show[]> {
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) return [];
   const res = await fetch(
-    `https://api.themoviedb.org/3/trending/tv/week?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=tr-TR`,
+    `https://api.themoviedb.org/3/trending/tv/week?api_key=${apiKey}&language=tr-TR`,
     { next: { revalidate: 86400 } }
   );
-  if (!res.ok) throw new Error('TMDB verisi alınamadı');
+  if (!res.ok) return [];
   const data = await res.json();
   return data.results as Show[];
 }
