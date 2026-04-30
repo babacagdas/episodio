@@ -16,6 +16,7 @@ interface Props {
   currentUserId: string | null;
   followersCount: number;
   followingCount: number;
+  order?: 'followers-first' | 'following-first';
 }
 
 export default function FollowListsModal({
@@ -23,6 +24,7 @@ export default function FollowListsModal({
   currentUserId,
   followersCount,
   followingCount,
+  order = 'followers-first',
 }: Props) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<'followers' | 'following'>('followers');
@@ -101,14 +103,29 @@ export default function FollowListsModal({
 
   return (
     <>
-      <button onClick={() => openWithTab('followers')} className="text-center" type="button">
-        <span className="block text-2xl font-bold text-white">{followersCount}</span>
-        <span className="text-[11px] text-white/30 uppercase tracking-wider hover:text-white transition-colors">Takipçi</span>
-      </button>
-      <button onClick={() => openWithTab('following')} className="text-center" type="button">
-        <span className="block text-2xl font-bold text-white">{followingCount}</span>
-        <span className="text-[11px] text-white/30 uppercase tracking-wider hover:text-white transition-colors">Takip</span>
-      </button>
+      {order === 'following-first' ? (
+        <>
+          <button onClick={() => openWithTab('following')} className="text-center" type="button">
+            <span className="block text-2xl font-bold text-white">{followingCount}</span>
+            <span className="text-[11px] text-white/30 uppercase tracking-wider hover:text-white transition-colors">Takip</span>
+          </button>
+          <button onClick={() => openWithTab('followers')} className="text-center" type="button">
+            <span className="block text-2xl font-bold text-white">{followersCount}</span>
+            <span className="text-[11px] text-white/30 uppercase tracking-wider hover:text-white transition-colors">Takipçi</span>
+          </button>
+        </>
+      ) : (
+        <>
+          <button onClick={() => openWithTab('followers')} className="text-center" type="button">
+            <span className="block text-2xl font-bold text-white">{followersCount}</span>
+            <span className="text-[11px] text-white/30 uppercase tracking-wider hover:text-white transition-colors">Takipçi</span>
+          </button>
+          <button onClick={() => openWithTab('following')} className="text-center" type="button">
+            <span className="block text-2xl font-bold text-white">{followingCount}</span>
+            <span className="text-[11px] text-white/30 uppercase tracking-wider hover:text-white transition-colors">Takip</span>
+          </button>
+        </>
+      )}
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

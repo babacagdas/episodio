@@ -311,13 +311,26 @@ export default function ProfileContent() {
                 </button>
               )}
             </div>
+            {user && (
+              <div className="md:hidden w-full flex justify-center mt-2">
+                <div className="flex items-center gap-8">
+                  <FollowListsModal
+                    profileId={user.id}
+                    currentUserId={user.id}
+                    followersCount={followersCount}
+                    followingCount={followingCount}
+                    order="following-first"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* Stats */}
       <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-6">
-        <div className="grid grid-cols-3 sm:flex sm:flex-wrap sm:items-center gap-4 sm:gap-8">
+        <div className="grid grid-cols-3 gap-4 md:hidden">
           {[
             { val: watchlist.length, label: 'Listede' },
             { val: 0, label: 'İzlendi' },
@@ -328,17 +341,29 @@ export default function ProfileContent() {
               <span className="text-[10px] sm:text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
             </div>
           ))}
-          <div className="col-span-3 mt-2 sm:mt-0 sm:col-span-1 sm:hidden h-px bg-white/10" />
-          <div className="col-span-3 sm:col-span-1">
-            {user && (
-              <FollowListsModal
-                profileId={user.id}
-                currentUserId={user.id}
-                followersCount={followersCount}
-                followingCount={followingCount}
-              />
-            )}
-          </div>
+        </div>
+
+        <div className="hidden md:flex items-center gap-8">
+          {user && (
+            <FollowListsModal
+              profileId={user.id}
+              currentUserId={user.id}
+              followersCount={followersCount}
+              followingCount={followingCount}
+              order="following-first"
+            />
+          )}
+          <div className="w-px h-8 bg-white/10" />
+          {[
+            { val: 0, label: 'İzlendi' },
+            { val: watchlist.length, label: 'Listede' },
+            { val: 0, label: 'Yorum' },
+          ].map(({ val, label }) => (
+            <div key={label} className="text-center">
+              <span className="block text-2xl font-bold text-white">{val}</span>
+              <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
+            </div>
+          ))}
         </div>
       </section>
 
