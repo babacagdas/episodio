@@ -39,6 +39,8 @@ export default function ProfileContent() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const [watchedCount, setWatchedCount] = useState(0);
+  const [reviewCount, setReviewCount] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
@@ -49,7 +51,6 @@ export default function ProfileContent() {
       if (p) {
         setProfile(p);
       } else {
-        // İlk girişte profil oluştur
         const initial: Profile = {
           username: data.user.email?.split('@')[0] ?? '',
           full_name: data.user.user_metadata?.full_name ?? '',
@@ -60,12 +61,16 @@ export default function ProfileContent() {
         setProfile(initial);
       }
 
-      const [followersRes, followingRes] = await Promise.all([
+      const [followersRes, followingRes, watchedRes, reviewRes] = await Promise.all([
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', data.user.id),
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', data.user.id),
+        supabase.from('watch_status').select('*', { count: 'exact', head: true }).eq('user_id', data.user.id).eq('status', 'completed'),
+        supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('user_id', data.user.id),
       ]);
       setFollowersCount(followersRes.count ?? 0);
       setFollowingCount(followingRes.count ?? 0);
+      setWatchedCount(watchedRes.count ?? 0);
+      setReviewCount(reviewRes.count ?? 0);
     });
   }, []);
 
@@ -333,8 +338,8 @@ export default function ProfileContent() {
         <div className="grid grid-cols-3 gap-4 md:hidden">
           {[
             { val: watchlist.length, label: 'Listede' },
-            { val: 0, label: 'İzlendi' },
-            { val: 0, label: 'Yorum' },
+            { val: watchedCount, label: 'İzlendi' },
+            { val: reviewCount, label: 'Yorum' },
           ].map(({ val, label }) => (
             <div key={label} className="text-center">
               <span className="block text-lg sm:text-2xl font-bold text-white">{val}</span>
@@ -355,9 +360,9 @@ export default function ProfileContent() {
           )}
           <div className="w-px h-8 bg-white/10" />
           {[
-            { val: 0, label: 'İzlendi' },
+            { val: watchedCount, label: 'İzlendi' },
             { val: watchlist.length, label: 'Listede' },
-            { val: 0, label: 'Yorum' },
+            { val: reviewCount, label: 'Yorum' },
           ].map(({ val, label }) => (
             <div key={label} className="text-center">
               <span className="block text-2xl font-bold text-white">{val}</span>

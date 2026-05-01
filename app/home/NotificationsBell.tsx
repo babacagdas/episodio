@@ -115,70 +115,73 @@ export default function NotificationsBell() {
       </button>
 
       {open && (
-        <div className="fixed top-16 left-3 right-3 max-h-[calc(100dvh-6rem)] overflow-y-auto bg-[#141414] border border-white/10 rounded-2xl shadow-2xl p-3 z-[120] md:absolute md:top-auto md:left-auto md:right-0 md:mt-2 md:w-[340px] md:max-h-[420px]">
-          <div className="flex items-center justify-between px-2 py-1 mb-2">
-            <p className="text-sm font-semibold text-white">Bildirimler</p>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={markAllRead}
-                className="text-xs text-[#D4A017] hover:text-white transition-colors"
-              >
-                Tümünü okundu yap
-              </button>
+        <>
+          <div className="fixed inset-0 z-[119]" onClick={() => setOpen(false)} />
+          <div className="fixed top-16 left-3 right-3 max-h-[calc(100dvh-6rem)] overflow-y-auto bg-[#141414] border border-white/10 rounded-2xl shadow-2xl p-3 z-[120] md:absolute md:top-auto md:left-auto md:right-0 md:mt-2 md:w-[340px] md:max-h-[420px]">
+            <div className="flex items-center justify-between px-2 py-1 mb-2">
+              <p className="text-sm font-semibold text-white">Bildirimler</p>
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  onClick={markAllRead}
+                  className="text-xs text-[#D4A017] hover:text-white transition-colors"
+                >
+                  Tümünü okundu yap
+                </button>
+              )}
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center py-6">
+                <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              </div>
+            ) : items.length === 0 ? (
+              <div className="px-2 py-6 text-sm text-white/35 text-center">Henüz bildirimin yok.</div>
+            ) : (
+              <div className="space-y-2">
+                {items.map((item) => {
+                  const actorProfilePath =
+                    item.actor?.username
+                      ? `/u/${item.actor.username}`
+                      : item.actor_id
+                        ? `/u/${item.actor_id}`
+                        : null;
+                  const targetHref =
+                    item.type === 'follow'
+                      ? (actorProfilePath ?? item.link ?? '/home')
+                      : (item.link ?? actorProfilePath ?? '/home');
+                  const content = (
+                    <div className={`rounded-xl px-3 py-2 border ${item.is_read ? 'border-white/5 bg-white/[0.02]' : 'border-[#E50914]/30 bg-[#E50914]/10'}`}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full overflow-hidden bg-[#1A1A1A] border border-white/10 flex items-center justify-center shrink-0">
+                          {item.actor?.avatar_url ? (
+                            <img src={item.actor.avatar_url} alt={item.actor.full_name ?? item.actor.username ?? 'Kullanıcı'} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="material-symbols-outlined text-[15px] text-white/30">person</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-white/55 truncate">
+                          {item.actor?.full_name || item.actor?.username || 'Kullanıcı'}
+                        </p>
+                      </div>
+                      <p className="text-sm text-white/85 mt-1">{item.message}</p>
+                      <p className="text-[11px] text-white/35 mt-1">{formatTimeAgo(item.created_at)} önce</p>
+                    </div>
+                  );
+
+                  if (targetHref) {
+                    return (
+                      <Link key={item.id} href={targetHref} onClick={() => setOpen(false)}>
+                        {content}
+                      </Link>
+                    );
+                  }
+                  return <div key={item.id}>{content}</div>;
+                })}
+              </div>
             )}
           </div>
-
-          {loading ? (
-            <div className="flex justify-center py-6">
-              <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-            </div>
-          ) : items.length === 0 ? (
-            <div className="px-2 py-6 text-sm text-white/35 text-center">Henüz bildirimin yok.</div>
-          ) : (
-            <div className="space-y-2">
-              {items.map((item) => {
-                const actorProfilePath =
-                  item.actor?.username
-                    ? `/u/${item.actor.username}`
-                    : item.actor_id
-                      ? `/u/${item.actor_id}`
-                      : null;
-                const targetHref =
-                  item.type === 'follow'
-                    ? (actorProfilePath ?? item.link ?? '/home')
-                    : (item.link ?? actorProfilePath ?? '/home');
-                const content = (
-                  <div className={`rounded-xl px-3 py-2 border ${item.is_read ? 'border-white/5 bg-white/[0.02]' : 'border-[#E50914]/30 bg-[#E50914]/10'}`}>
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full overflow-hidden bg-[#1A1A1A] border border-white/10 flex items-center justify-center shrink-0">
-                        {item.actor?.avatar_url ? (
-                          <img src={item.actor.avatar_url} alt={item.actor.full_name ?? item.actor.username ?? 'Kullanıcı'} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="material-symbols-outlined text-[15px] text-white/30">person</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-white/55 truncate">
-                        {item.actor?.full_name || item.actor?.username || 'Kullanıcı'}
-                      </p>
-                    </div>
-                    <p className="text-sm text-white/85 mt-1">{item.message}</p>
-                    <p className="text-[11px] text-white/35 mt-1">{formatTimeAgo(item.created_at)} önce</p>
-                  </div>
-                );
-
-                if (targetHref) {
-                  return (
-                    <Link key={item.id} href={targetHref} onClick={() => setOpen(false)}>
-                      {content}
-                    </Link>
-                  );
-                }
-                return <div key={item.id}>{content}</div>;
-              })}
-            </div>
-          )}
-        </div>
+        </>
       )}
     </div>
   );
