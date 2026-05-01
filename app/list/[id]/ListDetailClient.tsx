@@ -203,13 +203,13 @@ export default function ListDetailClient({
             {message && <p className="text-xs text-[#D4A017] mt-3">{message}</p>}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <ShareListButton title={name} />
             <button
               type="button"
               onClick={toggleLike}
               disabled={likeLoading}
-              className={`px-4 py-2 rounded-full border text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+              className={`h-9 px-3 rounded-full border flex items-center gap-1.5 transition-colors ${
                 likedByMe
                   ? 'bg-[#E50914]/20 border-[#E50914]/60 text-[#FFB3B8]'
                   : 'bg-white/10 border-white/15 text-white hover:bg-white/20'
@@ -218,24 +218,29 @@ export default function ListDetailClient({
               <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: likedByMe ? "'FILL' 1" : "'FILL' 0" }}>
                 favorite
               </span>
-              {likesCount}
+              <span className="text-xs font-semibold">{likesCount}</span>
             </button>
             {isOwner && !editing && (
               <>
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="px-4 py-2 rounded-full bg-white/10 border border-white/15 text-white text-xs font-semibold hover:bg-white/20 transition-colors"
+                  className="w-9 h-9 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
+                  title="Adı Düzenle"
                 >
-                  Adı Düzenle
+                  <span className="material-symbols-outlined text-base">edit</span>
                 </button>
                 <button
                   type="button"
                   onClick={deleteList}
                   disabled={deleting}
-                  className="px-4 py-2 rounded-full bg-[#E50914]/20 border border-[#E50914]/50 text-[#FFB3B8] text-xs font-semibold hover:bg-[#E50914]/30 transition-colors disabled:opacity-50"
+                  className="w-9 h-9 rounded-full bg-[#E50914]/20 border border-[#E50914]/50 text-[#FFB3B8] flex items-center justify-center hover:bg-[#E50914]/30 transition-colors disabled:opacity-50"
+                  title="Listeyi Sil"
                 >
-                  {deleting ? 'Siliniyor...' : 'Listeyi Sil'}
+                  {deleting
+                    ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    : <span className="material-symbols-outlined text-base">delete</span>
+                  }
                 </button>
               </>
             )}
