@@ -98,34 +98,17 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     );
   }
 
-  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, reviewRes] = await Promise.all([
-    supabase
-      .from('watchlist')
-      .select('show_id, show_name, poster_path')
-      .eq('user_id', profile.id)
-      .order('added_at', { ascending: false })
-      .limit(24),
+  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, reviewRes, notesRes] = await Promise.all([
+    supabase.from('watchlist').select('show_id, show_name, poster_path').eq('user_id', profile.id).order('added_at', { ascending: false }).limit(24),
     supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profile.id),
     supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profile.id),
-    user
-      ? supabase
-          .from('follows')
-          .select('follower_id')
-          .eq('follower_id', user.id)
-          .eq('following_id', profile.id)
-          .maybeSingle()
-      : Promise.resolve({ data: null, error: null }),
-    supabase
-      .from('lists')
-      .select('id, name, description, visibility')
-      .eq('user_id', profile.id)
-      .eq('visibility', 'public')
-      .order('created_at', { ascending: false })
-      .limit(12),
+    user ? supabase.from('follows').select('follower_id').eq('follower_id', user.id).eq('following_id', profile.id).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    supabase.from('lists').select('id, name, description, visibility').eq('user_id', profile.id).eq('visibility', 'public').order('created_at', { ascending: false }).limit(12),
     supabase.from('list_items').select('list_id, poster_path'),
     supabase.from('list_likes').select('list_id'),
     supabase.from('watch_status').select('*', { count: 'exact', head: true }).eq('user_id', profile.id).eq('status', 'completed'),
     supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('user_id', profile.id),
+    supabase.from('show_notes').select('show_id, show_name, poster_path, content').eq('user_id', profile.id).eq('is_public', true).order('updated_at', { ascending: false }).limit(20),
   ]);
 
   const watchlist = (watchlistData ?? []) as WatchlistRow[];
@@ -146,6 +129,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     if (!postersByListId[row.list_id]) postersByListId[row.list_id] = [];
     if (row.poster_path && postersByListId[row.list_id].length < 4) postersByListId[row.list_id].push(row.poster_path);
   });
+  const publicNotes = (notesRes.data ?? []) as { show_id: number; show_name: string; poster_path: string | null; content: string }[];
   const likesByListId: Record<string, number> = {};
   (likesRes.data ?? []).forEach((row: { list_id: string }) => {
     if (!listIdSet.has(row.list_id)) return;
@@ -257,6 +241,28 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
             </div>
           )}
         </section>
+
+        {publicNotes.length > 0 && (
+          <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-2 mb-16">
+            <h2 className="text-white font-semibold mb-4">Notlar</h2>
+            <div className="space-y-3 max-w-2xl">
+              {publicNotes.map(note => (
+                <Link key={note.show_id} href={`/show/${note.show_id}`} className="flex gap-4 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 rounded-2xl p-4 transition-colors block">
+                  <div className="w-10 h-14 rounded-lg overflow-hidden bg-[#1A1A1A] shrink-0">
+                    {note.poster_path
+                      ? <img src={`https://image.tmdb.org/t/p/w92${note.poster_path}`} alt={note.show_name} className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-sm">movie</span></div>
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white truncate mb-1">{note.show_name}</p>
+                    <p className="text-sm text-white/55 line-clamp-2 leading-relaxed">{note.content}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       <BottomNav />
