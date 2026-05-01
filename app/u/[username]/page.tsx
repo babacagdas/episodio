@@ -167,7 +167,27 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
         </section>
 
         <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-6">
-          <div className="flex flex-wrap items-center gap-5 sm:gap-8">
+          {/* Mobil */}
+          <div className="grid grid-cols-3 gap-4 md:hidden">
+            {[
+              { val: watchedCount, label: 'İzlendi' },
+              { val: watchlist.length, label: 'Listede' },
+              { val: reviewCount, label: 'Yorum' },
+            ].map(({ val, label }) => (
+              <div key={label} className="text-center">
+                <span className="block text-lg sm:text-2xl font-bold text-white">{val}</span>
+                <span className="text-[10px] sm:text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
+              </div>
+            ))}
+          </div>
+          <div className="hidden md:flex items-center gap-8">
+            <FollowListsModal
+              profileId={profile.id}
+              currentUserId={user?.id ?? null}
+              followersCount={followers}
+              followingCount={following}
+            />
+            <div className="w-px h-8 bg-white/10" />
             {[
               { val: watchedCount, label: 'İzlendi' },
               { val: watchlist.length, label: 'Listede' },
@@ -178,6 +198,9 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                 <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
               </div>
             ))}
+          </div>
+          {/* Mobil takip */}
+          <div className="md:hidden mt-4">
             <FollowListsModal
               profileId={profile.id}
               currentUserId={user?.id ?? null}
