@@ -153,7 +153,7 @@ export default function ListDetailClient({
   return (
     <>
       <section className="mb-8">
-        <div className="flex items-start justify-between gap-6">
+        <div className="flex flex-col gap-3">
           <div className="flex-1">
             <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-2">
               {visibility === 'public' ? 'Public Liste' : 'Private Liste'}
@@ -194,7 +194,7 @@ export default function ListDetailClient({
               </div>
             ) : (
               <>
-                <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-2">{name}</h1>
+                <h1 className="text-2xl md:text-4xl font-bold text-white tracking-tight mb-2">{name}</h1>
                 {description && <p className="text-sm text-white/55 max-w-3xl">{description}</p>}
                 <p className="text-xs text-white/35 mt-3">{itemCountText}</p>
               </>
@@ -203,21 +203,19 @@ export default function ListDetailClient({
             {message && <p className="text-xs text-[#D4A017] mt-3">{message}</p>}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2">
             <ShareListButton title={name} />
             <button
               type="button"
               onClick={toggleLike}
               disabled={likeLoading}
-              className={`h-9 px-3 rounded-full border flex items-center gap-1.5 transition-colors ${
+              className={`h-8 px-2.5 rounded-full border flex items-center gap-1 transition-colors ${
                 likedByMe
                   ? 'bg-[#E50914]/20 border-[#E50914]/60 text-[#FFB3B8]'
                   : 'bg-white/10 border-white/15 text-white hover:bg-white/20'
               } disabled:opacity-50`}
             >
-              <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: likedByMe ? "'FILL' 1" : "'FILL' 0" }}>
-                favorite
-              </span>
+              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: likedByMe ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
               <span className="text-xs font-semibold">{likesCount}</span>
             </button>
             {isOwner && !editing && (
@@ -225,21 +223,21 @@ export default function ListDetailClient({
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="w-9 h-9 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
-                  title="Adı Düzenle"
+                  className="w-8 h-8 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
+                  title="Düzenle"
                 >
-                  <span className="material-symbols-outlined text-base">edit</span>
+                  <span className="material-symbols-outlined text-sm">edit</span>
                 </button>
                 <button
                   type="button"
                   onClick={deleteList}
                   disabled={deleting}
-                  className="w-9 h-9 rounded-full bg-[#E50914]/20 border border-[#E50914]/50 text-[#FFB3B8] flex items-center justify-center hover:bg-[#E50914]/30 transition-colors disabled:opacity-50"
-                  title="Listeyi Sil"
+                  className="w-8 h-8 rounded-full bg-[#E50914]/20 border border-[#E50914]/50 text-[#FFB3B8] flex items-center justify-center hover:bg-[#E50914]/30 transition-colors disabled:opacity-50"
+                  title="Sil"
                 >
                   {deleting
                     ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    : <span className="material-symbols-outlined text-base">delete</span>
+                    : <span className="material-symbols-outlined text-sm">delete</span>
                   }
                 </button>
               </>
