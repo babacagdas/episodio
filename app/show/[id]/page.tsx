@@ -3,6 +3,7 @@ import Sidebar from '@/components/Sidebar';
 import { BottomNav } from '@/components/Nav';
 import { getShowDetail, getSeasonEpisodes, getSimilarShows, type Episode } from '@/lib/tmdb';
 import WatchlistButton from './WatchlistButton';
+import WatchStatusButton from './WatchStatusButton';
 import ShowTabs from './ShowTabs';
 import AddToListButton from './AddToListButton';
 
@@ -69,10 +70,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <button className="px-6 py-2.5 bg-[#E50914] text-white font-semibold text-sm rounded-full hover:bg-red-700 transition-colors flex items-center gap-2 shadow-[0_0_20px_rgba(229,9,20,0.4)]">
-                <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
-                İzliyorum
-              </button>
+              <WatchStatusButton showId={show.id} showName={show.name} posterPath={show.poster_path} />
               <WatchlistButton show={{
                 id: show.id,
                 name: show.name,

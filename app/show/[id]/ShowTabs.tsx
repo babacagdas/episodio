@@ -69,18 +69,13 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
   async function submitReview() {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    console.log('user:', user, 'content:', myContent, 'rating:', myRating);
-    if (!user || !myContent.trim() || myRating === 0) {
-      console.log('guard hit - user:', !!user, 'content:', !!myContent.trim(), 'rating:', myRating);
-      return;
-    }
+    if (!user || !myContent.trim() || myRating === 0) return;
     setSubmitting(true);
     const { data, error } = await supabase
       .from('reviews')
       .upsert({ user_id: user.id, show_id: showId, rating: myRating, content: myContent.trim() }, { onConflict: 'user_id,show_id' })
       .select('*, profiles(username, full_name, avatar_url)')
       .single();
-    console.log('upsert result:', data, error);
     if (!error && data) {
       setReviews(prev => [data, ...prev.filter(r => r.user_id !== user.id)]);
       setMyContent('');
