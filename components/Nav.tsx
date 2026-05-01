@@ -4,10 +4,10 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 
 const navItems = [
-  { href: '/home', icon: 'home', label: 'Home' },
-  { href: '/search', icon: 'search', label: 'Search' },
-  { href: '/watchlist', icon: 'bookmark', label: 'Watchlist' },
-  { href: '/profile', icon: 'person', label: 'Profile' },
+  { href: '/home', icon: 'home', label: 'Ana Sayfa' },
+  { href: '/search', icon: 'search', label: 'Keşfet' },
+  { href: '/watchlist', icon: 'bookmark', label: 'Listem' },
+  { href: '/profile', icon: 'person', label: 'Profil' },
 ];
 
 export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {

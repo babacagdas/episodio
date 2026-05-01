@@ -5,10 +5,10 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 const navItems = [
-  { href: '/home', icon: 'home', label: 'Home' },
-  { href: '/search', icon: 'search', label: 'Search' },
-  { href: '/watchlist', icon: 'bookmark', label: 'Watchlist' },
-  { href: '/profile', icon: 'person', label: 'Profile' },
+  { href: '/home', icon: 'home', label: 'Ana Sayfa' },
+  { href: '/search', icon: 'search', label: 'Keşfet' },
+  { href: '/watchlist', icon: 'bookmark', label: 'Listem' },
+  { href: '/profile', icon: 'person', label: 'Profil' },
 ];
 
 export default function Sidebar() {

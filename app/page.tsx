@@ -33,13 +33,13 @@ export default function Splash() {
             href="/signin"
             className="w-full bg-primary-container text-white font-label-bold text-label-bold py-sm px-md rounded-full shadow-[0_4px_20px_rgba(229,9,20,0.3)] hover:bg-opacity-90 transition-all flex items-center justify-center gap-base"
           >
-            <span>Sign In</span>
+            <span>Giriş Yap</span>
           </Link>
           <Link
             href="/signup"
             className="w-full bg-transparent text-white border border-white/20 font-label-bold text-label-bold py-sm px-md rounded-full hover:bg-white/5 transition-all flex items-center justify-center gap-base backdrop-blur-sm"
           >
-            <span>Create Account</span>
+            <span>Hesap Oluştur</span>
           </Link>
         </div>
       </main>
