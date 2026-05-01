@@ -23,7 +23,7 @@ export default function ProfileContent() {
   const [profile, setProfile] = useState<Profile>({ username: '', full_name: '', bio: '', avatar_url: '' });
   const { watchlist, loading } = useWatchlist();
   const { lists, likedLists, countsByListId, postersByListId, likesByListId, createList, loading: listsLoading, error: listsError } = useLists();
-  const [activeTab, setActiveTab] = useState<'watchlist' | 'watched' | 'lists'>('watchlist');
+  const [activeTab, setActiveTab] = useState<'watchlist' | 'watched' | 'lists' | 'notes'>('watchlist');
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<Profile>({ username: '', full_name: '', bio: '', avatar_url: '' });
   const [saving, setSaving] = useState(false);
@@ -41,6 +41,8 @@ export default function ProfileContent() {
   const [followingCount, setFollowingCount] = useState(0);
   const [watchedCount, setWatchedCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
+  const [notes, setNotes] = useState<{ show_id: number; show_name: string; poster_path: string | null; content: string; is_public: boolean }[]>([]);
+  const [notesLoaded, setNotesLoaded] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -71,6 +73,15 @@ export default function ProfileContent() {
       setFollowingCount(followingRes.count ?? 0);
       setWatchedCount(watchedRes.count ?? 0);
       setReviewCount(reviewRes.count ?? 0);
+
+      // Notları yükle
+      const { data: notesData } = await supabase
+        .from('show_notes')
+        .select('show_id, show_name, poster_path, content, is_public')
+        .eq('user_id', data.user.id)
+        .order('updated_at', { ascending: false });
+      setNotes(notesData ?? []);
+      setNotesLoaded(true);
     });
   }, []);
 
@@ -375,7 +386,7 @@ export default function ProfileContent() {
       {/* Tabs */}
       <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-8 border-b border-white/10">
         <nav className="flex gap-8">
-          {(['watchlist', 'watched', 'lists'] as const).map((tab) => (
+          {(['watchlist', 'watched', 'lists', 'notes'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -383,7 +394,7 @@ export default function ProfileContent() {
                 activeTab === tab ? 'text-white border-b-2 border-[#E50914]' : 'text-white/30 hover:text-white'
               }`}
             >
-              {tab === 'watchlist' ? 'İzleme Listesi' : tab === 'watched' ? 'İzlediklerim' : 'Listelerim'}
+              {tab === 'watchlist' ? 'İzleme Listesi' : tab === 'watched' ? 'İzlediklerim' : tab === 'lists' ? 'Listelerim' : 'Notlarım'}
             </button>
           ))}
         </nav>
@@ -478,6 +489,35 @@ export default function ProfileContent() {
               </div>
             )}
           </>
+        ) : activeTab === 'notes' ? (
+          !notesLoaded ? (
+            <div className="flex justify-center py-12"><span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>
+          ) : notes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-white/20">
+              <span className="material-symbols-outlined text-5xl mb-3">note</span>
+              <p className="text-sm">Henüz not eklemedin</p>
+            </div>
+          ) : (
+            <div className="space-y-4 max-w-2xl">
+              {notes.map((note) => (
+                <Link key={note.show_id} href={`/show/${note.show_id}`} className="flex gap-4 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 rounded-2xl p-4 transition-colors block">
+                  <div className="w-12 h-16 rounded-lg overflow-hidden bg-[#1A1A1A] shrink-0">
+                    {note.poster_path
+                      ? <img src={`https://image.tmdb.org/t/p/w92${note.poster_path}`} alt={note.show_name} className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-sm">movie</span></div>
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-sm font-semibold text-white truncate">{note.show_name}</p>
+                      <span className="text-[10px] text-white/25 shrink-0">{note.is_public ? '🌐 Herkese açık' : '🔒 Gizli'}</span>
+                    </div>
+                    <p className="text-sm text-white/55 line-clamp-3 leading-relaxed">{note.content}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )
         ) : loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
