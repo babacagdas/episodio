@@ -52,13 +52,14 @@ export default function ProfileContent() {
       setUser(data.user);
       const { data: p } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
       if (p) {
-        setProfile(p);
+        setProfile({ ...p, activity_visible: p.activity_visible ?? true });
       } else {
         const initial: Profile = {
           username: data.user.email?.split('@')[0] ?? '',
           full_name: data.user.user_metadata?.full_name ?? '',
           bio: '',
           avatar_url: data.user.user_metadata?.avatar_url ?? '',
+          activity_visible: true,
         };
         await supabase.from('profiles').insert({ id: data.user.id, ...initial });
         setProfile(initial);
