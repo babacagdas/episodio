@@ -322,29 +322,6 @@ export default function Search() {
               {!query.trim() && (
                 <div>
                   <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">
-                    Sosyal Keşif
-                  </p>
-                  {suggestedProfiles.length === 0 ? (
-                    <p className="text-sm text-white/30">Henüz keşfedilecek başka profil yok.</p>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-3xl">
-                      {suggestedProfiles.map((profile) => (
-                        <ProfileCard
-                          key={profile.id}
-                          profile={profile}
-                          isFollowing={!!followingMap[profile.id]}
-                          canFollow={profile.id !== currentUserId}
-                          onToggleFollow={toggleFollow}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {!query.trim() && (
-                <div>
-                  <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">
                     Bu Hafta Popüler Listeler
                   </p>
                   {popularLists.length === 0 ? (
