@@ -16,16 +16,17 @@ interface Profile {
   full_name: string;
   bio: string;
   avatar_url: string;
+  activity_visible: boolean;
 }
 
 export default function ProfileContent() {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile>({ username: '', full_name: '', bio: '', avatar_url: '' });
+  const [profile, setProfile] = useState<Profile>({ username: '', full_name: '', bio: '', avatar_url: '', activity_visible: true });
   const { watchlist, loading } = useWatchlist();
   const { lists, likedLists, countsByListId, postersByListId, likesByListId, createList, loading: listsLoading, error: listsError } = useLists();
   const [activeTab, setActiveTab] = useState<'watchlist' | 'watched' | 'lists' | 'notes'>('watchlist');
   const [editOpen, setEditOpen] = useState(false);
-  const [form, setForm] = useState<Profile>({ username: '', full_name: '', bio: '', avatar_url: '' });
+  const [form, setForm] = useState<Profile>({ username: '', full_name: '', bio: '', avatar_url: '', activity_visible: true });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [listModalOpen, setListModalOpen] = useState(false);
@@ -221,6 +222,23 @@ export default function ProfileContent() {
                   value={form.bio}
                   onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
                 />
+              </div>
+              <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                <div>
+                  <p className="text-sm text-white font-medium">Aktivite Akışı</p>
+                  <p className="text-xs text-white/35 mt-0.5">Takipçilerin ne yaptığını görebilsin</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, activity_visible: !f.activity_visible }))}
+                  className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${
+                    form.activity_visible ? 'bg-[#E50914]' : 'bg-white/20'
+                  }`}
+                >
+                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                    form.activity_visible ? 'translate-x-5' : 'translate-x-0.5'
+                  }`} />
+                </button>
               </div>
             </div>
 
