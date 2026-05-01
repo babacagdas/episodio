@@ -98,7 +98,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     );
   }
 
-  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes] = await Promise.all([
+  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, reviewRes] = await Promise.all([
     supabase
       .from('watchlist')
       .select('show_id, show_name, poster_path')
@@ -122,17 +122,17 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
       .eq('visibility', 'public')
       .order('created_at', { ascending: false })
       .limit(12),
-    supabase
-      .from('list_items')
-      .select('list_id, poster_path'),
-    supabase
-      .from('list_likes')
-      .select('list_id'),
+    supabase.from('list_items').select('list_id, poster_path'),
+    supabase.from('list_likes').select('list_id'),
+    supabase.from('watch_status').select('*', { count: 'exact', head: true }).eq('user_id', profile.id).eq('status', 'completed'),
+    supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('user_id', profile.id),
   ]);
 
   const watchlist = (watchlistData ?? []) as WatchlistRow[];
   const followers = followersRes.count ?? 0;
   const following = followingRes.count ?? 0;
+  const watchedCount = watchedRes.count ?? 0;
+  const reviewCount = reviewRes.count ?? 0;
   const isOwnProfile = user?.id === profile.id;
   const isFollowing = !!relationRes.data;
   const displayName = profile.full_name || profile.username || 'Kullanıcı';
@@ -184,10 +184,16 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
 
         <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-6">
           <div className="flex flex-wrap items-center gap-5 sm:gap-8">
-            <div className="text-center">
-              <span className="block text-2xl font-bold text-white">{watchlist.length}</span>
-              <span className="text-[11px] text-white/30 uppercase tracking-wider">Listede</span>
-            </div>
+            {[
+              { val: watchedCount, label: 'İzlendi' },
+              { val: watchlist.length, label: 'Listede' },
+              { val: reviewCount, label: 'Yorum' },
+            ].map(({ val, label }) => (
+              <div key={label} className="text-center">
+                <span className="block text-2xl font-bold text-white">{val}</span>
+                <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
+              </div>
+            ))}
             <FollowListsModal
               profileId={profile.id}
               currentUserId={user?.id ?? null}
