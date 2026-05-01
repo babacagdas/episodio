@@ -26,16 +26,16 @@ export default function ListPreviewCard({
   className = '',
 }: Props) {
   return (
-    <Link href={`/list/${id}`} className={`rounded-xl border border-white/10 bg-white/[0.03] p-4 hover:border-white/25 transition-colors ${className}`}>
-      <div className="aspect-square rounded-lg overflow-hidden border border-white/10 bg-[#111] mb-3 grid grid-cols-2 grid-rows-2 gap-[1px]">
+    <Link href={`/list/${id}`} className={`rounded-xl border border-white/10 bg-white/[0.03] p-3 hover:border-white/25 transition-colors block ${className}`}>
+      <div className="flex gap-1 mb-3">
         {Array.from({ length: 4 }).map((_, idx) => {
           const posterPath = posters[idx];
           const poster = posterPath ? `${POSTER_BASE}${posterPath}` : null;
           return (
-            <div key={idx} className="bg-[#1A1A1A]">
+            <div key={idx} className="flex-1 aspect-[2/3] rounded-md overflow-hidden bg-[#1A1A1A] border border-white/10">
               {poster
-                ? <img src={poster} alt={name} className="w-full h-full object-cover" />
-                : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-base">movie</span></div>
+                ? <img src={poster} alt="" className="w-full h-full object-cover" />
+                : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-sm">movie</span></div>
               }
             </div>
           );

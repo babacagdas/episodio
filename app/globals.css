@@ -9,7 +9,7 @@
   body {
     background-color: #0A0A0A;
     color: #ffdad5;
-    min-height: max(884px, 100dvh);
+    min-height: 100dvh;
     font-family: 'Poppins', sans-serif;
   }
 }
