@@ -44,6 +44,8 @@ export default function ProfileContent() {
   const [reviewCount, setReviewCount] = useState(0);
   const [notes, setNotes] = useState<{ show_id: number; show_name: string; poster_path: string | null; content: string; is_public: boolean }[]>([]);
   const [notesLoaded, setNotesLoaded] = useState(false);
+  const [watchedShows, setWatchedShows] = useState<{ show_id: number; show_name: string; poster_path: string | null }[]>([]);
+  const [watchedLoading, setWatchedLoading] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -84,6 +86,15 @@ export default function ProfileContent() {
         .order('updated_at', { ascending: false });
       setNotes(notesData ?? []);
       setNotesLoaded(true);
+
+      // İzlediklerim
+      const { data: watchedData } = await supabase
+        .from('watch_status')
+        .select('show_id, show_name, poster_path')
+        .eq('user_id', data.user.id)
+        .eq('status', 'completed')
+        .order('updated_at', { ascending: false });
+      setWatchedShows(watchedData ?? []);
     });
   }, []);
 
@@ -508,6 +519,39 @@ export default function ProfileContent() {
               </div>
             )}
           </>
+        ) : activeTab === 'watched' ? (
+          watchedLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+            </div>
+          ) : watchedShows.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-white/20">
+              <span className="material-symbols-outlined text-5xl mb-3">check_circle</span>
+              <p className="text-sm">Henüz bitirdiğin dizi yok</p>
+              <Link href="/search" className="mt-4 text-xs text-[#E50914] hover:text-white transition-colors">Dizi keşfet →</Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {watchedShows.map((show) => {
+                const poster = show.poster_path ? `${POSTER_BASE}${show.poster_path}` : null;
+                return (
+                  <Link key={show.show_id} href={`/show/${show.show_id}`} className="relative aspect-[2/3] rounded-xl overflow-hidden bg-[#141414] border border-white/5 group hover:border-white/20 hover:scale-[1.02] transition-all duration-300 block">
+                    {poster
+                      ? <img alt={show.show_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={poster} />
+                      : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-4xl">movie</span></div>
+                    }
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity" />
+                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-600 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-white text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>
+                    </div>
+                    <div className="absolute bottom-0 left-0 w-full p-3">
+                      <h4 className="text-xs font-semibold text-white truncate">{show.show_name}</h4>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )
         ) : activeTab === 'notes' ? (
           !notesLoaded ? (
             <div className="flex justify-center py-12"><span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>

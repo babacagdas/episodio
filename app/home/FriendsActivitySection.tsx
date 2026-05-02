@@ -91,6 +91,20 @@ export default function FriendsActivitySection() {
     const showNameMap: Record<number, { name: string; poster: string | null }> = {};
     (statusRes.data ?? []).forEach((s: any) => { showNameMap[s.show_id] = { name: s.show_name, poster: s.poster_path }; });
 
+    // Review'lardaki show_id'ler için watchlist'ten isim al
+    const reviewShowIds = (reviewsRes.data ?? []).map((r: any) => r.show_id);
+    const missingIds = reviewShowIds.filter((id: number) => !showNameMap[id]);
+    if (missingIds.length > 0) {
+      const { data: wlRows } = await supabase
+        .from('watchlist')
+        .select('show_id, show_name, poster_path')
+        .in('show_id', missingIds)
+        .limit(50);
+      (wlRows ?? []).forEach((w: any) => {
+        if (!showNameMap[w.show_id]) showNameMap[w.show_id] = { name: w.show_name, poster: w.poster_path };
+      });
+    }
+
     const reviewItems: ActivityItem[] = (reviewsRes.data ?? []).map((r: any) => ({
       id: `review-${r.id}`,
       type: 'review',

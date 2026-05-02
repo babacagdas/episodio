@@ -163,15 +163,27 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                 </div>
               )}
             </div>
+            {/* Mobilde takip/takipçi, follow butonunun hemen altında */}
+            <div className="md:hidden w-full flex justify-center mt-2">
+              <div className="flex items-center gap-8">
+                <FollowListsModal
+                  profileId={profile.id}
+                  currentUserId={user?.id ?? null}
+                  followersCount={followers}
+                  followingCount={following}
+                  order="following-first"
+                />
+              </div>
+            </div>
           </div>
         </section>
 
         <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-6">
-          {/* Mobil */}
+          {/* Mobil: Listede/İzlendi/Yorum (profilimle aynı) */}
           <div className="grid grid-cols-3 gap-4 md:hidden">
             {[
-              { val: watchedCount, label: 'İzlendi' },
               { val: watchlist.length, label: 'Listede' },
+              { val: watchedCount, label: 'İzlendi' },
               { val: reviewCount, label: 'Yorum' },
             ].map(({ val, label }) => (
               <div key={label} className="text-center">
@@ -186,6 +198,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
               currentUserId={user?.id ?? null}
               followersCount={followers}
               followingCount={following}
+              order="following-first"
             />
             <div className="w-px h-8 bg-white/10" />
             {[
@@ -198,15 +211,6 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                 <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
               </div>
             ))}
-          </div>
-          {/* Mobil takip */}
-          <div className="md:hidden mt-4">
-            <FollowListsModal
-              profileId={profile.id}
-              currentUserId={user?.id ?? null}
-              followersCount={followers}
-              followingCount={following}
-            />
           </div>
         </section>
 

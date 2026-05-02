@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { MobileHeader, BottomNav } from '@/components/Nav';
@@ -181,28 +181,31 @@ export default function Search() {
     });
   }, []);
 
-  const handleSearch = useCallback(async (q: string) => {
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSearch = useCallback((q: string) => {
     setQuery(q);
     if (!q.trim()) {
       setResults([]);
       setProfiles([]);
       return;
     }
-
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     setLoading(true);
-    try {
-      const [showRes, profileRes] = await Promise.all([
-        fetch(`/api/search?q=${encodeURIComponent(q)}`),
-        fetch(`/api/profiles/search?q=${encodeURIComponent(q)}`),
-      ]);
-
-      const shows: Show[] = await showRes.json();
-      const profileResults: UserSearchProfile[] = await profileRes.json();
-      setResults(shows);
-      setProfiles(profileResults);
-    } finally {
-      setLoading(false);
-    }
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const [showRes, profileRes] = await Promise.all([
+          fetch(`/api/search?q=${encodeURIComponent(q)}`),
+          fetch(`/api/profiles/search?q=${encodeURIComponent(q)}`),
+        ]);
+        const shows: Show[] = await showRes.json();
+        const profileResults: UserSearchProfile[] = await profileRes.json();
+        setResults(shows);
+        setProfiles(profileResults);
+      } finally {
+        setLoading(false);
+      }
+    }, 350);
   }, []);
 
   const toggleFollow = useCallback(async (profile: UserSearchProfile) => {
@@ -250,11 +253,11 @@ export default function Search() {
   const displayed = query.trim() ? results : trending;
 
   return (
-    <div className="font-body-md min-h-screen antialiased flex flex-col pb-24 md:pb-0">
+    <div className="font-body-md min-h-screen antialiased flex flex-col pb-24 md:pb-0 overflow-x-hidden">
       <MobileHeader />
       <Sidebar />
 
-      <main className="md:ml-[240px] w-full px-6 md:px-12 pt-8 pb-24 flex flex-col gap-10">
+      <main className="md:ml-[240px] md:w-[calc(100%-240px)] px-6 md:px-12 pt-8 pb-24 flex flex-col gap-10 overflow-x-hidden">
 
         {/* Title */}
         <div>
