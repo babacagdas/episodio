@@ -7,9 +7,9 @@ import { MobileHeader, BottomNav } from '@/components/Nav';
 import type { Show } from '@/lib/tmdb';
 import { createClient } from '@/lib/supabase/client';
 import ListPreviewCard from '@/components/ListPreviewCard';
+import DiscoverFilterPanel, { type AppliedFilters } from './DiscoverFilterPanel';
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
-const GENRES = ['Drama', 'Komedi', 'Gerilim', 'Bilim Kurgu', 'Türk Dizisi', 'Kore Dizisi', 'Belgesel', 'Suç'];
 
 function ShowCard({ show }: { show: Show }) {
   const poster = show.poster_path ? `${POSTER_BASE}${show.poster_path}` : null;
@@ -102,6 +102,12 @@ export default function Search() {
   const [popularLists, setPopularLists] = useState<PopularList[]>([]);
   const [trending, setTrending] = useState<Show[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [filterApplying, setFilterApplying] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<AppliedFilters | null>(null);
+  const [filteredShows, setFilteredShows] = useState<Show[]>([]);
+  const [filterError, setFilterError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`/api/trending`)
@@ -208,6 +214,43 @@ export default function Search() {
     }, 350);
   }, []);
 
+  const applyDiscoverFilters = useCallback(async (f: AppliedFilters) => {
+    setFilterApplying(true);
+    setFilterError(null);
+    try {
+      const qs = new URLSearchParams();
+      if (f.category.kind === 'genre') qs.set('genreId', String(f.category.genreId));
+      else qs.set('originCountry', f.category.originCountry);
+      if (f.year) qs.set('year', String(f.year));
+      const res = await fetch(`/api/shows/filter?${qs.toString()}`);
+      const data: unknown = await res.json().catch(() => null);
+      if (!res.ok) {
+        const msg = data && typeof data === 'object' && data !== null && 'error' in data && typeof (data as { error: unknown }).error === 'string'
+          ? (data as { error: string }).error
+          : 'Filtre uygulanamadı';
+        setFilterError(msg);
+        return;
+      }
+      if (!Array.isArray(data)) {
+        setFilterError('Beklenmeyen yanıt');
+        return;
+      }
+      setFilteredShows(data as Show[]);
+      setActiveFilters(f);
+      setFilterPanelOpen(false);
+    } catch {
+      setFilterError('Bağlantı hatası');
+    } finally {
+      setFilterApplying(false);
+    }
+  }, []);
+
+  const clearDiscoverFilter = useCallback(() => {
+    setActiveFilters(null);
+    setFilteredShows([]);
+    setFilterError(null);
+  }, []);
+
   const toggleFollow = useCallback(async (profile: UserSearchProfile) => {
     if (!currentUserId) {
       window.location.href = '/signin';
@@ -250,7 +293,8 @@ export default function Search() {
     }
   }, [currentUserId, followingMap]);
 
-  const displayed = query.trim() ? results : trending;
+  const displayed = query.trim() ? results : (activeFilters ? filteredShows : trending);
+  const discoverShowsLabel = query.trim() ? 'Diziler' : activeFilters ? 'Filtreye uygun diziler' : 'Trend Diziler';
 
   return (
     <div className="font-body-md min-h-screen antialiased flex flex-col pb-24 md:pb-0 overflow-x-hidden">
@@ -264,32 +308,59 @@ export default function Search() {
           <h1 className="text-2xl font-bold text-white tracking-tight">Keşfet</h1>
         </div>
 
-        {/* Search Bar */}
-        <div className="w-full max-w-2xl">
-          <div className="flex items-center gap-3 px-1 pb-2 border-b-2 border-[#E50914]">
-            <span className="material-symbols-outlined text-white/40 text-xl">search</span>
-            <input
-              className="flex-1 bg-transparent text-white text-sm placeholder:text-white/30 focus:outline-none"
-              placeholder="Dizi, film veya tür ara..."
-              type="text"
-              value={query}
-              onChange={e => handleSearch(e.target.value)}
-            />
-            {query && (
-              <button onClick={() => handleSearch('')} className="text-white/30 hover:text-white transition-colors">
-                <span className="material-symbols-outlined text-xl">close</span>
-              </button>
-            )}
+        {/* Search + Filtre */}
+        <div className="w-full max-w-4xl flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
+          <div className="flex-1 min-w-0 max-w-2xl">
+            <div className="flex items-center gap-3 px-1 pb-2 border-b-2 border-[#E50914]">
+              <span className="material-symbols-outlined text-white/40 text-xl shrink-0">search</span>
+              <input
+                className="flex-1 min-w-0 bg-transparent text-white text-sm placeholder:text-white/30 focus:outline-none"
+                placeholder="Dizi, film veya tür ara..."
+                type="text"
+                value={query}
+                onChange={e => handleSearch(e.target.value)}
+              />
+              {query && (
+                <button type="button" onClick={() => handleSearch('')} className="text-white/30 hover:text-white transition-colors shrink-0">
+                  <span className="material-symbols-outlined text-xl">close</span>
+                </button>
+              )}
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setFilterPanelOpen(true)}
+            className="shrink-0 self-end inline-flex flex-col items-center gap-1.5 text-left group"
+          >
+            <span className="text-sm font-semibold text-white tracking-tight group-hover:text-white/90">Filtre</span>
+            <span className="h-[2px] w-full min-w-[3rem] rounded-full bg-[#E50914]" />
+          </button>
         </div>
+        {filterError && (
+          <p className="text-xs text-[#E50914] max-w-4xl -mt-4">{filterError}</p>
+        )}
 
         {/* Results / Trending */}
         <div>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
             <p className="text-xs text-white/30 uppercase tracking-widest font-semibold">
-              {query.trim() ? `"${query}" sonuçları` : 'Trend'}
+              {query.trim() ? `"${query}" sonuçları` : activeFilters ? 'Filtreye göre' : 'Trend'}
             </p>
-            {loading && <span className="text-xs text-white/30 animate-pulse">Aranıyor...</span>}
+            <div className="flex items-center gap-3">
+              {activeFilters && !query.trim() && (
+                <button
+                  type="button"
+                  onClick={clearDiscoverFilter}
+                  className="text-xs font-semibold text-white/45 hover:text-white transition-colors uppercase tracking-wide"
+                >
+                  Filtreyi sıfırla
+                </button>
+              )}
+              {loading && <span className="text-xs text-white/30 animate-pulse">Aranıyor...</span>}
+              {filterApplying && !query.trim() && (
+                <span className="text-xs text-white/30 animate-pulse">Filtreleniyor…</span>
+              )}
+            </div>
           </div>
 
           {!loading && query.trim() && results.length === 0 && profiles.length === 0 ? (
@@ -350,17 +421,31 @@ export default function Search() {
 
               <div>
                 <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">
-                  {query.trim() ? 'Diziler' : 'Trend Diziler'}
+                  {discoverShowsLabel}
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                  {displayed.map((show) => <ShowCard key={show.id} show={show} />)}
-                </div>
+                {activeFilters && !query.trim() && !filterApplying && displayed.length === 0 ? (
+                  <p className="text-sm text-white/35 py-12 text-center border border-white/10 rounded-xl">
+                    Bu filtreyle eşleşen dizi bulunamadı. Filtreyi veya yılı değiştirmeyi dene.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                    {displayed.map((show) => <ShowCard key={show.id} show={show} />)}
+                  </div>
+                )}
               </div>
             </div>
           )}
         </div>
 
       </main>
+
+      <DiscoverFilterPanel
+        open={filterPanelOpen}
+        onClose={() => setFilterPanelOpen(false)}
+        onApply={applyDiscoverFilters}
+        initial={activeFilters}
+        busy={filterApplying}
+      />
 
       <BottomNav />
     </div>
