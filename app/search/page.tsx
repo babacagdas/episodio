@@ -331,7 +331,7 @@ export default function Search() {
                     <p className="text-sm text-white/30">Bu hafta henüz popüler liste yok.</p>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {popularLists.map((list) => (
+                      {popularLists.slice(0, 8).map((list) => (
                         <ListPreviewCard
                           key={list.id}
                           id={list.id}
