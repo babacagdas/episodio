@@ -39,6 +39,7 @@ export default function FriendsActivitySection() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const loadActivities = useCallback(async () => {
     setLoading(true);
@@ -160,7 +161,7 @@ export default function FriendsActivitySection() {
         </div>
       ) : (
         <div className="flex flex-col gap-3 max-w-2xl">
-          {activities.map(activity => {
+          {(showAll ? activities : activities.slice(0, 5)).map(activity => {
             const name = activity.profile?.full_name || activity.profile?.username || 'Kullanıcı';
             const username = activity.profile?.username;
             const poster = activity.poster_path ? `${POSTER_BASE}${activity.poster_path}` : null;
@@ -212,6 +213,17 @@ export default function FriendsActivitySection() {
               </div>
             );
           })}
+
+          {!showAll && activities.length > 5 && (
+            <button
+              type="button"
+              onClick={() => setShowAll(true)}
+              className="self-start text-sm text-white/70 hover:text-white transition-colors"
+            >
+              Daha fazlasını gör
+              <div className="h-px w-full bg-[#E50914] mt-1" />
+            </button>
+          )}
         </div>
       )}
     </>
