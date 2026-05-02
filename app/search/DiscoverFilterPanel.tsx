@@ -22,6 +22,9 @@ const currentYear = new Date().getFullYear();
 const YEARS: number[] = [];
 for (let y = currentYear; y >= 1990; y--) YEARS.push(y);
 
+/** ~5 satır yıl görünsün; satır yüksekliği ile çarpıldı */
+const YEAR_LIST_MAX_HEIGHT = 'min(13.75rem, 45vh)';
+
 export interface AppliedFilters {
   category: FilterCategory;
   year: number | null;
@@ -67,19 +70,20 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
       <button
         type="button"
         aria-label="Paneli kapat"
-        className="fixed inset-0 z-[90] bg-black/70 backdrop-blur-sm md:bg-black/50"
+        className="fixed inset-0 z-[90] bg-black"
         onClick={onClose}
       />
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="discover-filter-title"
-        className="fixed z-[100] left-0 right-0 bottom-0 max-h-[90vh] overflow-y-auto rounded-t-3xl border border-white/10 border-b-0 bg-[#0d0d0d] shadow-2xl
-          md:left-auto md:top-0 md:bottom-0 md:right-0 md:max-h-none md:h-full md:w-full md:max-w-md md:rounded-none md:border-l md:border-y-0 md:border-r-0"
+        className="fixed z-[100] left-4 right-4 top-[4.75rem] max-h-[min(85vh,calc(100dvh-6rem))]
+          md:left-auto md:right-10 md:w-full md:max-w-md md:top-24 lg:top-28
+          flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0d0d0d] shadow-2xl"
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-white/10 bg-[#0d0d0d]/95 px-5 py-4 backdrop-blur">
+        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
           <div>
-            <h2 id="discover-filter-title" className="text-lg font-bold text-white tracking-tight">
+            <h2 id="discover-filter-title" className="text-lg font-bold tracking-tight text-white">
               Filtreler
             </h2>
             <p className="mt-1 h-px w-12 rounded-full bg-[#E50914]" />
@@ -93,10 +97,10 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
           </button>
         </div>
 
-        <div className="flex flex-col gap-8 px-5 py-6 pb-12">
+        <div className="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto overscroll-y-contain px-5 py-6 pb-8">
           <section>
-            <p className="text-xs uppercase tracking-widest text-white/40 font-semibold mb-3">Kategori</p>
-            <div className="flex flex-wrap gap-2">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">Kategori</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-3">
               {FILTER_CATEGORIES.map((cat) => {
                 const selected = cat.label === selectedLabel;
                 return (
@@ -104,50 +108,76 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
                     key={cat.label}
                     type="button"
                     onClick={() => setSelectedLabel(cat.label)}
-                    className={`rounded-full px-3.5 py-2 text-xs font-semibold transition border ${
+                    className={`bg-transparent px-0.5 pb-1 text-left text-xs font-semibold transition ${
                       selected
-                        ? 'border-[#E50914] bg-[#E50914]/15 text-white'
-                        : 'border-white/15 bg-white/[0.03] text-white/70 hover:border-white/30 hover:text-white'
+                        ? 'text-white'
+                        : 'text-white/55 hover:text-white/90'
                     }`}
                   >
-                    {cat.label}
+                    <span className="block pb-1">{cat.label}</span>
+                    <span
+                      className={`block h-0.5 w-full rounded-full transition ${
+                        selected ? 'bg-[#E50914]' : 'bg-[#E50914]/25'
+                      }`}
+                    />
                   </button>
                 );
               })}
             </div>
           </section>
 
-          <section>
-            <p className="text-xs uppercase tracking-widest text-white/40 font-semibold mb-3">Yıl</p>
-            <select
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              className="w-full rounded-xl border border-white/15 bg-[#161616] px-4 py-3 text-sm text-white focus:border-[#E50914] focus:outline-none"
-            >
-              <option value="">Tüm yıllar</option>
-              {YEARS.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
+          <section className="min-h-0 shrink-0">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">Yıl</p>
+            <div className="overflow-hidden rounded-lg bg-black">
+              <div
+                className="overflow-y-auto overscroll-y-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(229,9,20,0.45)_transparent]"
+                style={{ maxHeight: YEAR_LIST_MAX_HEIGHT }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setYear('')}
+                  className={`flex w-full items-center border-b border-white/5 px-4 py-3 text-left text-sm transition hover:bg-white/[0.04] ${
+                    year === '' ? 'text-white' : 'text-white/60'
+                  }`}
+                >
+                  Tüm yıllar
+                  {year === '' && <span className="ml-auto h-0.5 w-8 shrink-0 rounded-full bg-[#E50914]" />}
+                </button>
+                {YEARS.map((y) => {
+                  const active = String(y) === year;
+                  return (
+                    <button
+                      key={y}
+                      type="button"
+                      onClick={() => setYear(String(y))}
+                      className={`flex w-full items-center border-b border-white/5 px-4 py-3 text-left text-sm transition last:border-b-0 hover:bg-white/[0.04] ${
+                        active ? 'text-white' : 'text-white/60'
+                      }`}
+                    >
+                      {y}
+                      {active && <span className="ml-auto h-0.5 w-8 shrink-0 rounded-full bg-[#E50914]" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </section>
 
-          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-2">
+          <div className="mt-auto flex flex-wrap items-center justify-end gap-8 border-t border-white/5 pt-6">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-white/15 py-3.5 text-sm font-semibold text-white/70 transition hover:bg-white/5 hover:text-white"
+              className="bg-transparent pb-1 text-sm font-semibold text-white/60 transition hover:text-white"
             >
-              Vazgeç
+              <span className="inline-block border-b-2 border-[#E50914] pb-0.5">Vazgeç</span>
             </button>
             <button
               type="button"
               disabled={busy || !selectedLabel}
               onClick={handleApply}
-              className="rounded-xl bg-[#E50914] py-3.5 text-sm font-semibold text-white transition hover:bg-red-700 disabled:opacity-40"
+              className="bg-transparent pb-1 text-sm font-semibold text-white transition hover:text-white/90 disabled:cursor-not-allowed disabled:opacity-35"
             >
-              {busy ? 'Yükleniyor…' : 'Uygula'}
+              <span className="inline-block border-b-2 border-[#E50914] pb-0.5">{busy ? 'Yükleniyor…' : 'Uygula'}</span>
             </button>
           </div>
         </div>
