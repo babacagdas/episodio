@@ -117,8 +117,8 @@ export default function NotificationsBell() {
       {open && (
         <>
           <div className="fixed inset-0 z-[119]" onClick={() => setOpen(false)} />
-          <div className="fixed top-16 left-3 right-3 max-h-[calc(100dvh-6rem)] overflow-y-auto bg-[#141414] border border-white/10 rounded-2xl shadow-2xl p-3 z-[120] md:absolute md:top-auto md:left-auto md:right-0 md:mt-2 md:w-[340px] md:max-h-[420px]">
-            <div className="flex items-center justify-between px-2 py-1 mb-2">
+          <div className="fixed top-16 left-3 right-3 max-h-[calc(100dvh-6rem)] overflow-y-auto bg-black border border-white/10 rounded-2xl shadow-2xl p-3 z-[120] md:absolute md:top-auto md:left-auto md:right-0 md:mt-2 md:w-[340px] md:max-h-[420px]">
+            <div className="flex items-center justify-between px-2 py-1 mb-2 border-b border-[#E50914]/50">
               <p className="text-sm font-semibold text-white">Bildirimler</p>
               {unreadCount > 0 && (
                 <button
@@ -138,7 +138,7 @@ export default function NotificationsBell() {
             ) : items.length === 0 ? (
               <div className="px-2 py-6 text-sm text-white/35 text-center">Henüz bildirimin yok.</div>
             ) : (
-              <div className="space-y-2">
+              <div>
                 {items.map((item) => {
                   const actorProfilePath =
                     item.actor?.username
@@ -151,9 +151,9 @@ export default function NotificationsBell() {
                       ? (actorProfilePath ?? item.link ?? '/home')
                       : (item.link ?? actorProfilePath ?? '/home');
                   const content = (
-                    <div className={`rounded-xl px-3 py-2 border ${item.is_read ? 'border-white/5 bg-white/[0.02]' : 'border-[#E50914]/30 bg-[#E50914]/10'}`}>
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full overflow-hidden bg-[#1A1A1A] border border-white/10 flex items-center justify-center shrink-0">
+                    <div className={`px-2 py-3 border-b border-[#E50914]/35 last:border-b-0 ${item.is_read ? 'opacity-85' : ''}`}>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full overflow-hidden bg-[#0f0f0f] border border-white/10 flex items-center justify-center shrink-0">
                           {item.actor?.avatar_url ? (
                             <img src={item.actor.avatar_url} alt={item.actor.full_name ?? item.actor.username ?? 'Kullanıcı'} className="w-full h-full object-cover" />
                           ) : (
@@ -164,7 +164,7 @@ export default function NotificationsBell() {
                           {item.actor?.full_name || item.actor?.username || 'Kullanıcı'}
                         </p>
                       </div>
-                      <p className="text-sm text-white/85 mt-1">{item.message}</p>
+                      <p className="text-sm text-white/90 mt-1.5">{item.message}</p>
                       <p className="text-[11px] text-white/35 mt-1">{formatTimeAgo(item.created_at)} önce</p>
                     </div>
                   );

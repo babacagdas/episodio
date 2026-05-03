@@ -325,10 +325,10 @@ export default function ProfileContent() {
       )}
       {/* Cover & Avatar */}
       <section className="relative">
-        <div className="h-[200px] md:h-[280px] w-full bg-gradient-to-br from-[#E50914]/30 via-[#141414] to-[#0A0A0A]" />
-        <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-16 md:-mt-20 z-10">
+        <div className="h-[150px] md:h-[280px] w-full bg-gradient-to-br from-[#E50914]/30 via-[#141414] to-[#0A0A0A]" />
+        <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-12 md:-mt-20 z-10">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-md">
-            <div className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-[#0A0A0A] overflow-hidden bg-[#141414] shrink-0 flex items-center justify-center">
+            <div className="w-24 h-24 md:w-36 md:h-36 rounded-full border-4 border-[#0A0A0A] overflow-hidden bg-[#141414] shrink-0 flex items-center justify-center">
               {avatar
                 ? <img alt={displayName} className="w-full h-full object-cover" src={profile.avatar_url || avatar} />
                 : <span className="material-symbols-outlined text-white/20 text-5xl">person</span>
@@ -375,16 +375,16 @@ export default function ProfileContent() {
       </section>
 
       {/* Stats */}
-      <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-6">
-        <div className="grid grid-cols-3 gap-4 md:hidden">
+      <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-4 md:mt-6">
+        <div className="grid grid-cols-3 gap-2.5 md:hidden">
           {[
             { val: watchlist.length, label: 'Listede' },
             { val: watchedCount, label: 'İzlendi' },
             { val: reviewCount, label: 'Yorum' },
           ].map(({ val, label }) => (
             <div key={label} className="text-center">
-              <span className="block text-lg sm:text-2xl font-bold text-white">{val}</span>
-              <span className="text-[10px] sm:text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
+              <span className="block text-base font-bold text-white">{val}</span>
+              <span className="text-[9px] text-white/30 uppercase tracking-wide">{label}</span>
             </div>
           ))}
         </div>

@@ -42,10 +42,11 @@ export default function ShareListButton({ title }: Props) {
       <button
         type="button"
         onClick={handleShare}
-        className="px-4 py-2 rounded-full bg-white/10 border border-white/15 text-white text-xs font-semibold hover:bg-white/20 transition-colors flex items-center gap-1.5"
+        className="w-8 h-8 rounded-full bg-white/10 border border-white/15 text-white hover:bg-white/20 transition-colors flex items-center justify-center"
+        aria-label="Paylaş"
+        title="Paylaş"
       >
-        <span className="material-symbols-outlined text-base">share</span>
-        Paylaş
+        <span className="material-symbols-outlined text-sm">share</span>
       </button>
       {message && <p className="text-[11px] text-white/45">{message}</p>}
     </div>
