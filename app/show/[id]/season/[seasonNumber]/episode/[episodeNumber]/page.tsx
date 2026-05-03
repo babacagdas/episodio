@@ -37,7 +37,7 @@ export default async function EpisodePage({
       : null;
 
   return (
-    <div className="font-body-md text-body-md antialiased min-h-screen pb-24 md:pb-0">
+    <div className="font-body-md text-body-md antialiased min-h-screen pb-24 md:pb-0 overflow-x-hidden">
       <Sidebar />
 
       <div className="md:hidden fixed top-4 left-4 z-50">
@@ -46,7 +46,7 @@ export default async function EpisodePage({
         </Link>
       </div>
 
-      <main className="md:ml-[240px] w-full">
+      <main className="md:ml-[240px] md:w-[calc(100%-240px)] w-full overflow-x-hidden">
         <section className="relative w-full h-[430px] md:h-[520px]">
           <div className="absolute inset-0">
             {heroImage
@@ -56,7 +56,7 @@ export default async function EpisodePage({
           </div>
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #0A0A0A 0%, rgba(10,10,10,0.4) 60%, transparent 100%)' }} />
 
-          <div className="absolute bottom-0 left-0 w-full px-margin-mobile md:px-12 pb-10 max-w-[1200px]">
+          <div className="absolute bottom-0 left-0 w-full px-margin-mobile md:px-12 pb-10 max-w-[1200px] mx-auto">
             <p className="text-xs text-white/40 uppercase tracking-widest font-semibold mb-2">
               {show.name} • Sezon {seasonNumber} • Bölüm {episode.episode_number}
             </p>
@@ -69,7 +69,7 @@ export default async function EpisodePage({
           </div>
         </section>
 
-        <section className="px-margin-mobile md:px-12 max-w-[900px] mt-8">
+        <section className="px-margin-mobile md:px-12 max-w-[900px] mt-8 w-full overflow-x-hidden">
           {episode.overview && (
             <p className="text-white/60 text-sm leading-relaxed mb-8">{episode.overview}</p>
           )}

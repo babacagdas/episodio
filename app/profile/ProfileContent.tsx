@@ -171,7 +171,7 @@ export default function ProfileContent() {
   }
 
   return (
-    <main className="md:ml-[240px] md:pt-4">
+    <main className="md:ml-[240px] md:w-[calc(100%-240px)] w-full md:pt-4 overflow-x-hidden">
       {/* Edit Modal */}
       {editOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -414,8 +414,8 @@ export default function ProfileContent() {
       </section>
 
       {/* Tabs */}
-      <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-8 border-b border-white/10">
-        <nav className="flex gap-8">
+      <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-8 border-b border-white/10 overflow-x-hidden">
+        <nav className="flex flex-wrap gap-x-6 gap-y-3 md:gap-8">
           {(['watchlist', 'watched', 'lists', 'notes'] as const).map((tab) => (
             <button
               key={tab}

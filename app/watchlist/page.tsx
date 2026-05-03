@@ -12,11 +12,11 @@ export default function WatchlistPage() {
   const { watchlist, loading } = useWatchlist();
 
   return (
-    <div className="font-body-md min-h-screen antialiased pb-24 md:pb-0">
+    <div className="font-body-md min-h-screen antialiased pb-24 md:pb-0 overflow-x-hidden">
       <MobileHeader />
       <Sidebar />
 
-      <main className="md:ml-[240px] w-full px-6 md:px-12 pt-8 pb-24 flex flex-col gap-10">
+      <main className="md:ml-[240px] md:w-[calc(100%-240px)] w-full px-6 md:px-12 pt-8 pb-24 flex flex-col gap-10 overflow-x-hidden">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">İzleme Listesi</h1>
           <p className="text-sm text-white/40 mt-1">Kaydettiğin dizileri buradan takip edebilirsin.</p>

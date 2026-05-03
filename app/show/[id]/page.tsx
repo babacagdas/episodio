@@ -31,7 +31,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
   );
 
   return (
-    <div className="font-body-md text-body-md antialiased min-h-screen pb-24 md:pb-0">
+    <div className="font-body-md text-body-md antialiased min-h-screen pb-24 md:pb-0 overflow-x-hidden">
       <Sidebar />
 
       <div className="md:hidden fixed top-4 left-4 z-50">
@@ -40,7 +40,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
         </Link>
       </div>
 
-      <main className="md:ml-[240px] w-full">
+      <main className="md:ml-[240px] md:w-[calc(100%-240px)] w-full overflow-x-hidden">
         {/* Hero */}
         <section className="relative w-full h-[530px] md:h-[600px]">
           <div className="absolute inset-0">
@@ -51,7 +51,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
           </div>
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #0A0A0A 0%, rgba(10,10,10,0.4) 60%, transparent 100%)' }} />
 
-          <div className="absolute bottom-0 left-0 w-full px-margin-mobile md:px-12 pb-10 flex flex-col items-start max-w-[1200px]">
+          <div className="absolute bottom-0 left-0 w-full px-margin-mobile md:px-12 pb-10 flex flex-col items-start max-w-[1200px] mx-auto">
             <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 tracking-tight">{show.name}</h1>
 
             <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -88,7 +88,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
         </section>
 
         {/* Content */}
-        <section className="px-margin-mobile md:px-12 max-w-[900px] mt-8">
+        <section className="px-margin-mobile md:px-12 max-w-[900px] mt-8 w-full overflow-x-hidden">
           {show.overview && (
             <p className="text-white/50 text-sm leading-relaxed mb-8 max-w-3xl">{show.overview}</p>
           )}

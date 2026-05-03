@@ -165,7 +165,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
   return (
     <>
       {/* Tabs */}
-      <div className="flex gap-6 border-b border-white/10 mb-8">
+      <div className="flex flex-wrap gap-x-6 gap-y-3 border-b border-white/10 mb-8 overflow-x-hidden">
         {(['episodes', 'reviews', 'notes', 'similar'] as const).map((t) => (
           <button
             key={t}
