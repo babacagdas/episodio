@@ -21,6 +21,9 @@ interface Props {
   visibility: 'public' | 'private';
   ownerName: string;
   isOwner: boolean;
+  isSharedWithMe: boolean;
+  currentUserId: string | null;
+  sharedWithUserId: string | null;
   initialItems: ListItemData[];
   initialLikesCount: number;
   initiallyLiked: boolean;
@@ -33,6 +36,9 @@ export default function ListDetailClient({
   visibility,
   ownerName,
   isOwner,
+  isSharedWithMe,
+  currentUserId,
+  sharedWithUserId,
   initialItems,
   initialLikesCount,
   initiallyLiked,
@@ -48,8 +54,37 @@ export default function ListDetailClient({
   const [likesCount, setLikesCount] = useState(initialLikesCount);
   const [likedByMe, setLikedByMe] = useState(initiallyLiked);
   const [message, setMessage] = useState('');
+  const [inviteAccepting, setInviteAccepting] = useState(false);
 
   const itemCountText = useMemo(() => `${items.length} dizi • ${ownerName}`, [items.length, ownerName]);
+
+  const inviteMode = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('invite') === '1';
+  }, []);
+
+  async function acceptInvite() {
+    setInviteAccepting(true);
+    setMessage('');
+    try {
+      const res = await fetch('/api/lists/accept-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listId }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        const err = data && typeof data === 'object' && data && 'error' in data ? (data as any).error : 'Kabul edilemedi.';
+        setMessage(String(err));
+      } else {
+        setMessage('Davet kabul edildi.');
+        setTimeout(() => setMessage(''), 2000);
+        router.refresh();
+      }
+    } finally {
+      setInviteAccepting(false);
+    }
+  }
 
   async function removeItem(showId: number) {
     const supabase = createClient();
@@ -152,6 +187,22 @@ export default function ListDetailClient({
 
   return (
     <>
+      {!isOwner && !isSharedWithMe && currentUserId && !sharedWithUserId && inviteMode && (
+        <div className="mb-6 border border-[#E50914]/40 bg-[#E50914]/10 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-white">Liste daveti</p>
+            <p className="text-xs text-white/60 mt-1">Kabul edersen ikiniz de bu listeye dizi ekleyebilirsiniz.</p>
+          </div>
+          <button
+            type="button"
+            onClick={acceptInvite}
+            disabled={inviteAccepting}
+            className="px-4 py-2 rounded-full bg-[#E50914] text-white text-xs font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            {inviteAccepting ? 'Kabul ediliyor…' : 'Kabul et'}
+          </button>
+        </div>
+      )}
       <section className="mb-8">
         <div className="flex flex-col gap-3">
           <div className="flex-1">

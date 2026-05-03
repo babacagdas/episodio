@@ -23,8 +23,9 @@ export default function ProfileContent() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile>({ username: '', full_name: '', bio: '', avatar_url: '', activity_visible: true });
   const { watchlist, loading } = useWatchlist();
-  const { lists, likedLists, countsByListId, postersByListId, likesByListId, createList, loading: listsLoading, error: listsError } = useLists();
+  const { lists, sharedLists, likedLists, countsByListId, postersByListId, likesByListId, createList, loading: listsLoading, error: listsError } = useLists();
   const [activeTab, setActiveTab] = useState<'watchlist' | 'watched' | 'lists' | 'notes'>('watchlist');
+  const [listsSubTab, setListsSubTab] = useState<'mine' | 'shared'>('mine');
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<Profile>({ username: '', full_name: '', bio: '', avatar_url: '', activity_visible: true });
   const [saving, setSaving] = useState(false);
@@ -33,6 +34,9 @@ export default function ProfileContent() {
   const [listName, setListName] = useState('');
   const [listDescription, setListDescription] = useState('');
   const [listVisibility, setListVisibility] = useState<'public' | 'private'>('public');
+  const [inviteQuery, setInviteQuery] = useState('');
+  const [inviteResults, setInviteResults] = useState<{ id: string; username: string | null; full_name: string | null; avatar_url: string | null }[]>([]);
+  const [invitedUser, setInvitedUser] = useState<{ id: string; username: string | null; full_name: string | null } | null>(null);
   const [listSaving, setListSaving] = useState(false);
   const [listMessage, setListMessage] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
@@ -155,6 +159,7 @@ export default function ProfileContent() {
       name: listName,
       description: listDescription,
       visibility: listVisibility,
+      invitedUserId: invitedUser?.id ?? null,
     });
 
     if (!result.ok) {
@@ -166,8 +171,23 @@ export default function ProfileContent() {
     setListName('');
     setListDescription('');
     setListVisibility('public');
+    setInviteQuery('');
+    setInviteResults([]);
+    setInvitedUser(null);
     setListSaving(false);
     setListModalOpen(false);
+  }
+
+  async function searchInvite(q: string) {
+    setInviteQuery(q);
+    if (!q.trim()) { setInviteResults([]); return; }
+    try {
+      const res = await fetch(`/api/profiles/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (Array.isArray(data)) setInviteResults(data);
+    } catch {
+      setInviteResults([]);
+    }
   }
 
   return (
@@ -311,6 +331,60 @@ export default function ProfileContent() {
               </button>
             </div>
 
+            {/* Arkadaş davet et (opsiyonel) */}
+            <div className="pt-1">
+              <label className="text-xs text-white/30 uppercase tracking-wider mb-2 block">Arkadaş davet et (opsiyonel)</label>
+              {invitedUser ? (
+                <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm text-white font-semibold truncate">
+                      {invitedUser.full_name || invitedUser.username || 'Kullanıcı'}
+                    </p>
+                    <p className="text-xs text-white/35 truncate">@{invitedUser.username ?? invitedUser.id.slice(0, 8)}</p>
+                  </div>
+                  <button type="button" onClick={() => setInvitedUser(null)} className="text-white/30 hover:text-white transition-colors">
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <input
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#E50914]/50 focus:outline-none transition-colors"
+                    placeholder="Kullanıcı ara…"
+                    value={inviteQuery}
+                    onChange={(e) => searchInvite(e.target.value)}
+                  />
+                  {inviteResults.length > 0 && (
+                    <div className="mt-2 max-h-44 overflow-y-auto rounded-xl border border-white/10 bg-[#0f0f0f]">
+                      {inviteResults
+                        .filter((p) => p.id !== user?.id)
+                        .slice(0, 8)
+                        .map((p) => {
+                          const label = p.full_name || p.username || 'Kullanıcı';
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => { setInvitedUser({ id: p.id, username: p.username, full_name: p.full_name }); setInviteResults([]); setInviteQuery(''); }}
+                              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.04] border-b border-white/5 last:border-b-0"
+                            >
+                              <div className="w-8 h-8 rounded-full bg-[#1A1A1A] border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
+                                {p.avatar_url ? <img src={p.avatar_url} alt={label} className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-white/20 text-sm">person</span>}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm text-white font-semibold truncate">{label}</p>
+                                <p className="text-xs text-white/35 truncate">@{p.username ?? p.id.slice(0, 8)}</p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  )}
+                </>
+              )}
+              <p className="text-[11px] text-white/25 mt-2">Davet gönderilir; kabul edince liste ortak olur.</p>
+            </div>
+
             {listMessage && <p className="text-xs text-[#E50914]">{listMessage}</p>}
 
             <button
@@ -434,6 +508,22 @@ export default function ProfileContent() {
       <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-6 mb-16">
         {activeTab === 'lists' ? (
           <>
+            <div className="flex items-center gap-6 mb-5">
+              <button
+                type="button"
+                onClick={() => setListsSubTab('mine')}
+                className={`pb-2 text-sm font-semibold transition-colors ${listsSubTab === 'mine' ? 'text-white border-b-2 border-[#E50914]' : 'text-white/30 hover:text-white'}`}
+              >
+                Listelerim
+              </button>
+              <button
+                type="button"
+                onClick={() => setListsSubTab('shared')}
+                className={`pb-2 text-sm font-semibold transition-colors ${listsSubTab === 'shared' ? 'text-white border-b-2 border-[#E50914]' : 'text-white/30 hover:text-white'}`}
+              >
+                Ortak Listeler
+              </button>
+            </div>
             <div className="flex justify-between items-center mb-5">
               <button
                 type="button"
@@ -453,6 +543,28 @@ export default function ProfileContent() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-28 rounded-xl bg-white/[0.04] border border-white/10 animate-pulse" />)}
               </div>
+            ) : listsSubTab === 'shared' ? (
+              sharedLists.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-white/20">
+                  <span className="material-symbols-outlined text-5xl mb-3">group</span>
+                  <p className="text-sm">Henüz ortak listen yok</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {sharedLists.map((list) => (
+                    <ListPreviewCard
+                      key={list.id}
+                      id={list.id}
+                      name={list.name}
+                      description={list.description}
+                      visibility={list.visibility}
+                      posters={postersByListId[list.id] ?? []}
+                      itemCount={countsByListId[list.id] ?? 0}
+                      likeCount={likesByListId[list.id] ?? 0}
+                    />
+                  ))}
+                </div>
+              )
             ) : lists.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-white/20">
                 <span className="material-symbols-outlined text-5xl mb-3">playlist_play</span>

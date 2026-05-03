@@ -31,11 +31,11 @@ export default async function ListDetailPage({ params }: { params: Promise<ListP
 
   const { data: listRaw } = await supabase
     .from('lists')
-    .select('id, user_id, name, description, visibility, created_at')
+    .select('id, user_id, shared_with_user_id, name, description, visibility, created_at')
     .eq('id', id)
     .single();
 
-  const list = listRaw as ListData | null;
+  const list = listRaw as (ListData & { shared_with_user_id?: string | null }) | null;
   if (!list) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] text-white flex items-center justify-center">
@@ -50,7 +50,8 @@ export default async function ListDetailPage({ params }: { params: Promise<ListP
   }
 
   const isOwner = currentUserId === list.user_id;
-  if (list.visibility === 'private' && !isOwner) {
+  const isSharedWithMe = !!currentUserId && list.shared_with_user_id === currentUserId;
+  if (list.visibility === 'private' && !isOwner && !isSharedWithMe) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] text-white flex items-center justify-center">
         <div className="text-center px-6">
@@ -113,6 +114,9 @@ export default async function ListDetailPage({ params }: { params: Promise<ListP
           visibility={list.visibility}
           ownerName={ownerName}
           isOwner={isOwner}
+          isSharedWithMe={isSharedWithMe}
+          currentUserId={currentUserId}
+          sharedWithUserId={list.shared_with_user_id ?? null}
           initialItems={items}
           initialLikesCount={likesCount ?? 0}
           initiallyLiked={!!likedRow.data}

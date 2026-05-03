@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 export interface UserList {
   id: string;
   user_id: string;
+  shared_with_user_id?: string | null;
   name: string;
   description: string | null;
   visibility: 'public' | 'private';
@@ -20,6 +21,7 @@ export interface ListShowItem {
 
 export function useLists() {
   const [lists, setLists] = useState<UserList[]>([]);
+  const [sharedLists, setSharedLists] = useState<UserList[]>([]);
   const [likedLists, setLikedLists] = useState<UserList[]>([]);
   const [countsByListId, setCountsByListId] = useState<Record<string, number>>({});
   const [postersByListId, setPostersByListId] = useState<Record<string, string[]>>({});
@@ -35,6 +37,7 @@ export function useLists() {
 
     if (!user) {
       setLists([]);
+      setSharedLists([]);
       setLikedLists([]);
       setCountsByListId({});
       setPostersByListId({});
@@ -47,7 +50,7 @@ export function useLists() {
     const [{ data: listsData, error: listsError }, { data: likedRows }] = await Promise.all([
       supabase
         .from('lists')
-        .select('id, user_id, name, description, visibility, created_at')
+        .select('id, user_id, shared_with_user_id, name, description, visibility, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false }),
       supabase
@@ -59,6 +62,7 @@ export function useLists() {
     if (listsError) {
       setError(listsError.message);
       setLists([]);
+      setSharedLists([]);
       setLikedLists([]);
       setCountsByListId({});
       setPostersByListId({});
@@ -73,21 +77,31 @@ export function useLists() {
     likedIds.forEach((id) => { likedMap[id] = true; });
     setLikedByMeMap(likedMap);
 
-    const { data: likedListsData } = likedIds.length > 0
+    const [{ data: likedListsData }, { data: sharedListsData }] = await Promise.all([
+      likedIds.length > 0
       ? await supabase
           .from('lists')
-          .select('id, user_id, name, description, visibility, created_at')
+          .select('id, user_id, shared_with_user_id, name, description, visibility, created_at')
           .in('id', likedIds)
           .order('created_at', { ascending: false })
-      : { data: [] as any[] };
+      : { data: [] as any[] },
+      supabase
+        .from('lists')
+        .select('id, user_id, shared_with_user_id, name, description, visibility, created_at')
+        .eq('shared_with_user_id', user.id)
+        .order('created_at', { ascending: false }),
+    ]);
 
     const parsedLists = (listsData ?? []) as UserList[];
+    const parsedSharedLists = (sharedListsData ?? []) as UserList[];
     const parsedLikedLists = ((likedListsData ?? []) as UserList[]).filter((list) => list.user_id !== user.id);
     setLists(parsedLists);
+    setSharedLists(parsedSharedLists);
     setLikedLists(parsedLikedLists);
 
     const relevantIds = Array.from(new Set([
       ...parsedLists.map((list) => list.id),
+      ...parsedSharedLists.map((list) => list.id),
       ...parsedLikedLists.map((list) => list.id),
     ]));
 
@@ -137,6 +151,7 @@ export function useLists() {
     name: string;
     description?: string;
     visibility?: 'public' | 'private';
+    invitedUserId?: string | null;
   }) => {
     const supabase = createClient();
     const { data: authData } = await supabase.auth.getUser();
@@ -163,6 +178,16 @@ export function useLists() {
     setCountsByListId((prev) => ({ ...prev, [newList.id]: 0 }));
     setPostersByListId((prev) => ({ ...prev, [newList.id]: [] }));
     setLikesByListId((prev) => ({ ...prev, [newList.id]: 0 }));
+    // Opsiyonel davet: listeyi paylaşımlı yapmadan sadece bildirim gönderiyoruz (kabul edince shared_with_user_id set edilir)
+    if (payload.invitedUserId) {
+      try {
+        await fetch('/api/lists/invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ listId: newList.id, invitedUserId: payload.invitedUserId }),
+        });
+      } catch {}
+    }
     return { ok: true, list: newList };
   }, []);
 
@@ -197,6 +222,7 @@ export function useLists() {
 
   return {
     lists,
+    sharedLists,
     likedLists,
     countsByListId,
     postersByListId,
