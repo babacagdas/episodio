@@ -93,9 +93,22 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
 
     const { data } = await supabase
       .from('reviews')
-      .select('*, profiles(username, full_name, avatar_url)')
+      .select('*')
       .eq('show_id', showId)
       .order('created_at', { ascending: false });
+
+    const userIds = Array.from(new Set((data ?? []).map((r: any) => r.user_id))) as string[];
+    const profileMap: Record<string, { username: string; full_name: string; avatar_url: string } | null> = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase.from('profiles').select('id, username, full_name, avatar_url').in('id', userIds);
+      (profiles ?? []).forEach((p: any) => {
+        profileMap[p.id] = {
+          username: p.username ?? '',
+          full_name: p.full_name ?? '',
+          avatar_url: p.avatar_url ?? '',
+        };
+      });
+    }
 
     const ids = (data ?? []).map((r: any) => r.id);
     let likesMap: Record<string, number> = {};
@@ -115,7 +128,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
       ...r,
       content: parsed.content,
       isSpoiler: parsed.isSpoiler,
-      profiles: Array.isArray(r.profiles) ? r.profiles[0] : r.profiles,
+      profiles: profileMap[r.user_id] ?? undefined,
       likeCount: likesMap[r.id] ?? 0,
       likedByMe: myLikes.has(r.id),
     };}));
@@ -139,11 +152,12 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
     const { data, error } = await supabase
       .from('reviews')
       .insert({ user_id: userId, show_id: showId, rating: myRating, content: payload })
-      .select('*, profiles(username, full_name, avatar_url)')
+      .select('*')
       .single();
     if (!error && data) {
+      const { data: p } = await supabase.from('profiles').select('username, full_name, avatar_url').eq('id', userId).single();
       const parsed = parseSpoiler(data.content ?? '');
-      const r = { ...data, content: parsed.content, isSpoiler: parsed.isSpoiler, profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles, likeCount: 0, likedByMe: false };
+      const r = { ...data, content: parsed.content, isSpoiler: parsed.isSpoiler, profiles: p ?? undefined, likeCount: 0, likedByMe: false };
       setReviews(prev => [r, ...prev]);
       setMyContent('');
       setMyRating(0);
