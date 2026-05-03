@@ -58,6 +58,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
   const [myRating, setMyRating] = useState(0);
   const [myContent, setMyContent] = useState('');
   const [mySpoiler, setMySpoiler] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
@@ -132,6 +133,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
   async function submitReview() {
     if (!userId || !myContent.trim() || myRating === 0) return;
     setSubmitting(true);
+    setSubmitError('');
     const supabase = createClient();
     const payload = buildSpoilerContent(myContent.trim(), mySpoiler);
     const { data, error } = await supabase
@@ -147,6 +149,8 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
       setMyRating(0);
       setMySpoiler(false);
       setReviewsLoaded(true);
+    } else if (error) {
+      setSubmitError(error.message ?? 'Yorum gönderilemedi.');
     }
     setSubmitting(false);
   }
@@ -327,6 +331,9 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                 >
                   {mySpoiler ? 'Spoiler etiketi açık' : 'Spoiler etiketi ekle'}
                 </button>
+                {submitError && (
+                  <p className="mt-2 text-xs text-[#E50914]">{submitError}</p>
+                )}
               </div>
             </div>
           ) : (
