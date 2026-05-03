@@ -14,6 +14,7 @@ interface Review {
   show_id: number;
   rating: number;
   content: string;
+  isSpoiler?: boolean;
   created_at: string;
   likeCount: number;
   likedByMe: boolean;
@@ -37,6 +38,18 @@ function timeAgo(date: string) {
   return `${Math.floor(h / 24)} g`;
 }
 
+const SPOILER_PREFIX = '[SPOILER]';
+function parseSpoiler(raw: string) {
+  const isSpoiler = raw.startsWith(SPOILER_PREFIX);
+  return {
+    isSpoiler,
+    content: isSpoiler ? raw.replace(SPOILER_PREFIX, '').trim() : raw,
+  };
+}
+function buildSpoilerContent(content: string, isSpoiler: boolean) {
+  return isSpoiler ? `${SPOILER_PREFIX} ${content}` : content;
+}
+
 export default function ShowTabs({ showId, episodesBySeason, similar, poster, seasons }: Props) {
   const [tab, setTab] = useState<'episodes' | 'reviews' | 'notes' | 'similar'>('episodes');
   const [selectedSeasonNumber, setSelectedSeasonNumber] = useState<number | null>(seasons[0]?.season_number ?? null);
@@ -44,6 +57,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
   const [reviewsLoaded, setReviewsLoaded] = useState(false);
   const [myRating, setMyRating] = useState(0);
   const [myContent, setMyContent] = useState('');
+  const [mySpoiler, setMySpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
@@ -55,6 +69,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
   const [noteSaving, setNoteSaving] = useState(false);
   const [noteSaved, setNoteSaved] = useState(false);
   const [noteLoaded, setNoteLoaded] = useState(false);
+  const [revealedSpoilers, setRevealedSpoilers] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const supabase = createClient();
@@ -93,12 +108,16 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
       });
     }
 
-    setReviews((data ?? []).map((r: any) => ({
+    setReviews((data ?? []).map((r: any) => {
+      const parsed = parseSpoiler(r.content ?? '');
+      return {
       ...r,
+      content: parsed.content,
+      isSpoiler: parsed.isSpoiler,
       profiles: Array.isArray(r.profiles) ? r.profiles[0] : r.profiles,
       likeCount: likesMap[r.id] ?? 0,
       likedByMe: myLikes.has(r.id),
-    })));
+    };}));
     setReviewsLoaded(true);
   }
 
@@ -114,19 +133,29 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
     if (!userId || !myContent.trim() || myRating === 0) return;
     setSubmitting(true);
     const supabase = createClient();
+    const payload = buildSpoilerContent(myContent.trim(), mySpoiler);
     const { data, error } = await supabase
       .from('reviews')
-      .upsert({ user_id: userId, show_id: showId, rating: myRating, content: myContent.trim() }, { onConflict: 'user_id,show_id' })
+      .insert({ user_id: userId, show_id: showId, rating: myRating, content: payload })
       .select('*, profiles(username, full_name, avatar_url)')
       .single();
     if (!error && data) {
-      const r = { ...data, profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles, likeCount: 0, likedByMe: false };
-      setReviews(prev => [r, ...prev.filter(x => x.user_id !== userId)]);
+      const parsed = parseSpoiler(data.content ?? '');
+      const r = { ...data, content: parsed.content, isSpoiler: parsed.isSpoiler, profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles, likeCount: 0, likedByMe: false };
+      setReviews(prev => [r, ...prev]);
       setMyContent('');
       setMyRating(0);
+      setMySpoiler(false);
       setReviewsLoaded(true);
     }
     setSubmitting(false);
+  }
+
+  async function deleteReview(reviewId: string) {
+    if (!userId) return;
+    const supabase = createClient();
+    const { error } = await supabase.from('reviews').delete().eq('id', reviewId).eq('user_id', userId);
+    if (!error) setReviews((prev) => prev.filter((r) => r.id !== reviewId));
   }
 
   async function toggleLike(reviewId: string) {
@@ -275,7 +304,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                     </button>
                   ))}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   <input
                     className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white text-sm placeholder:text-white/30 focus:border-white/30 focus:outline-none transition-colors"
                     placeholder="Yorumunu yaz..."
@@ -286,11 +315,18 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                   <button
                     onClick={submitReview}
                     disabled={submitting || !myContent.trim() || myRating === 0}
-                    className="px-4 py-2 bg-[#E50914] text-white text-sm font-semibold rounded-full hover:bg-red-700 transition-all disabled:opacity-40"
+                    className="px-3.5 py-2 bg-[#E50914] text-white text-sm font-semibold rounded-full hover:bg-red-700 transition-all disabled:opacity-40"
                   >
                     {submitting ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin block" /> : 'Paylaş'}
                   </button>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setMySpoiler((prev) => !prev)}
+                  className={`mt-2 text-[11px] font-semibold transition-colors ${mySpoiler ? 'text-[#E50914]' : 'text-white/35 hover:text-white/70'}`}
+                >
+                  {mySpoiler ? 'Spoiler etiketi açık' : 'Spoiler etiketi ekle'}
+                </button>
               </div>
             </div>
           ) : (
@@ -325,7 +361,17 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                             ))}
                           </div>
                         </div>
-                        <p className="text-sm text-white/75 leading-relaxed">{r.content}</p>
+                        {r.isSpoiler && !revealedSpoilers[r.id] ? (
+                          <button
+                            type="button"
+                            onClick={() => setRevealedSpoilers((prev) => ({ ...prev, [r.id]: true }))}
+                            className="mt-1 text-xs font-semibold text-[#E50914] hover:text-white transition-colors"
+                          >
+                            Spoiler var — Göster
+                          </button>
+                        ) : (
+                          <p className="text-sm text-white/75 leading-relaxed">{r.content}</p>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 mt-1.5 px-2">
                         <span className="text-[11px] text-white/25">{timeAgo(r.created_at)}</span>
@@ -337,6 +383,15 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                           <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: r.likedByMe ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
                           {r.likeCount > 0 && r.likeCount}
                         </button>
+                        {r.user_id === userId && (
+                          <button
+                            type="button"
+                            onClick={() => deleteReview(r.id)}
+                            className="text-[11px] font-semibold text-white/30 hover:text-[#E50914] transition-colors"
+                          >
+                            Sil
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

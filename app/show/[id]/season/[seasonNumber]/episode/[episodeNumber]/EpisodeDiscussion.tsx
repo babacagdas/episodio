@@ -12,6 +12,7 @@ interface EpisodeComment {
   episode_number: number;
   rating: number;
   content: string;
+  isSpoiler?: boolean;
   created_at: string;
   likeCount: number;
   likedByMe: boolean;
@@ -24,6 +25,7 @@ interface EpisodeReply {
   comment_id: string;
   user_id: string;
   content: string;
+  isSpoiler?: boolean;
   created_at: string;
   profile?: { username: string | null; full_name: string | null; avatar_url: string | null };
 }
@@ -43,17 +45,32 @@ function timeAgo(date: string) {
   return `${Math.floor(h / 24)} g`;
 }
 
+const SPOILER_PREFIX = '[SPOILER]';
+function parseSpoiler(raw: string) {
+  const isSpoiler = raw.startsWith(SPOILER_PREFIX);
+  return {
+    isSpoiler,
+    content: isSpoiler ? raw.replace(SPOILER_PREFIX, '').trim() : raw,
+  };
+}
+function buildSpoilerContent(content: string, isSpoiler: boolean) {
+  return isSpoiler ? `${SPOILER_PREFIX} ${content}` : content;
+}
+
 export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber }: Props) {
   const [comments, setComments] = useState<EpisodeComment[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [rating, setRating] = useState(0);
   const [content, setContent] = useState('');
+  const [commentSpoiler, setCommentSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
+  const [replySpoiler, setReplySpoiler] = useState(false);
   const [replySubmitting, setReplySubmitting] = useState(false);
+  const [revealedSpoilers, setRevealedSpoilers] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const supabase = createClient();
@@ -109,16 +126,21 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
     const repliesMap: Record<string, EpisodeReply[]> = {};
     (repliesRes.data ?? []).forEach((r: any) => {
       if (!repliesMap[r.comment_id]) repliesMap[r.comment_id] = [];
-      repliesMap[r.comment_id].push({ ...r, profile: profileMap[r.user_id] ?? null });
+      const parsedReply = parseSpoiler(r.content ?? '');
+      repliesMap[r.comment_id].push({ ...r, content: parsedReply.content, isSpoiler: parsedReply.isSpoiler, profile: profileMap[r.user_id] ?? null });
     });
 
-    setComments(rows.map((r: any) => ({
+    setComments(rows.map((r: any) => {
+      const parsedComment = parseSpoiler(r.content ?? '');
+      return {
       ...r,
+      content: parsedComment.content,
+      isSpoiler: parsedComment.isSpoiler,
       profile: profileMap[r.user_id] ?? null,
       likeCount: likesMap[r.id] ?? 0,
       likedByMe: myLikes.has(r.id),
       replies: repliesMap[r.id] ?? [],
-    })));
+    };}));
     setLoaded(true);
   }
 
@@ -128,14 +150,22 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
     const supabase = createClient();
     const { data, error } = await supabase
       .from('episode_discussions')
-      .insert({ user_id: userId, show_id: showId, season_number: seasonNumber, episode_number: episodeNumber, rating, content: content.trim() })
+      .insert({ user_id: userId, show_id: showId, season_number: seasonNumber, episode_number: episodeNumber, rating, content: buildSpoilerContent(content.trim(), commentSpoiler) })
       .select('*').single();
     if (!error && data) {
       const { data: p } = await supabase.from('profiles').select('username, full_name, avatar_url').eq('id', userId).single();
-      setComments(prev => [{ ...data, profile: p ?? null, likeCount: 0, likedByMe: false, replies: [] }, ...prev]);
-      setContent(''); setRating(0);
+      const parsed = parseSpoiler(data.content ?? '');
+      setComments(prev => [{ ...data, content: parsed.content, isSpoiler: parsed.isSpoiler, profile: p ?? null, likeCount: 0, likedByMe: false, replies: [] }, ...prev]);
+      setContent(''); setRating(0); setCommentSpoiler(false);
     }
     setSubmitting(false);
+  }
+
+  async function deleteComment(commentId: string) {
+    if (!userId) return;
+    const supabase = createClient();
+    const { error } = await supabase.from('episode_discussions').delete().eq('id', commentId).eq('user_id', userId);
+    if (!error) setComments((prev) => prev.filter((c) => c.id !== commentId));
   }
 
   async function toggleLike(commentId: string) {
@@ -161,17 +191,18 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
     const supabase = createClient();
     const { data, error } = await supabase
       .from('episode_comment_replies')
-      .insert({ comment_id: commentId, user_id: userId, content: replyContent.trim() })
+      .insert({ comment_id: commentId, user_id: userId, content: buildSpoilerContent(replyContent.trim(), replySpoiler) })
       .select('*').single();
     if (!error && data) {
       const { data: p } = await supabase.from('profiles').select('username, full_name, avatar_url').eq('id', userId).single();
-      const reply: EpisodeReply = { ...data, profile: p ?? null };
+      const parsed = parseSpoiler(data.content ?? '');
+      const reply: EpisodeReply = { ...data, content: parsed.content, isSpoiler: parsed.isSpoiler, profile: p ?? null };
       setComments(prev => prev.map(c => c.id === commentId ? { ...c, replies: [...c.replies, reply] } : c));
       const comment = comments.find(c => c.id === commentId);
       if (comment && comment.user_id !== userId) {
         await supabase.from('notifications').insert({ user_id: comment.user_id, actor_id: userId, type: 'episode_reply', message: 'Yorumuna yanıt yazdı.', link: `/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}` });
       }
-      setReplyContent(''); setReplyingTo(null);
+      setReplyContent(''); setReplyingTo(null); setReplySpoiler(false);
     }
     setReplySubmitting(false);
   }
@@ -192,7 +223,7 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
                 </button>
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 items-center">
               <input
                 className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white text-sm placeholder:text-white/30 focus:border-white/30 focus:outline-none transition-colors"
                 placeholder="Bu bölüm hakkında ne düşünüyorsun?"
@@ -204,11 +235,18 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
                 type="button"
                 onClick={submitComment}
                 disabled={submitting || !content.trim() || rating === 0}
-                className="px-4 py-2 bg-[#E50914] text-white text-sm font-semibold rounded-full hover:bg-red-700 transition-all disabled:opacity-40"
+                className="w-10 h-10 shrink-0 bg-[#E50914] text-white rounded-full hover:bg-red-700 transition-all disabled:opacity-40 flex items-center justify-center"
               >
-                {submitting ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin block" /> : 'Paylaş'}
+                {submitting ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin block" /> : <span className="material-symbols-outlined text-[18px]">send</span>}
               </button>
             </div>
+            <button
+              type="button"
+              onClick={() => setCommentSpoiler((prev) => !prev)}
+              className={`mt-2 text-[11px] font-semibold transition-colors ${commentSpoiler ? 'text-[#E50914]' : 'text-white/35 hover:text-white/70'}`}
+            >
+              {commentSpoiler ? 'Spoiler etiketi açık' : 'Spoiler etiketi ekle'}
+            </button>
           </div>
         </div>
       ) : (
@@ -242,7 +280,17 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
                         ))}
                       </div>
                     </div>
-                    <p className="text-sm text-white/75 leading-relaxed">{comment.content}</p>
+                    {comment.isSpoiler && !revealedSpoilers[comment.id] ? (
+                      <button
+                        type="button"
+                        onClick={() => setRevealedSpoilers((prev) => ({ ...prev, [comment.id]: true }))}
+                        className="text-xs font-semibold text-[#E50914] hover:text-white transition-colors"
+                      >
+                        Spoiler var — Göster
+                      </button>
+                    ) : (
+                      <p className="text-sm text-white/75 leading-relaxed">{comment.content}</p>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-4 mt-1.5 px-2">
@@ -254,6 +302,15 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
                     <button onClick={() => setReplyingTo(prev => prev === comment.id ? null : comment.id)} className="text-[11px] font-semibold text-white/30 hover:text-white transition-colors">
                       Yanıtla
                     </button>
+                    {comment.user_id === userId && (
+                      <button
+                        type="button"
+                        onClick={() => deleteComment(comment.id)}
+                        className="text-[11px] font-semibold text-white/30 hover:text-[#E50914] transition-colors"
+                      >
+                        Sil
+                      </button>
+                    )}
                   </div>
 
                   {/* Yanıtlar */}
@@ -270,7 +327,17 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
                             <div className="flex-1">
                               <div className="bg-white/[0.03] rounded-2xl rounded-tl-sm px-3 py-2">
                                 <Link href={rUsername ? `/u/${rUsername}` : '#'} className="text-xs font-semibold text-white hover:text-white/80 transition-colors">{rName}</Link>
-                                <p className="text-xs text-white/65 mt-0.5">{reply.content}</p>
+                                {reply.isSpoiler && !revealedSpoilers[reply.id] ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setRevealedSpoilers((prev) => ({ ...prev, [reply.id]: true }))}
+                                    className="mt-0.5 text-[11px] font-semibold text-[#E50914] hover:text-white transition-colors"
+                                  >
+                                    Spoiler var — Göster
+                                  </button>
+                                ) : (
+                                  <p className="text-xs text-white/65 mt-0.5">{reply.content}</p>
+                                )}
                               </div>
                               <span className="text-[10px] text-white/25 px-2">{timeAgo(reply.created_at)}</span>
                             </div>
@@ -294,7 +361,14 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
                       <button type="button" onClick={() => submitReply(comment.id)} disabled={replySubmitting || !replyContent.trim()} className="px-3 py-1.5 bg-[#E50914] text-white text-xs font-semibold rounded-full disabled:opacity-40">
                         {replySubmitting ? '...' : 'Gönder'}
                       </button>
-                      <button type="button" onClick={() => { setReplyingTo(null); setReplyContent(''); }} className="text-white/30 hover:text-white text-xs transition-colors">İptal</button>
+                      <button
+                        type="button"
+                        onClick={() => setReplySpoiler((prev) => !prev)}
+                        className={`text-[11px] font-semibold transition-colors ${replySpoiler ? 'text-[#E50914]' : 'text-white/30 hover:text-white'}`}
+                      >
+                        Spoiler
+                      </button>
+                      <button type="button" onClick={() => { setReplyingTo(null); setReplyContent(''); setReplySpoiler(false); }} className="text-white/30 hover:text-white text-xs transition-colors">İptal</button>
                     </div>
                   )}
                 </div>
