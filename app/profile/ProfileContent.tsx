@@ -607,13 +607,12 @@ export default function ProfileContent() {
         <div className="h-[120px] sm:h-[160px] md:h-[220px] lg:h-[300px] w-full relative overflow-hidden bg-[#0A0A0A]">
           {coverImageUrl ? (
             <img src={coverImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
-          ) : (
-            <div className="absolute inset-0 bg-[#101010]" aria-hidden />
-          )}
-          {/* Köşe/vinyet gradyanı yok: kapak net görünsün; çok hafif düz kırmızı film */}
+          ) : null}
           <div
             className={`absolute inset-0 pointer-events-none ${
-              coverImageUrl ? 'bg-[#E50914]/[0.06]' : 'bg-[#E50914]/12'
+              coverImageUrl
+                ? 'bg-[#E50914]/[0.06]'
+                : 'bg-gradient-to-br from-[#E50914]/30 via-[#141414] to-[#0A0A0A]'
             }`}
             aria-hidden
           />

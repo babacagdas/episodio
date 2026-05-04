@@ -108,6 +108,23 @@ export async function getTrendingShows(): Promise<Show[]> {
   return data.results as Show[];
 }
 
+/** Profil kapağı için backdrop path (URL üretmek sayfada) */
+export async function getTvBackdropPath(showId: string): Promise<string | null> {
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) return null;
+  try {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/tv/${showId}?api_key=${apiKey}&language=tr-TR`,
+      { next: { revalidate: 3600 } }
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as { backdrop_path?: string | null };
+    return data.backdrop_path ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** İzlenen dizilerden tür çıkarmak için (sadece genre_ids) */
 export async function getTvGenreIds(showId: string): Promise<number[]> {
   const apiKey = getTmdbApiKey();

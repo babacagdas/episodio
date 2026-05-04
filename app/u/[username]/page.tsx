@@ -6,8 +6,10 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import FollowButton from './FollowButton';
 import FollowListsModal from './FollowListsModal';
 import ListPreviewCard from '@/components/ListPreviewCard';
+import { getTvBackdropPath } from '@/lib/tmdb';
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
+const TMDB_BACKDROP = 'https://image.tmdb.org/t/p/w1280';
 
 interface PageParams {
   username: string;
@@ -19,6 +21,7 @@ interface Profile {
   full_name: string;
   bio: string;
   avatar_url: string;
+  cover_show_id?: number | null;
 }
 
 interface WatchlistRow {
@@ -46,7 +49,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   // Use safe step-by-step lookup instead of OR filter parsing.
   const { data: byUsername } = await supabase
     .from('profiles')
-    .select('id, username, full_name, bio, avatar_url')
+    .select('id, username, full_name, bio, avatar_url, cover_show_id')
     .eq('username', loweredUsername)
     .maybeSingle();
   profileData = (byUsername as Profile | null) ?? null;
@@ -54,7 +57,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   if (!profileData) {
     const { data: byId } = await supabase
       .from('profiles')
-      .select('id, username, full_name, bio, avatar_url')
+      .select('id, username, full_name, bio, avatar_url, cover_show_id')
       .eq('id', normalizedUsername)
       .maybeSingle();
     profileData = (byId as Profile | null) ?? null;
@@ -69,7 +72,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     );
     const { data: adminByUsername } = await admin
       .from('profiles')
-      .select('id, username, full_name, bio, avatar_url')
+      .select('id, username, full_name, bio, avatar_url, cover_show_id')
       .eq('username', loweredUsername)
       .maybeSingle();
     profileData = (adminByUsername as Profile | null) ?? null;
@@ -77,7 +80,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     if (!profileData) {
       const { data: adminById } = await admin
         .from('profiles')
-        .select('id, username, full_name, bio, avatar_url')
+        .select('id, username, full_name, bio, avatar_url, cover_show_id')
         .eq('id', normalizedUsername)
         .maybeSingle();
       profileData = (adminById as Profile | null) ?? null;
@@ -96,6 +99,13 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
         </div>
       </div>
     );
+  }
+
+  let coverImageUrl: string | null = null;
+  const coverShowId = profile.cover_show_id ?? null;
+  if (coverShowId != null) {
+    const path = await getTvBackdropPath(String(coverShowId));
+    if (path) coverImageUrl = `${TMDB_BACKDROP}${path}`;
   }
 
   const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, reviewRes, notesRes] = await Promise.all([
@@ -143,7 +153,21 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
 
       <main className="md:ml-[240px]">
         <section className="relative">
-          <div className="h-[200px] md:h-[260px] w-full bg-gradient-to-br from-[#E50914]/30 via-[#141414] to-[#0A0A0A]" />
+          <div className="relative h-[200px] w-full overflow-hidden bg-[#0A0A0A] md:h-[260px]">
+            {coverImageUrl ? (
+              <img
+                src={coverImageUrl}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover object-center"
+              />
+            ) : null}
+            <div
+              className={`absolute inset-0 pointer-events-none ${
+                coverImageUrl ? 'bg-[#E50914]/[0.06]' : 'bg-gradient-to-br from-[#E50914]/30 via-[#141414] to-[#0A0A0A]'
+              }`}
+              aria-hidden
+            />
+          </div>
           <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-16 md:-mt-20 z-10">
             <div className="flex flex-col md:flex-row items-center md:items-end gap-md">
               <div className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-[#0A0A0A] overflow-hidden bg-[#141414] shrink-0 flex items-center justify-center">
