@@ -4,6 +4,8 @@ export interface Show {
   poster_path: string | null;
   vote_average: number;
   first_air_date: string;
+  /** discover/list uçlarında gelir */
+  overview?: string;
 }
 
 export interface Season {

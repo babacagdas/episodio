@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { discoverShowsByGenre, getTvGenreIds } from '@/lib/tmdb';
+import { discoverShowsByGenre, getShowDetail, getTvGenreIds } from '@/lib/tmdb';
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 const FALLBACK = 'https://placehold.co/342x513/141414/555?text=Poster+Yok';
@@ -49,31 +49,53 @@ export default async function PersonalizedRecommendation() {
   const pool = candidates.slice(0, 24);
   const pick = pool[Math.floor(Math.random() * pool.length)];
 
+  let overview = pick.overview?.trim() ?? '';
+  if (!overview) {
+    try {
+      const detail = await getShowDetail(String(pick.id));
+      overview = detail.overview?.trim() ?? '';
+    } catch {
+      overview = '';
+    }
+  }
+
   const poster = pick.poster_path ? `${POSTER_BASE}${pick.poster_path}` : FALLBACK;
   const year = pick.first_air_date?.slice(0, 4) ?? '';
+  const rating = typeof pick.vote_average === 'number' ? pick.vote_average.toFixed(1) : null;
 
   return (
     <section className="mb-6 md:mb-8">
       <h2 className="font-headline-md text-headline-md text-white mb-4">Sana Özel Öneri</h2>
       <Link
         href={`/show/${pick.id}`}
-        className="group flex max-w-lg overflow-hidden rounded-card border border-white/5 transition-colors hover:border-white/20 sm:max-w-xl"
+        className="group flex max-w-2xl cursor-pointer items-start gap-3 sm:gap-4 border-0 bg-transparent p-0 transition-opacity hover:opacity-90"
       >
-        <div className="relative aspect-[2/3] w-[38%] max-w-[140px] shrink-0 sm:max-w-[156px]">
+        <div className="relative aspect-[2/3] w-[6.5rem] shrink-0 overflow-hidden rounded-md sm:w-28 md:w-32">
           <Image
             src={poster}
             alt={pick.name}
             fill
-            sizes="(max-width: 768px) 42vw, 200px"
-            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            sizes="(max-width: 768px) 28vw, 160px"
+            className="object-cover"
           />
         </div>
-        <div className="flex min-w-0 flex-1 flex-col justify-center p-3 sm:p-4">
-          <p className="font-label-sm mb-1.5 text-[10px] text-white/50">İzlemek İsteyebileceklerin</p>
-          <h3 className="font-label-bold text-label-bold text-white drop-shadow-md line-clamp-2">{pick.name}</h3>
-          <p className="font-label-sm mt-1 text-[10px] text-gray-300">
-            {year && `${year} • `}⭐ {pick.vote_average.toFixed(1)}
+        <div className="min-w-0 flex-1">
+          <h3 className="font-label-bold text-label-bold text-white line-clamp-2">{pick.name}</h3>
+          <p className="mt-1 font-body-md text-sm text-white/65 md:text-base">
+            {year ? <span>{year}</span> : null}
+            {year && rating ? <span className="mx-2 text-white/25">•</span> : null}
+            {rating ? (
+              <span className="text-white/70">
+                ⭐ {rating}
+              </span>
+            ) : null}
+            {!year && !rating ? <span className="text-white/35">—</span> : null}
           </p>
+          {overview ? (
+            <p className="mt-2 text-sm leading-relaxed text-white/45 line-clamp-4 md:text-[15px] md:leading-snug md:line-clamp-5">
+              {overview}
+            </p>
+          ) : null}
         </div>
       </Link>
     </section>
