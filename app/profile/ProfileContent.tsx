@@ -206,18 +206,6 @@ export default function ProfileContent() {
     setEditOpen(true);
   }
 
-  /** Kapak şeridindeki buton: düzenleme + TMDB kapak seçici */
-  function openCoverPicker() {
-    setForm(profile);
-    setAvatarPreview(null);
-    setAvatarFile(null);
-    setSaveError('');
-    setCoverSearchQuery('');
-    setCoverSearchResults([]);
-    setEditOpen(true);
-    setCoverModalOpen(true);
-  }
-
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -619,19 +607,16 @@ export default function ProfileContent() {
         <div className="h-[120px] sm:h-[160px] md:h-[220px] lg:h-[300px] w-full relative overflow-hidden bg-[#0A0A0A]">
           {coverImageUrl ? (
             <img src={coverImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
-          ) : null}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#E50914]/30 via-[#141414] to-[#0A0A0A]" />
-          {user && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none p-2 sm:p-3 md:p-4 lg:p-6">
-              <button
-                type="button"
-                onClick={openCoverPicker}
-                className="pointer-events-auto rounded-full border border-white/25 bg-black/55 font-semibold text-white shadow-lg backdrop-blur-md transition-colors hover:bg-black/70 hover:border-white/40 px-3 py-1.5 text-xs sm:px-3.5 sm:py-2 sm:text-[13px] md:px-5 md:py-2.5 md:text-sm lg:px-6 lg:py-3 lg:text-base"
-              >
-                Kapak değiştir
-              </button>
-            </div>
+          ) : (
+            <div className="absolute inset-0 bg-[#101010]" aria-hidden />
           )}
+          {/* Köşe/vinyet gradyanı yok: kapak net görünsün; çok hafif düz kırmızı film */}
+          <div
+            className={`absolute inset-0 pointer-events-none ${
+              coverImageUrl ? 'bg-[#E50914]/[0.06]' : 'bg-[#E50914]/12'
+            }`}
+            aria-hidden
+          />
         </div>
         <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-10 sm:-mt-11 md:-mt-[4.25rem] lg:-mt-24 z-10">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-2 sm:gap-3 md:gap-md">
