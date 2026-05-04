@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import MentionMenu, { type MentionUser } from '@/components/MentionMenu';
 
 interface EpisodeComment {
   id: string;
@@ -72,6 +73,46 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
   const [replySubmitting, setReplySubmitting] = useState(false);
   const [revealedSpoilers, setRevealedSpoilers] = useState<Record<string, boolean>>({});
 
+  // Mentions (followed users only; fetch once)
+  const commentInputRef = useRef<HTMLInputElement | null>(null);
+  const commentWrapRef = useRef<HTMLDivElement | null>(null);
+  const replyInputRef = useRef<HTMLInputElement | null>(null);
+  const replyWrapRef = useRef<HTMLDivElement | null>(null);
+  const [followedUsers, setFollowedUsers] = useState<MentionUser[]>([]);
+  const [mentionOpen, setMentionOpen] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const mentionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [replyMentionOpen, setReplyMentionOpen] = useState(false);
+  const [replyMentionQuery, setReplyMentionQuery] = useState('');
+  const replyMentionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const followedByUsername = useMemo(() => {
+    const map: Record<string, MentionUser> = {};
+    followedUsers.forEach((u) => { if (u.username) map[u.username.toLowerCase()] = u; });
+    return map;
+  }, [followedUsers]);
+
+  const filteredMentions = useMemo(() => {
+    const q = mentionQuery.trim().toLowerCase();
+    if (!q) return followedUsers;
+    return followedUsers.filter((u) => ((u.username ?? '').toLowerCase().includes(q) || (u.full_name ?? '').toLowerCase().includes(q)));
+  }, [followedUsers, mentionQuery]);
+
+  const filteredReplyMentions = useMemo(() => {
+    const q = replyMentionQuery.trim().toLowerCase();
+    if (!q) return followedUsers;
+    return followedUsers.filter((u) => ((u.username ?? '').toLowerCase().includes(q) || (u.full_name ?? '').toLowerCase().includes(q)));
+  }, [followedUsers, replyMentionQuery]);
+
+  function extractMentionQuery(text: string, cursor: number) {
+    const left = text.slice(0, cursor);
+    const at = left.lastIndexOf('@');
+    if (at < 0) return null;
+    const chunk = left.slice(at + 1);
+    if (chunk.includes(' ') || chunk.includes('\n')) return null;
+    return { at, q: chunk };
+  }
+
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data }) => {
@@ -82,6 +123,18 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
     });
     loadComments();
   }, [showId, seasonNumber, episodeNumber]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const supabase = createClient();
+    (async () => {
+      const { data: rel } = await supabase.from('follows').select('following_id').eq('follower_id', userId).limit(80);
+      const ids = (rel ?? []).map((r: any) => r.following_id).filter(Boolean);
+      if (ids.length === 0) { setFollowedUsers([]); return; }
+      const { data: prof } = await supabase.from('profiles').select('id, username, full_name, avatar_url').in('id', ids);
+      setFollowedUsers((prof ?? []) as MentionUser[]);
+    })();
+  }, [userId]);
 
   async function loadComments() {
     const supabase = createClient();
@@ -157,6 +210,24 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
       const parsed = parseSpoiler(data.content ?? '');
       setComments(prev => [{ ...data, content: parsed.content, isSpoiler: parsed.isSpoiler, profile: p ?? null, likeCount: 0, likedByMe: false, replies: [] }, ...prev]);
       setContent(''); setRating(0); setCommentSpoiler(false);
+
+      // mention notifications (unique; only among followed users)
+      const rawMentions = Array.from((content ?? '').matchAll(/@([a-zA-Z0-9_]+)/g)).map((m) => m[1]?.toLowerCase()).filter(Boolean);
+      const unique = Array.from(new Set(rawMentions));
+      const targetIds = unique
+        .map((u) => followedByUsername[u]?.id)
+        .filter((id): id is string => !!id && id !== userId);
+      if (targetIds.length > 0) {
+        await supabase.from('notifications').insert(
+          targetIds.map((targetId) => ({
+            user_id: targetId,
+            actor_id: userId,
+            type: 'mention',
+            message: 'Seni bir bölüm yorumunda etiketledi.',
+            link: `/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}`,
+          }))
+        );
+      }
     }
     setSubmitting(false);
   }
@@ -203,6 +274,24 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
         await supabase.from('notifications').insert({ user_id: comment.user_id, actor_id: userId, type: 'episode_reply', message: 'Yorumuna yanıt yazdı.', link: `/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}` });
       }
       setReplyContent(''); setReplyingTo(null); setReplySpoiler(false);
+
+      // mention notifications (unique; only among followed users)
+      const rawMentions = Array.from((replyContent ?? '').matchAll(/@([a-zA-Z0-9_]+)/g)).map((m) => m[1]?.toLowerCase()).filter(Boolean);
+      const unique = Array.from(new Set(rawMentions));
+      const targetIds = unique
+        .map((u) => followedByUsername[u]?.id)
+        .filter((id): id is string => !!id && id !== userId);
+      if (targetIds.length > 0) {
+        await supabase.from('notifications').insert(
+          targetIds.map((targetId) => ({
+            user_id: targetId,
+            actor_id: userId,
+            type: 'mention',
+            message: 'Seni bir yanıt içinde etiketledi.',
+            link: `/show/${showId}/season/${seasonNumber}/episode/${episodeNumber}`,
+          }))
+        );
+      }
     }
     setReplySubmitting(false);
   }
@@ -224,13 +313,56 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
               ))}
             </div>
             <div className="flex gap-2 items-center">
-              <input
-                className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white text-sm placeholder:text-white/30 focus:border-white/30 focus:outline-none transition-colors"
-                placeholder="Bu bölüm hakkında ne düşünüyorsun?"
-                value={content}
-                onChange={e => setContent(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitComment(); } }}
-              />
+              <div ref={commentWrapRef} className="relative flex-1">
+                <input
+                  ref={commentInputRef}
+                  className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white text-sm placeholder:text-white/30 focus:border-white/30 focus:outline-none transition-colors"
+                  placeholder="Bu bölüm hakkında ne düşünüyorsun? (@ ile etiketle)"
+                  value={content}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setContent(next);
+                    const cursor = e.target.selectionStart ?? next.length;
+                    const hit = extractMentionQuery(next, cursor);
+                    if (!hit) { setMentionOpen(false); setMentionQuery(''); return; }
+                    if (mentionTimer.current) clearTimeout(mentionTimer.current);
+                    mentionTimer.current = setTimeout(() => {
+                      setMentionQuery(hit.q);
+                      setMentionOpen(true);
+                    }, 180);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setMentionOpen(false);
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitComment(); }
+                  }}
+                />
+                <MentionMenu
+                  open={mentionOpen}
+                  anchorRef={commentWrapRef}
+                  items={filteredMentions}
+                  onPick={(u) => {
+                    const el = commentInputRef.current;
+                    const base = content;
+                    const cursor = el?.selectionStart ?? base.length;
+                    const hit = extractMentionQuery(base, cursor);
+                    const username = u.username ?? '';
+                    if (!hit || !username) { setMentionOpen(false); return; }
+                    const before = base.slice(0, hit.at);
+                    const after = base.slice(cursor);
+                    const next = `${before}@${username} ${after}`;
+                    setContent(next);
+                    setMentionOpen(false);
+                    setMentionQuery('');
+                    requestAnimationFrame(() => {
+                      try {
+                        const pos = (before + `@${username} `).length;
+                        el?.focus();
+                        el?.setSelectionRange(pos, pos);
+                      } catch {}
+                    });
+                  }}
+                />
+              </div>
               <button
                 type="button"
                 onClick={submitComment}
@@ -350,14 +482,57 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
                   {/* Yanıt yaz */}
                   {replyingTo === comment.id && (
                     <div className="mt-3 flex gap-2 pl-3">
-                      <input
-                        className="flex-1 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-white text-xs placeholder:text-white/25 focus:border-white/25 focus:outline-none transition-colors"
-                        placeholder="Yanıt yaz..."
-                        value={replyContent}
-                        onChange={e => setReplyContent(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); submitReply(comment.id); } }}
-                        autoFocus
-                      />
+                      <div ref={replyWrapRef} className="relative flex-1">
+                        <input
+                          ref={replyInputRef}
+                          className="w-full bg-white/5 border border-white/10 rounded-full px-3 py-1.5 text-white text-xs placeholder:text-white/25 focus:border-white/25 focus:outline-none transition-colors"
+                          placeholder="Yanıt yaz... (@ ile etiketle)"
+                          value={replyContent}
+                          onChange={(e) => {
+                            const next = e.target.value;
+                            setReplyContent(next);
+                            const cursor = e.target.selectionStart ?? next.length;
+                            const hit = extractMentionQuery(next, cursor);
+                            if (!hit) { setReplyMentionOpen(false); setReplyMentionQuery(''); return; }
+                            if (replyMentionTimer.current) clearTimeout(replyMentionTimer.current);
+                            replyMentionTimer.current = setTimeout(() => {
+                              setReplyMentionQuery(hit.q);
+                              setReplyMentionOpen(true);
+                            }, 180);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') setReplyMentionOpen(false);
+                            if (e.key === 'Enter') { e.preventDefault(); submitReply(comment.id); }
+                          }}
+                          autoFocus
+                        />
+                        <MentionMenu
+                          open={replyMentionOpen}
+                          anchorRef={replyWrapRef}
+                          items={filteredReplyMentions}
+                          onPick={(u) => {
+                            const el = replyInputRef.current;
+                            const base = replyContent;
+                            const cursor = el?.selectionStart ?? base.length;
+                            const hit = extractMentionQuery(base, cursor);
+                            const username = u.username ?? '';
+                            if (!hit || !username) { setReplyMentionOpen(false); return; }
+                            const before = base.slice(0, hit.at);
+                            const after = base.slice(cursor);
+                            const next = `${before}@${username} ${after}`;
+                            setReplyContent(next);
+                            setReplyMentionOpen(false);
+                            setReplyMentionQuery('');
+                            requestAnimationFrame(() => {
+                              try {
+                                const pos = (before + `@${username} `).length;
+                                el?.focus();
+                                el?.setSelectionRange(pos, pos);
+                              } catch {}
+                            });
+                          }}
+                        />
+                      </div>
                       <button type="button" onClick={() => submitReply(comment.id)} disabled={replySubmitting || !replyContent.trim()} className="px-3 py-1.5 bg-[#E50914] text-white text-xs font-semibold rounded-full disabled:opacity-40">
                         {replySubmitting ? '...' : 'Gönder'}
                       </button>

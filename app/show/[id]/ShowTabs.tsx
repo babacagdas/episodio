@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import type { Episode, Season, Show } from '@/lib/tmdb';
+import MentionMenu, { type MentionUser } from '@/components/MentionMenu';
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 const STILL_BASE = 'https://image.tmdb.org/t/p/w300';
@@ -72,6 +73,39 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
   const [noteLoaded, setNoteLoaded] = useState(false);
   const [revealedSpoilers, setRevealedSpoilers] = useState<Record<string, boolean>>({});
 
+  // Mentions (followed users only; fetch once)
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputWrapRef = useRef<HTMLDivElement | null>(null);
+  const [followedUsers, setFollowedUsers] = useState<MentionUser[]>([]);
+  const [mentionOpen, setMentionOpen] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const mentionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const followedByUsername = useMemo(() => {
+    const map: Record<string, MentionUser> = {};
+    followedUsers.forEach((u) => { if (u.username) map[u.username.toLowerCase()] = u; });
+    return map;
+  }, [followedUsers]);
+
+  const filteredMentions = useMemo(() => {
+    const q = mentionQuery.trim().toLowerCase();
+    if (!q) return followedUsers;
+    return followedUsers.filter((u) => {
+      const a = (u.username ?? '').toLowerCase();
+      const b = (u.full_name ?? '').toLowerCase();
+      return a.includes(q) || b.includes(q);
+    });
+  }, [followedUsers, mentionQuery]);
+
+  function extractMentionQuery(text: string, cursor: number) {
+    const left = text.slice(0, cursor);
+    const at = left.lastIndexOf('@');
+    if (at < 0) return null;
+    const chunk = left.slice(at + 1);
+    if (chunk.includes(' ') || chunk.includes('\n')) return null;
+    return { at, q: chunk };
+  }
+
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data }) => {
@@ -84,6 +118,18 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    const supabase = createClient();
+    (async () => {
+      const { data: rel } = await supabase.from('follows').select('following_id').eq('follower_id', userId).limit(80);
+      const ids = (rel ?? []).map((r: any) => r.following_id).filter(Boolean);
+      if (ids.length === 0) { setFollowedUsers([]); return; }
+      const { data: prof } = await supabase.from('profiles').select('id, username, full_name, avatar_url').in('id', ids);
+      setFollowedUsers((prof ?? []) as MentionUser[]);
+    })();
+  }, [userId]);
 
   async function loadReviews() {
     if (reviewsLoaded) return;
@@ -163,6 +209,24 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
       setMyRating(0);
       setMySpoiler(false);
       setReviewsLoaded(true);
+
+      // mention notifications (unique; only among followed users)
+      const rawMentions = Array.from((myContent ?? '').matchAll(/@([a-zA-Z0-9_]+)/g)).map((m) => m[1]?.toLowerCase()).filter(Boolean);
+      const unique = Array.from(new Set(rawMentions));
+      const targetIds = unique
+        .map((u) => followedByUsername[u]?.id)
+        .filter((id): id is string => !!id && id !== userId);
+      if (targetIds.length > 0) {
+        await supabase.from('notifications').insert(
+          targetIds.map((targetId) => ({
+            user_id: targetId,
+            actor_id: userId,
+            type: 'mention',
+            message: 'Seni bir yorumda etiketledi.',
+            link: `/show/${showId}`,
+          }))
+        );
+      }
     } else if (error) {
       setSubmitError(error.message ?? 'Yorum gönderilemedi.');
     }
@@ -323,13 +387,56 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                   ))}
                 </div>
                 <div className="flex gap-2 items-center">
-                  <input
-                    className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white text-sm placeholder:text-white/30 focus:border-white/30 focus:outline-none transition-colors"
-                    placeholder="Yorumunu yaz..."
-                    value={myContent}
-                    onChange={e => setMyContent(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitReview(); } }}
-                  />
+                  <div ref={inputWrapRef} className="relative flex-1">
+                    <input
+                      ref={inputRef}
+                      className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-white text-sm placeholder:text-white/30 focus:border-white/30 focus:outline-none transition-colors"
+                      placeholder="Yorumunu yaz... (@ ile etiketle)"
+                      value={myContent}
+                      onChange={(e) => {
+                        const next = e.target.value;
+                        setMyContent(next);
+                        const cursor = e.target.selectionStart ?? next.length;
+                        const hit = extractMentionQuery(next, cursor);
+                        if (!hit) { setMentionOpen(false); setMentionQuery(''); return; }
+                        if (mentionTimer.current) clearTimeout(mentionTimer.current);
+                        mentionTimer.current = setTimeout(() => {
+                          setMentionQuery(hit.q);
+                          setMentionOpen(true);
+                        }, 180);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') setMentionOpen(false);
+                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitReview(); }
+                      }}
+                    />
+                    <MentionMenu
+                      open={mentionOpen}
+                      anchorRef={inputWrapRef}
+                      items={filteredMentions}
+                      onPick={(u) => {
+                        const el = inputRef.current;
+                        const base = myContent;
+                        const cursor = el?.selectionStart ?? base.length;
+                        const hit = extractMentionQuery(base, cursor);
+                        const username = u.username ?? '';
+                        if (!hit || !username) { setMentionOpen(false); return; }
+                        const before = base.slice(0, hit.at);
+                        const after = base.slice(cursor);
+                        const next = `${before}@${username} ${after}`;
+                        setMyContent(next);
+                        setMentionOpen(false);
+                        setMentionQuery('');
+                        requestAnimationFrame(() => {
+                          try {
+                            const pos = (before + `@${username} `).length;
+                            el?.focus();
+                            el?.setSelectionRange(pos, pos);
+                          } catch {}
+                        });
+                      }}
+                    />
+                  </div>
                   <button
                     onClick={submitReview}
                     disabled={submitting || !myContent.trim() || myRating === 0}
