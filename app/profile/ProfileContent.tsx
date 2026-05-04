@@ -11,23 +11,46 @@ import FollowListsModal from '@/app/u/[username]/FollowListsModal';
 import type { User } from '@supabase/supabase-js';
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
+const TMDB_BACKDROP = 'https://image.tmdb.org/t/p/w1280';
+
 interface Profile {
   username: string;
   full_name: string;
   bio: string;
   avatar_url: string;
   activity_visible: boolean;
+  cover_show_id?: number | null;
+}
+
+interface TmdbTvSearchItem {
+  id: number;
+  name: string;
+  poster_path: string | null;
 }
 
 export default function ProfileContent() {
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Profile>({ username: '', full_name: '', bio: '', avatar_url: '', activity_visible: true });
+  const [profile, setProfile] = useState<Profile>({
+    username: '',
+    full_name: '',
+    bio: '',
+    avatar_url: '',
+    activity_visible: true,
+    cover_show_id: null,
+  });
   const { watchlist, loading } = useWatchlist();
   const { lists, sharedLists, likedLists, countsByListId, postersByListId, likesByListId, createList, loading: listsLoading, error: listsError } = useLists();
   const [activeTab, setActiveTab] = useState<'watchlist' | 'watched' | 'lists' | 'notes'>('watchlist');
   const [listsSubTab, setListsSubTab] = useState<'mine' | 'shared'>('mine');
   const [editOpen, setEditOpen] = useState(false);
-  const [form, setForm] = useState<Profile>({ username: '', full_name: '', bio: '', avatar_url: '', activity_visible: true });
+  const [form, setForm] = useState<Profile>({
+    username: '',
+    full_name: '',
+    bio: '',
+    avatar_url: '',
+    activity_visible: true,
+    cover_show_id: null,
+  });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [listModalOpen, setListModalOpen] = useState(false);
@@ -42,6 +65,12 @@ export default function ProfileContent() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [coverModalOpen, setCoverModalOpen] = useState(false);
+  const [coverSearchQuery, setCoverSearchQuery] = useState('');
+  const [coverSearchResults, setCoverSearchResults] = useState<TmdbTvSearchItem[]>([]);
+  const [coverSearchLoading, setCoverSearchLoading] = useState(false);
+  const [coverBackdropPath, setCoverBackdropPath] = useState<string | null>(null);
+  const coverSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [watchedCount, setWatchedCount] = useState(0);
@@ -58,7 +87,11 @@ export default function ProfileContent() {
       setUser(data.user);
       const { data: p } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
       if (p) {
-        setProfile({ ...p, activity_visible: p.activity_visible ?? true });
+        setProfile({
+          ...p,
+          activity_visible: p.activity_visible ?? true,
+          cover_show_id: p.cover_show_id ?? null,
+        });
       } else {
         const initial: Profile = {
           username: data.user.email?.split('@')[0] ?? '',
@@ -66,6 +99,7 @@ export default function ProfileContent() {
           bio: '',
           avatar_url: data.user.user_metadata?.avatar_url ?? '',
           activity_visible: true,
+          cover_show_id: null,
         };
         await supabase.from('profiles').insert({ id: data.user.id, ...initial });
         setProfile(initial);
@@ -102,6 +136,62 @@ export default function ProfileContent() {
     });
   }, []);
 
+  const activeCoverShowId = editOpen ? (form.cover_show_id ?? null) : (profile.cover_show_id ?? null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (activeCoverShowId == null) {
+      setCoverBackdropPath(null);
+      return;
+    }
+    void (async () => {
+      try {
+        const res = await fetch(`/api/tmdb/show/${activeCoverShowId}`);
+        const data = (await res.json()) as { backdrop_path?: string | null };
+        if (cancelled) return;
+        setCoverBackdropPath(data.backdrop_path ?? null);
+      } catch {
+        if (!cancelled) setCoverBackdropPath(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeCoverShowId]);
+
+  useEffect(() => {
+    if (!coverModalOpen) return;
+    const q = coverSearchQuery.trim();
+    let cancelled = false;
+    if (coverSearchTimer.current) clearTimeout(coverSearchTimer.current);
+    if (!q) {
+      setCoverSearchResults([]);
+      setCoverSearchLoading(false);
+      return;
+    }
+    setCoverSearchLoading(true);
+    coverSearchTimer.current = setTimeout(() => {
+      void (async () => {
+        try {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+          const data = (await res.json()) as unknown;
+          if (cancelled) return;
+          setCoverSearchResults(Array.isArray(data) ? (data as TmdbTvSearchItem[]) : []);
+        } catch {
+          if (!cancelled) setCoverSearchResults([]);
+        } finally {
+          if (!cancelled) setCoverSearchLoading(false);
+        }
+      })();
+    }, 300);
+    return () => {
+      cancelled = true;
+      if (coverSearchTimer.current) clearTimeout(coverSearchTimer.current);
+    };
+  }, [coverSearchQuery, coverModalOpen]);
+
+  const coverImageUrl = coverBackdropPath ? `${TMDB_BACKDROP}${coverBackdropPath}` : null;
+
   const displayName = profile.full_name || profile.username || user?.email?.split('@')[0] || 'Kullanıcı';
   const avatar = avatarPreview || profile.avatar_url || null;
 
@@ -110,7 +200,22 @@ export default function ProfileContent() {
     setAvatarPreview(null);
     setAvatarFile(null);
     setSaveError('');
+    setCoverModalOpen(false);
+    setCoverSearchQuery('');
+    setCoverSearchResults([]);
     setEditOpen(true);
+  }
+
+  /** Kapak şeridindeki buton: düzenleme + TMDB kapak seçici */
+  function openCoverPicker() {
+    setForm(profile);
+    setAvatarPreview(null);
+    setAvatarFile(null);
+    setSaveError('');
+    setCoverSearchQuery('');
+    setCoverSearchResults([]);
+    setEditOpen(true);
+    setCoverModalOpen(true);
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -140,12 +245,23 @@ export default function ProfileContent() {
       avatar_url = urlData.publicUrl;
     }
 
-    const updated = { ...form, avatar_url };
-    const { error } = await supabase.from('profiles').upsert({ id: user.id, ...updated, updated_at: new Date().toISOString() });
+    const updated: Profile = {
+      username: form.username,
+      full_name: form.full_name,
+      bio: form.bio,
+      avatar_url,
+      activity_visible: form.activity_visible,
+      cover_show_id: form.cover_show_id ?? null,
+    };
+    const { error } = await supabase.from('profiles').upsert({
+      id: user.id,
+      ...updated,
+      updated_at: new Date().toISOString(),
+    });
     if (error) {
       setSaveError(error.message);
     } else {
-      setProfile(updated);
+      setProfile((prev) => ({ ...prev, ...updated }));
       setEditOpen(false);
     }
     setSaving(false);
@@ -195,11 +311,23 @@ export default function ProfileContent() {
       {/* Edit Modal */}
       {editOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setEditOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => {
+              setCoverModalOpen(false);
+              setEditOpen(false);
+            }}
+          />
           <div className="relative z-10 w-full max-w-md bg-[#141414] border border-white/10 rounded-2xl p-6 flex flex-col gap-5 shadow-2xl">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-white">Profili Düzenle</h3>
-              <button onClick={() => setEditOpen(false)} className="text-white/30 hover:text-white transition-colors">
+              <button
+                onClick={() => {
+                  setCoverModalOpen(false);
+                  setEditOpen(false);
+                }}
+                className="text-white/30 hover:text-white transition-colors"
+              >
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
@@ -220,6 +348,28 @@ export default function ProfileContent() {
               </div>
               <button onClick={() => fileRef.current?.click()} className="text-xs text-[#E50914] hover:text-white transition-colors">Fotoğraf Değiştir</button>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+              <div className="flex flex-col items-center gap-1.5 w-full">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCoverSearchQuery('');
+                    setCoverSearchResults([]);
+                    setCoverModalOpen(true);
+                  }}
+                  className="text-xs text-[#E50914] hover:text-white transition-colors font-medium"
+                >
+                  Kapak değiştir
+                </button>
+                {form.cover_show_id != null && (
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, cover_show_id: null }))}
+                    className="text-[11px] text-white/35 hover:text-white/60 transition-colors"
+                  >
+                    Kapak kaldır
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Fields */}
@@ -283,6 +433,73 @@ export default function ProfileContent() {
             >
               {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Kaydet'}
             </button>
+          </div>
+        </div>
+      )}
+
+      {editOpen && coverModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setCoverModalOpen(false)} />
+          <div className="relative z-10 w-full max-w-lg bg-[#141414] border border-white/10 rounded-2xl p-5 flex flex-col gap-4 shadow-2xl max-h-[85vh]">
+            <div className="flex items-center justify-between shrink-0">
+              <h3 className="text-base font-bold text-white">Dizi ile kapak seç</h3>
+              <button
+                type="button"
+                onClick={() => setCoverModalOpen(false)}
+                className="text-white/30 hover:text-white transition-colors"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <input
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#E50914]/50 focus:outline-none transition-colors shrink-0"
+              placeholder="Dizi adı ara (TMDB)…"
+              value={coverSearchQuery}
+              onChange={(e) => setCoverSearchQuery(e.target.value)}
+              autoFocus
+            />
+            <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-white/10 bg-[#0f0f0f]">
+              {coverSearchLoading && (
+                <p className="text-xs text-white/35 p-4 text-center">Aranıyor…</p>
+              )}
+              {!coverSearchLoading && coverSearchQuery.trim() && coverSearchResults.length === 0 && (
+                <p className="text-xs text-white/35 p-4 text-center">Sonuç yok</p>
+              )}
+              {!coverSearchLoading && coverSearchResults.length > 0 && (
+                <ul className="divide-y divide-white/5">
+                  {coverSearchResults.map((show) => (
+                    <li key={show.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setForm((f) => ({ ...f, cover_show_id: show.id }));
+                          setCoverModalOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 p-3 text-left hover:bg-white/5 transition-colors"
+                      >
+                        <div className="w-12 h-[72px] shrink-0 rounded-md overflow-hidden bg-white/10 border border-white/10">
+                          {show.poster_path ? (
+                            <img
+                              src={`${POSTER_BASE}${show.poster_path}`}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-white/20">
+                              <span className="material-symbols-outlined text-2xl">movie</span>
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-sm text-white font-medium leading-snug line-clamp-2">{show.name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {!coverSearchQuery.trim() && !coverSearchLoading && (
+                <p className="text-xs text-white/30 p-4 text-center">Aramak için dizi adı yazın</p>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -399,7 +616,24 @@ export default function ProfileContent() {
       )}
       {/* Cover & Avatar */}
       <section className="relative">
-        <div className="h-[150px] md:h-[280px] w-full bg-gradient-to-br from-[#E50914]/30 via-[#141414] to-[#0A0A0A]" />
+        <div className="h-[150px] md:h-[280px] w-full relative overflow-hidden bg-[#0A0A0A]">
+          {coverImageUrl ? (
+            <img src={coverImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
+          ) : null}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#E50914]/30 via-[#141414] to-[#0A0A0A]" />
+          {user && (
+            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none p-3">
+              <button
+                type="button"
+                onClick={openCoverPicker}
+                className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/55 px-4 py-2.5 text-sm font-semibold text-white shadow-lg backdrop-blur-md transition-colors hover:bg-black/70 hover:border-white/40"
+              >
+                <span className="material-symbols-outlined text-[20px]">wallpaper</span>
+                Kapak değiştir
+              </button>
+            </div>
+          )}
+        </div>
         <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-12 md:-mt-20 z-10">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-md">
             <div className="w-24 h-24 md:w-36 md:h-36 rounded-full border-4 border-[#0A0A0A] overflow-hidden bg-[#141414] shrink-0 flex items-center justify-center">
