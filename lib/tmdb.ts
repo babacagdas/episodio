@@ -105,3 +105,32 @@ export async function getTrendingShows(): Promise<Show[]> {
   const data = await res.json();
   return data.results as Show[];
 }
+
+/** İzlenen dizilerden tür çıkarmak için (sadece genre_ids) */
+export async function getTvGenreIds(showId: string): Promise<number[]> {
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) return [];
+  try {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/tv/${showId}?api_key=${apiKey}&language=tr-TR`,
+      { next: { revalidate: 86400 } }
+    );
+    if (!res.ok) return [];
+    const data = (await res.json()) as { genres?: { id: number }[] };
+    return (data.genres ?? []).map((g) => g.id);
+  } catch {
+    return [];
+  }
+}
+
+export async function discoverShowsByGenre(genreId: number, page = 1): Promise<Show[]> {
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) return [];
+  const res = await fetch(
+    `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&language=tr-TR&with_genres=${genreId}&sort_by=popularity.desc&page=${page}`,
+    { cache: 'no-store' }
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.results ?? []) as Show[];
+}

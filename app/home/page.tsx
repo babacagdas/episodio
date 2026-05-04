@@ -7,6 +7,7 @@ import { getTrendingShows } from '@/lib/tmdb';
 import FriendsActivitySection from './FriendsActivitySection';
 import NotificationsBell from './NotificationsBell';
 import CurrentlyWatchingCard from './CurrentlyWatchingCard';
+import PersonalizedRecommendation from './PersonalizedRecommendation';
 
 async function TrendingGrid() {
   const shows = await getTrendingShows();
@@ -40,6 +41,8 @@ export default async function Home() {
         </div>
 
         <CurrentlyWatchingCard />
+
+        <PersonalizedRecommendation />
 
         {/* Trending */}
         <section className="mb-lg">
