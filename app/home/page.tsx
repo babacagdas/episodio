@@ -6,6 +6,7 @@ import { CardGridSkeleton } from '@/components/Skeletons';
 import { getTrendingShows } from '@/lib/tmdb';
 import FriendsActivitySection from './FriendsActivitySection';
 import NotificationsBell from './NotificationsBell';
+import CurrentlyWatchingCard from './CurrentlyWatchingCard';
 
 async function TrendingGrid() {
   const shows = await getTrendingShows();
@@ -37,6 +38,8 @@ export default async function Home() {
           </div>
           <NotificationsBell />
         </div>
+
+        <CurrentlyWatchingCard />
 
         {/* Trending */}
         <section className="mb-lg">
