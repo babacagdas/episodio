@@ -616,40 +616,44 @@ export default function ProfileContent() {
       )}
       {/* Cover & Avatar */}
       <section className="relative">
-        <div className="h-[150px] md:h-[280px] w-full relative overflow-hidden bg-[#0A0A0A]">
+        <div className="h-[120px] sm:h-[160px] md:h-[220px] lg:h-[300px] w-full relative overflow-hidden bg-[#0A0A0A]">
           {coverImageUrl ? (
             <img src={coverImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
           ) : null}
           <div className="absolute inset-0 bg-gradient-to-br from-[#E50914]/30 via-[#141414] to-[#0A0A0A]" />
           {user && (
-            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none p-3">
+            <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none p-2 sm:p-3 md:p-4 lg:p-6">
               <button
                 type="button"
                 onClick={openCoverPicker}
-                className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/55 px-4 py-2.5 text-sm font-semibold text-white shadow-lg backdrop-blur-md transition-colors hover:bg-black/70 hover:border-white/40"
+                className="pointer-events-auto rounded-full border border-white/25 bg-black/55 font-semibold text-white shadow-lg backdrop-blur-md transition-colors hover:bg-black/70 hover:border-white/40 px-3 py-1.5 text-xs sm:px-3.5 sm:py-2 sm:text-[13px] md:px-5 md:py-2.5 md:text-sm lg:px-6 lg:py-3 lg:text-base"
               >
-                <span className="material-symbols-outlined text-[20px]">wallpaper</span>
                 Kapak değiştir
               </button>
             </div>
           )}
         </div>
-        <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-12 md:-mt-20 z-10">
-          <div className="flex flex-col md:flex-row items-center md:items-end gap-md">
-            <div className="w-24 h-24 md:w-36 md:h-36 rounded-full border-4 border-[#0A0A0A] overflow-hidden bg-[#141414] shrink-0 flex items-center justify-center">
+        <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-10 sm:-mt-11 md:-mt-[4.25rem] lg:-mt-24 z-10">
+          <div className="flex flex-col md:flex-row items-center md:items-end gap-2 sm:gap-3 md:gap-md">
+            <div className="w-[5.5rem] h-[5.5rem] sm:w-24 sm:h-24 md:w-[8.5rem] md:h-[8.5rem] lg:w-36 lg:h-36 rounded-full border-[3px] sm:border-4 border-[#0A0A0A] overflow-hidden bg-[#141414] shrink-0 flex items-center justify-center">
               {avatar
                 ? <img alt={displayName} className="w-full h-full object-cover" src={profile.avatar_url || avatar} />
-                : <span className="material-symbols-outlined text-white/20 text-5xl">person</span>
+                : <span className="material-symbols-outlined text-white/20 text-[2.5rem] sm:text-5xl md:text-[3.25rem]">person</span>
               }
             </div>
-            <div className="text-center md:text-left flex-1 mb-2">
-              <h2 className="text-2xl md:text-3xl font-bold text-white">{displayName}</h2>
+            <div className="text-center md:text-left flex-1 mb-2 min-w-0">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">{displayName}</h2>
               {profile.username && <p className="text-sm text-white/30 mt-0.5">@{profile.username}</p>}
               {profile.bio && <p className="text-sm text-white/50 mt-2 max-w-md">{profile.bio}</p>}
               {!profile.bio && user?.email && <p className="text-sm text-white/20 mt-1">{user.email}</p>}
             </div>
-            <div className="flex flex-wrap justify-center md:justify-end gap-3 mt-4 md:mt-0 pb-2">
-              <button onClick={openEdit} className="px-5 py-2 bg-transparent border border-white/20 rounded-full text-sm font-semibold text-white hover:bg-white/5 transition-colors">Profili Düzenle</button>
+            <div className="flex flex-wrap justify-center md:justify-end gap-2 sm:gap-3 mt-3 sm:mt-4 md:mt-0 pb-2 w-full md:w-auto">
+              <button
+                onClick={openEdit}
+                className="px-4 py-2 sm:px-5 sm:py-2 bg-transparent border border-white/20 rounded-full text-xs sm:text-sm font-semibold text-white hover:bg-white/5 transition-colors"
+              >
+                Profili Düzenle
+              </button>
               {user && (
                 <button
                   onClick={async () => {
