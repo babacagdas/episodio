@@ -38,6 +38,8 @@ interface ChatClientProps {
   };
 }
 
+const popularEmojis = ['😀', '😂', '😍', '👍', '🔥', '❤️', '🎬', '🍿', '😮', '😢', '👏', '🎉'];
+
 export default function ChatClient({ currentUser }: ChatClientProps) {
   const supabase = createClient();
   const searchParams = useSearchParams();
@@ -56,6 +58,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [modalSearchQuery, setModalSearchQuery] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const activeChatIdRef = useRef<string | null>(null);
@@ -613,12 +616,9 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                       >
                         {activeChat.otherUser.full_name || activeChat.otherUser.username}
                       </Link>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500/85 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse" />
-                        <span className="text-[10px] text-white/40 block">
-                          @{activeChat.otherUser.username} • Aktif
-                        </span>
-                      </div>
+                      <span className="text-[10px] text-white/30 block -mt-0.5">
+                        @{activeChat.otherUser.username}
+                      </span>
                     </div>
                   </div>
 
@@ -708,22 +708,36 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                     onSubmit={handleSendMessage}
                     className="bg-white/[0.02] border border-white/[0.06] focus-within:border-[#D4A017]/40 focus-within:ring-2 focus-within:ring-[#D4A017]/5 rounded-2xl p-2 flex items-center gap-2 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.2)]"
                   >
-                    {/* Dekoratif Medya İkonları */}
-                    <div className="flex items-center gap-1 px-1">
+                    {/* Emoji Picker Butonu ve Listesi */}
+                    <div className="relative flex items-center px-1">
                       <button
                         type="button"
-                        className="w-8 h-8 rounded-xl hover:bg-white/[0.04] text-white/30 hover:text-white/70 flex items-center justify-center transition-colors"
-                        title="Medya Ekle"
+                        onClick={() => setShowEmojiPicker((prev) => !prev)}
+                        className={`w-8 h-8 rounded-xl hover:bg-white/[0.04] flex items-center justify-center transition-colors ${showEmojiPicker ? 'text-[#D4A017]' : 'text-white/30 hover:text-white/70'}`}
+                        title="Emoji Ekle"
                       >
-                        <span className="material-symbols-outlined text-lg">image</span>
+                        <span className="material-symbols-outlined text-lg">sentiment_satisfied</span>
                       </button>
-                      <button
-                        type="button"
-                        className="w-8 h-8 rounded-xl hover:bg-white/[0.04] text-white/30 hover:text-white/70 flex items-center justify-center transition-colors"
-                        title="Dizi/Film Öner"
-                      >
-                        <span className="material-symbols-outlined text-lg">movie</span>
-                      </button>
+
+                      {showEmojiPicker && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)} />
+                          <div className="absolute bottom-12 left-0 z-50 bg-[#141414] border border-white/[0.08] rounded-xl p-2 shadow-2xl grid grid-cols-6 gap-1.5 w-[210px] animate-[chatScaleIn_0.2s_cubic-bezier(0.34,1.56,0.64,1)_forwards]">
+                            {popularEmojis.map((emoji) => (
+                              <button
+                                key={emoji}
+                                type="button"
+                                onClick={() => {
+                                  setInputMessage((prev) => prev + emoji);
+                                }}
+                                className="w-7 h-7 flex items-center justify-center text-lg hover:bg-white/10 rounded-lg transition-colors active:scale-90"
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
 
                     {/* Giriş Alanı */}
