@@ -283,7 +283,10 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
               (newMsg.sender_id === activeChatId && newMsg.receiver_id === currentUser.id) ||
               (newMsg.sender_id === currentUser.id && newMsg.receiver_id === activeChatId)
             ) {
-              setMessages((prev) => [...prev, newMsg]);
+              setMessages((prev) => {
+                if (prev.some((m) => m.id === newMsg.id)) return prev;
+                return [...prev, newMsg];
+              });
               if (newMsg.sender_id === activeChatId) {
                 markChatAsRead(activeChatId);
               }
@@ -385,321 +388,426 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
   });
 
   return (
-    <div className="font-body-md text-body-md antialiased h-[100dvh] bg-[#0A0A0A] text-white overflow-hidden flex">
+    <div className="font-body-md text-body-md antialiased h-[100dvh] bg-[#070707] text-white overflow-hidden flex">
+      {/* Global CSS Animasyonları */}
+      <style>{`
+        @keyframes chatFadeInUp {
+          0% {
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes chatFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes chatScaleIn {
+          from {
+            opacity: 0;
+            transform: scale(0.96);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
+
       <Sidebar />
 
       {/* Ana Sohbet Konteyneri */}
-      <main className="md:ml-[240px] flex-1 flex h-full w-full md:w-[calc(100%-240px)] relative bg-[#0C0C0C]">
+      <main className="md:ml-[240px] flex-1 flex h-full w-full md:w-[calc(100%-240px)] relative bg-[#090909] overflow-hidden">
         
-        {/* SOL PANEL: Sohbet Listesi */}
-        <div
-          className={`${
-            selectedUserId ? 'hidden md:flex' : 'flex'
-          } w-full md:w-[350px] border-r border-white/5 flex-col h-full bg-[#0E0E0E] shrink-0`}
-        >
-          {/* Header */}
-          <div className="p-5 border-b border-white/5 flex items-center justify-between">
-            <h1 className="text-xl font-bold tracking-tight">Mesajlar</h1>
-            <button
-              onClick={() => setShowNewChatModal(true)}
-              className="w-10 h-10 rounded-full bg-[#E50914] hover:bg-[#E50914]/90 hover:scale-105 active:scale-95 text-white flex items-center justify-center transition-all shadow-[0_4px_12px_rgba(229,9,20,0.2)]"
-              title="Yeni Sohbet Başlat"
-            >
-              <span className="material-symbols-outlined text-lg">add</span>
-            </button>
-          </div>
+        {/* Sinematik Arka Plan Işık Huzmeleri */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-[0.15]">
+          <div className="absolute -top-[10%] -right-[10%] w-[400px] h-[400px] bg-[#E50914] rounded-full filter blur-[150px] animate-pulse duration-[8000ms]" />
+          <div className="absolute -bottom-[10%] -left-[10%] w-[350px] h-[350px] bg-[#D4A017] rounded-full filter blur-[120px] opacity-70 animate-pulse duration-[10000ms]" />
+        </div>
 
-          {/* Arama Çubuğu */}
-          <div className="px-4 py-3">
-            <div className="relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">
-                search
-              </span>
-              <input
-                type="text"
-                placeholder="Sohbetlerde ara..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/[0.04] border border-white/5 focus:border-white/10 rounded-full py-2.5 pl-10 pr-4 text-base text-white placeholder-white/20 focus:outline-none transition-all"
-              />
+        {/* İçerik Katmanı */}
+        <div className="flex-1 flex h-full w-full relative z-10">
+          
+          {/* SOL PANEL: Sohbet Listesi */}
+          <div
+            className={`${
+              selectedUserId ? 'hidden md:flex' : 'flex'
+            } w-full md:w-[350px] border-r border-white/[0.04] flex-col h-full bg-[#0A0A0A]/40 backdrop-blur-2xl shrink-0`}
+          >
+            {/* Header */}
+            <div className="px-5 py-5 border-b border-white/[0.05] flex items-center justify-between bg-black/10">
+              <div>
+                <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">Gelen Kutusu</h1>
+                <p className="text-[10px] text-white/30 uppercase tracking-widest font-semibold mt-0.5">
+                  {chats.length} sohbet • {chats.reduce((acc, curr) => acc + curr.unreadCount, 0)} okunmamış
+                </p>
+              </div>
+              <button
+                onClick={() => setShowNewChatModal(true)}
+                className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#E50914] to-[#B80710] hover:from-[#f40f1c] hover:to-[#cd0812] active:scale-95 text-white flex items-center justify-center transition-all shadow-[0_4px_15px_rgba(229,9,20,0.3)] hover:shadow-[0_4px_20px_rgba(229,9,20,0.5)] border border-red-500/10 group"
+                title="Yeni Sohbet Başlat"
+              >
+                <span className="material-symbols-outlined text-lg group-hover:rotate-90 transition-transform duration-300">add</span>
+              </button>
+            </div>
+
+            {/* Arama Çubuğu */}
+            <div className="px-4 py-3">
+              <div className="relative group">
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-white/20 text-sm group-focus-within:text-[#D4A017] transition-colors duration-300">
+                  search
+                </span>
+                <input
+                  type="text"
+                  placeholder="Sohbetlerde ara..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white/[0.02] border border-white/[0.06] focus:border-[#D4A017]/40 focus:ring-2 focus:ring-[#D4A017]/5 rounded-xl py-2 pl-10 pr-4 text-xs text-white placeholder-white/20 focus:outline-none transition-all duration-300"
+                />
+              </div>
+            </div>
+
+            {/* Sohbet Listesi */}
+            <div className="flex-1 overflow-y-auto px-2 pb-24 md:pb-5 space-y-1">
+              {loadingChats ? (
+                <div className="flex flex-col gap-2 p-4">
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="flex items-center gap-3 animate-pulse">
+                      <div className="w-12 h-12 rounded-full bg-white/5" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-white/5 rounded w-1/3" />
+                        <div className="h-3 bg-white/5 rounded w-2/3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : filteredChats.length === 0 ? (
+                <div className="text-center py-10 px-4 text-white/30">
+                  <span className="material-symbols-outlined text-4xl mb-2">forum</span>
+                  <p className="text-sm">Henüz sohbet bulunamadı.</p>
+                  <button
+                    onClick={() => setShowNewChatModal(true)}
+                    className="mt-3 text-xs text-[#E50914] font-semibold hover:underline"
+                  >
+                    Yeni sohbet başlat
+                  </button>
+                </div>
+              ) : (
+                filteredChats.map((chat) => {
+                  const isActive = selectedUserId === chat.otherUser.id;
+                  const displayName = chat.otherUser.full_name || chat.otherUser.username;
+                  const lastMsg = chat.lastMessage;
+                  const isUnread = chat.unreadCount > 0;
+
+                  return (
+                    <button
+                      key={chat.otherUser.id}
+                      onClick={() => setSelectedUserId(chat.otherUser.id)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left ${
+                        isActive
+                          ? 'bg-gradient-to-r from-white/[0.07] to-white/[0.01] border-l-2 border-[#D4A017] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
+                          : 'hover:bg-white/[0.03] border-l-2 border-transparent hover:translate-x-0.5'
+                      }`}
+                    >
+                      {/* Profil Resmi */}
+                      <div className={`w-11 h-11 rounded-full border ${isActive ? 'border-[#D4A017]/30' : 'border-white/10'} overflow-hidden bg-[#1A1A1A] shrink-0 flex items-center justify-center relative`}>
+                        {chat.otherUser.avatar_url ? (
+                          <img
+                            src={chat.otherUser.avatar_url}
+                            alt={displayName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="material-symbols-outlined text-white/30 text-lg">
+                            person
+                          </span>
+                        )}
+                        {isUnread && (
+                          <span className="absolute -top-0.5 -right-0.5 bg-[#E50914] w-3 h-3 rounded-full border border-[#0E0E0E]" />
+                        )}
+                      </div>
+
+                      {/* Bilgiler & Unread Badge */}
+                      <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex justify-between items-baseline gap-1 mb-0.5">
+                            <span className={`text-sm font-semibold truncate ${isActive ? 'text-white' : isUnread ? 'text-[#D4A017]' : 'text-white/80'}`}>
+                              {displayName}
+                            </span>
+                            {lastMsg && (
+                              <span className={`text-[10px] shrink-0 ${isUnread ? 'text-[#D4A017] font-semibold' : 'text-white/30'}`}>
+                                {new Date(lastMsg.created_at).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-xs truncate leading-normal ${isUnread ? 'text-white/90 font-medium' : 'text-white/45'}`}>
+                            {lastMsg
+                              ? lastMsg.sender_id === currentUser.id
+                                ? `Siz: ${lastMsg.content}`
+                                : lastMsg.content
+                              : 'Sohbeti başlatın...'}
+                          </p>
+                        </div>
+
+                        {isUnread && (
+                          <div className="shrink-0 bg-gradient-to-r from-[#E50914] to-[#B80710] text-white text-[9px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-[0_0_10px_rgba(229,9,20,0.4)] animate-pulse">
+                            {chat.unreadCount}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </div>
 
-          {/* Sohbet Listesi */}
-          <div className="flex-1 overflow-y-auto px-2 pb-24 md:pb-5 space-y-1">
-            {loadingChats ? (
-              <div className="flex flex-col gap-2 p-4">
-                {[1, 2, 3].map((n) => (
-                  <div key={n} className="flex items-center gap-3 animate-pulse">
-                    <div className="w-12 h-12 rounded-full bg-white/5" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-white/5 rounded w-1/3" />
-                      <div className="h-3 bg-white/5 rounded w-2/3" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : filteredChats.length === 0 ? (
-              <div className="text-center py-10 px-4 text-white/30">
-                <span className="material-symbols-outlined text-4xl mb-2">forum</span>
-                <p className="text-sm">Henüz sohbet bulunamadı.</p>
-                <button
-                  onClick={() => setShowNewChatModal(true)}
-                  className="mt-3 text-xs text-[#E50914] font-semibold hover:underline"
-                >
-                  Yeni sohbet başlat
-                </button>
-              </div>
-            ) : (
-              filteredChats.map((chat) => {
-                const isActive = selectedUserId === chat.otherUser.id;
-                const displayName = chat.otherUser.full_name || chat.otherUser.username;
-                const lastMsg = chat.lastMessage;
-                const isUnread = chat.unreadCount > 0;
+          {/* SAĞ PANEL: Sohbet Penceresi */}
+          <div
+            className={`${
+              !selectedUserId ? 'hidden md:flex' : 'flex'
+            } flex-1 flex-col h-full bg-black/10 backdrop-blur-3xl`}
+          >
+            {activeChat ? (
+              <>
+                {/* Üst Bar */}
+                <div className="h-16 border-b border-white/[0.05] flex items-center justify-between px-5 shrink-0 bg-[#0A0A0A]/40 backdrop-blur-md">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {/* Mobilde Geri Butonu */}
+                    <button
+                      onClick={() => setSelectedUserId(null)}
+                      className="md:hidden w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center mr-1 text-white hover:bg-white/10 active:scale-95 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-lg">arrow_back</span>
+                    </button>
 
-                return (
-                  <button
-                    key={chat.otherUser.id}
-                    onClick={() => setSelectedUserId(chat.otherUser.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left ${
-                      isActive
-                        ? 'bg-white/[0.06] border border-white/5'
-                        : 'hover:bg-white/[0.03] border border-transparent'
-                    }`}
-                  >
                     {/* Profil Resmi */}
-                    <div className="w-11 h-11 rounded-full border border-white/10 overflow-hidden bg-[#1A1A1A] shrink-0 flex items-center justify-center relative">
-                      {chat.otherUser.avatar_url ? (
+                    <Link
+                      href={`/u/${activeChat.otherUser.username}`}
+                      className="w-10 h-10 rounded-full border border-white/[0.08] hover:border-[#D4A017]/40 overflow-hidden bg-[#151515] shrink-0 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300"
+                    >
+                      {activeChat.otherUser.avatar_url ? (
                         <img
-                          src={chat.otherUser.avatar_url}
-                          alt={displayName}
+                          src={activeChat.otherUser.avatar_url}
+                          alt={activeChat.otherUser.full_name || activeChat.otherUser.username}
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="material-symbols-outlined text-white/30 text-lg">
+                        <span className="material-symbols-outlined text-white/30 text-base">
                           person
                         </span>
                       )}
-                      {isUnread && (
-                        <span className="absolute -top-0.5 -right-0.5 bg-[#E50914] w-3 h-3 rounded-full border border-[#0E0E0E]" />
-                      )}
-                    </div>
+                    </Link>
 
-                    {/* Bilgiler */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex justify-between items-baseline gap-1 mb-0.5">
-                        <span className={`font-semibold truncate text-sm ${isUnread ? 'text-[#D4A017]' : 'text-white'}`}>
-                          {displayName}
+                    {/* İsim ve Kullanıcı Adı */}
+                    <div className="min-w-0">
+                      <Link
+                        href={`/u/${activeChat.otherUser.username}`}
+                        className="font-semibold text-white hover:text-[#D4A017] transition-colors text-sm block truncate"
+                      >
+                        {activeChat.otherUser.full_name || activeChat.otherUser.username}
+                      </Link>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500/85 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse" />
+                        <span className="text-[10px] text-white/40 block">
+                          @{activeChat.otherUser.username} • Aktif
                         </span>
-                        {lastMsg && (
-                          <span className={`text-[10px] shrink-0 ${isUnread ? 'text-[#D4A017] font-semibold' : 'text-white/20'}`}>
-                            {new Date(lastMsg.created_at).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
-                        )}
                       </div>
-                      <p className={`text-xs truncate leading-normal ${isUnread ? 'text-white/80 font-medium' : 'text-white/40'}`}>
-                        {lastMsg
-                          ? lastMsg.sender_id === currentUser.id
-                            ? `Siz: ${lastMsg.content}`
-                            : lastMsg.content
-                          : 'Sohbeti başlatın...'}
-                      </p>
                     </div>
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
+                  </div>
 
-        {/* SAĞ PANEL: Sohbet Penceresi */}
-        <div
-          className={`${
-            !selectedUserId ? 'hidden md:flex' : 'flex'
-          } flex-1 flex-col h-full bg-[#0C0C0C]`}
-        >
-          {activeChat ? (
-            <>
-              {/* Üst Bar */}
-              <div className="h-16 border-b border-white/5 flex items-center justify-between px-4 shrink-0 bg-[#0E0E0E]">
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Mobilde Geri Butonu */}
-                  <button
-                    onClick={() => setSelectedUserId(null)}
-                    className="md:hidden w-8 h-8 rounded-full bg-white/5 flex items-center justify-center mr-1 text-white hover:bg-white/10"
-                  >
-                    <span className="material-symbols-outlined text-lg">arrow_back</span>
-                  </button>
-
-                  {/* Profil Resmi */}
+                  {/* Profil Bağlantısı Butonu */}
                   <Link
                     href={`/u/${activeChat.otherUser.username}`}
-                    className="w-10 h-10 rounded-full border border-white/10 overflow-hidden bg-[#1A1A1A] shrink-0 flex items-center justify-center hover:opacity-80 transition-opacity"
+                    className="px-3.5 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/10 hover:border-[#D4A017]/30 hover:text-[#D4A017] text-xs font-semibold text-white/80 transition-all duration-300 flex items-center gap-1"
                   >
-                    {activeChat.otherUser.avatar_url ? (
-                      <img
-                        src={activeChat.otherUser.avatar_url}
-                        alt={activeChat.otherUser.full_name || activeChat.otherUser.username}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="material-symbols-outlined text-white/30 text-base">
-                        person
-                      </span>
-                    )}
+                    <span>Profili Gör</span>
+                    <span className="material-symbols-outlined text-[10px]">chevron_right</span>
                   </Link>
-
-                  {/* İsim ve Kullanıcı Adı */}
-                  <div className="min-w-0">
-                    <Link
-                      href={`/u/${activeChat.otherUser.username}`}
-                      className="font-semibold text-white hover:text-[#D4A017] transition-colors text-sm block truncate"
-                    >
-                      {activeChat.otherUser.full_name || activeChat.otherUser.username}
-                    </Link>
-                    <span className="text-[10px] text-white/30 block -mt-0.5">
-                      @{activeChat.otherUser.username}
-                    </span>
-                  </div>
                 </div>
 
-                {/* Profil Bağlantısı Butonu */}
-                <Link
-                  href={`/u/${activeChat.otherUser.username}`}
-                  className="px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 text-xs font-semibold text-white/70 hover:text-white transition-all flex items-center gap-1 border border-white/5"
-                >
-                  <span>Profili Gör</span>
-                  <span className="material-symbols-outlined text-[10px]">chevron_right</span>
-                </Link>
-              </div>
+                {/* Mesaj Alanı */}
+                <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                  {loadingMessages ? (
+                    <div className="flex items-center justify-center h-full">
+                      <span className="w-6 h-6 border-2 border-white/10 border-t-[#E50914] rounded-full animate-spin" />
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-white/20">
+                      <span className="material-symbols-outlined text-4xl mb-2">waving_hand</span>
+                      <p className="text-sm">İlk mesajı göndererek sohbeti başlatın!</p>
+                    </div>
+                  ) : (
+                    messages.map((msg, index) => {
+                      const isMe = msg.sender_id === currentUser.id;
+                      const prevMsg = index > 0 ? messages[index - 1] : null;
+                      const showTime =
+                        !prevMsg ||
+                        new Date(msg.created_at).getTime() - new Date(prevMsg.created_at).getTime() >
+                          300000; // 5 dakikadan uzun ara varsa saat göster
 
-              {/* Mesaj Alanı */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4">
-                {loadingMessages ? (
-                  <div className="flex items-center justify-center h-full">
-                    <span className="w-6 h-6 border-2 border-white/10 border-t-[#E50914] rounded-full animate-spin" />
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-white/20">
-                    <span className="material-symbols-outlined text-4xl mb-2">waving_hand</span>
-                    <p className="text-sm">İlk mesajı göndererek sohbeti başlatın!</p>
-                  </div>
-                ) : (
-                  messages.map((msg, index) => {
-                    const isMe = msg.sender_id === currentUser.id;
-                    const prevMsg = index > 0 ? messages[index - 1] : null;
-                    const showTime =
-                      !prevMsg ||
-                      new Date(msg.created_at).getTime() - new Date(prevMsg.created_at).getTime() >
-                        300000; // 5 dakikadan uzun ara varsa saat göster
-
-                    return (
-                      <div key={msg.id} className="flex flex-col">
-                        {showTime && (
-                          <span className="text-[10px] text-white/15 self-center my-3">
-                            {new Date(msg.created_at).toLocaleDateString([], {
-                              month: 'short',
-                              day: 'numeric',
-                            })}{' '}
-                            {new Date(msg.created_at).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
-                        )}
-                        <div
-                          className={`flex max-w-[70%] flex-col rounded-2xl px-4 py-2.5 ${
-                            isMe
-                              ? 'bg-[#E50914] text-white self-end rounded-tr-sm shadow-[0_2px_8px_rgba(229,9,20,0.15)]'
-                              : 'bg-white/[0.05] text-white/90 self-start rounded-tl-sm'
-                          }`}
+                      return (
+                        <div 
+                          key={msg.id} 
+                          className="flex flex-col"
+                          style={{
+                            animation: 'chatFadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                            opacity: 0,
+                            transform: 'translateY(12px)'
+                          }}
                         >
-                          <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                            {msg.content}
-                          </p>
-                          <span
-                            className={`text-[9px] self-end mt-1 ${
-                              isMe ? 'text-white/60' : 'text-white/30'
+                          {showTime && (
+                            <span className="text-[10px] text-white/15 self-center my-3">
+                              {new Date(msg.created_at).toLocaleDateString([], {
+                                month: 'short',
+                                day: 'numeric',
+                              })}{' '}
+                              {new Date(msg.created_at).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          )}
+                          <div
+                            className={`flex max-w-[70%] flex-col rounded-2xl px-4 py-2.5 ${
+                              isMe
+                                ? 'bg-gradient-to-br from-[#E50914] to-[#A5070E] border border-red-500/10 text-white self-end rounded-tr-sm shadow-[0_4px_15px_rgba(229,9,20,0.25)]'
+                                : 'bg-white/[0.04] border border-white/[0.03] text-white/90 self-start rounded-tl-sm shadow-[0_2px_10px_rgba(0,0,0,0.1)]'
                             }`}
                           >
-                            {new Date(msg.created_at).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
+                            <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                              {msg.content}
+                            </p>
+                            <span
+                              className={`text-[9px] self-end mt-1 ${
+                                isMe ? 'text-white/60' : 'text-white/35'
+                              }`}
+                            >
+                              {new Date(msg.created_at).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })
-                )}
-                <div ref={messagesEndRef} />
-              </div>
+                      );
+                    })
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
 
-              {/* Mesaj Yazma Girişi */}
-              <form
-                onSubmit={handleSendMessage}
-                className="p-4 border-t border-white/5 bg-[#0E0E0E] flex items-center gap-3 shrink-0"
-              >
-                <input
-                  type="text"
-                  placeholder="Bir mesaj yazın..."
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  className="flex-1 bg-white/[0.04] border border-white/5 focus:border-white/10 rounded-full px-5 py-3 text-base text-white placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 transition-all"
-                />
-                <button
-                  type="submit"
-                  disabled={!inputMessage.trim()}
-                  className="w-11 h-11 rounded-full bg-[#E50914] hover:bg-[#E50914]/90 disabled:opacity-50 disabled:hover:scale-100 hover:scale-105 active:scale-95 text-white flex items-center justify-center transition-all shadow-[0_4px_12px_rgba(229,9,20,0.2)] shrink-0"
-                >
-                  <span className="material-symbols-outlined text-lg">send</span>
-                </button>
-              </form>
-            </>
-          ) : (
-            // Boş Ekran
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-white/20">
-              <div className="w-16 h-16 rounded-3xl bg-white/[0.02] flex items-center justify-center mb-4 border border-white/5">
-                <span className="material-symbols-outlined text-white/30 text-3xl">chat_bubble</span>
+                {/* Mesaj Yazma Girişi */}
+                <div className="p-4 bg-[#0A0A0A]/40 backdrop-blur-md border-t border-white/[0.05]">
+                  <form
+                    onSubmit={handleSendMessage}
+                    className="bg-white/[0.02] border border-white/[0.06] focus-within:border-[#D4A017]/40 focus-within:ring-2 focus-within:ring-[#D4A017]/5 rounded-2xl p-2 flex items-center gap-2 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.2)]"
+                  >
+                    {/* Dekoratif Medya İkonları */}
+                    <div className="flex items-center gap-1 px-1">
+                      <button
+                        type="button"
+                        className="w-8 h-8 rounded-xl hover:bg-white/[0.04] text-white/30 hover:text-white/70 flex items-center justify-center transition-colors"
+                        title="Medya Ekle"
+                      >
+                        <span className="material-symbols-outlined text-lg">image</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="w-8 h-8 rounded-xl hover:bg-white/[0.04] text-white/30 hover:text-white/70 flex items-center justify-center transition-colors"
+                        title="Dizi/Film Öner"
+                      >
+                        <span className="material-symbols-outlined text-lg">movie</span>
+                      </button>
+                    </div>
+
+                    {/* Giriş Alanı */}
+                    <input
+                      type="text"
+                      placeholder="Bir mesaj yazın..."
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      className="flex-1 bg-transparent border-0 px-2 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:ring-0"
+                    />
+
+                    {/* Gönder Butonu */}
+                    <button
+                      type="submit"
+                      disabled={!inputMessage.trim()}
+                      className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#E50914] to-[#B80710] hover:from-[#f40f1c] hover:to-[#cd0812] disabled:opacity-30 disabled:pointer-events-none hover:scale-105 active:scale-95 text-white flex items-center justify-center transition-all shadow-[0_4px_12px_rgba(229,9,20,0.3)] hover:shadow-[0_4px_15px_rgba(229,9,20,0.5)] shrink-0 border border-red-500/10"
+                    >
+                      <span className="material-symbols-outlined text-base">send</span>
+                    </button>
+                  </form>
+                </div>
+              </>
+            ) : (
+              // Boş Ekran
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative">
+                <div className="absolute inset-0 pointer-events-none opacity-5 flex items-center justify-center">
+                  <img src="/logo.png" alt="Logo Watermark" className="w-[300px] h-auto object-contain select-none filter invert" />
+                </div>
+                <div className="relative z-10 max-w-sm flex flex-col items-center">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.06] flex items-center justify-center mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.4)] hover:scale-105 transition-transform duration-300">
+                    <span className="material-symbols-outlined text-[#D4A017] text-4xl drop-shadow-[0_0_15px_rgba(212,160,23,0.3)]">
+                      forum
+                    </span>
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-2 tracking-tight">Sohbete Başlayın</h3>
+                  <p className="text-sm text-white/40 leading-relaxed mb-6">
+                    Arkadaşlarınızla en sevdiğiniz film ve diziler hakkında konuşmak için soldan bir sohbet seçin veya yeni bir mesajlaşma başlatın.
+                  </p>
+                  <button
+                    onClick={() => setShowNewChatModal(true)}
+                    className="px-5 py-2.5 rounded-full bg-white/[0.03] hover:bg-white/10 hover:text-[#D4A017] border border-white/[0.05] hover:border-[#D4A017]/30 text-xs text-white/70 font-semibold transition-all duration-300 flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-sm">add</span>
+                    <span>Yeni Sohbet Başlat</span>
+                  </button>
+                </div>
               </div>
-              <h3 className="text-white font-semibold mb-1">Sohbete Başlayın</h3>
-              <p className="text-sm max-w-xs leading-relaxed">
-                Arkadaşlarınızla film ve diziler hakkında konuşmak için soldan bir sohbet seçin veya yeni bir tane başlatın.
-              </p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </main>
 
       {/* YENİ SOHBET MODALİ */}
       {showNewChatModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          style={{ animation: 'chatFadeIn 0.2s ease-out forwards' }}
+        >
           {/* Backdrop */}
           <div
             onClick={() => setShowNewChatModal(false)}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
           />
 
           {/* Modal Gövdesi */}
-          <div className="relative bg-[#111111] border border-white/10 w-full max-w-md rounded-3xl overflow-hidden flex flex-col max-h-[80vh] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          <div 
+            className="relative bg-[#101010]/95 backdrop-blur-2xl border border-white/[0.08] w-full max-w-md rounded-2xl overflow-hidden flex flex-col max-h-[80vh] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)]"
+            style={{ animation: 'chatScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
+          >
             {/* Modal Header */}
-            <div className="p-5 border-b border-white/5 flex justify-between items-center bg-[#141414]">
-              <h2 className="text-lg font-bold">Yeni Sohbet Başlat</h2>
+            <div className="p-5 border-b border-white/[0.06] flex justify-between items-center bg-black/20">
+              <h2 className="text-base font-bold text-white tracking-tight">Yeni Sohbet Başlat</h2>
               <button
                 onClick={() => setShowNewChatModal(false)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                className="w-8 h-8 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-all"
               >
                 <span className="material-symbols-outlined text-base">close</span>
               </button>
             </div>
 
             {/* Modal Arama */}
-            <div className="px-4 py-3 bg-[#121212] border-b border-white/5">
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">
+            <div className="px-4 py-3 bg-black/10 border-b border-white/[0.06]">
+              <div className="relative group">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-white/20 text-sm group-focus-within:text-[#D4A017] transition-colors">
                   search
                 </span>
                 <input
@@ -707,14 +815,14 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                   placeholder="Kullanıcı adı ara..."
                   value={modalSearchQuery}
                   onChange={(e) => setModalSearchQuery(e.target.value)}
-                  className="w-full bg-white/[0.04] border border-white/5 focus:border-white/10 rounded-full py-2 pl-9 pr-4 text-xs text-white placeholder-white/20 focus:outline-none transition-all"
+                  className="w-full bg-white/[0.02] border border-white/[0.06] focus:border-[#D4A017]/40 focus:ring-2 focus:ring-[#D4A017]/5 rounded-xl py-2 pl-9 pr-4 text-xs text-white placeholder-white/20 focus:outline-none transition-all duration-300"
                 />
               </div>
             </div>
 
             {/* Modal Bağlantı Listesi */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-1 bg-[#111111]">
-              <p className="text-[10px] text-white/30 uppercase tracking-widest font-semibold px-2 mb-2">
+            <div className="flex-1 overflow-y-auto p-4 space-y-1 bg-transparent">
+              <p className="text-[9px] text-white/30 uppercase tracking-widest font-semibold px-2 mb-2">
                 Takipçiler & Takip Edilenler
               </p>
               {filteredConnections.length === 0 ? (
@@ -732,10 +840,10 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                     <button
                       key={user.id}
                       onClick={() => startNewChat(user)}
-                      className="w-full flex items-center gap-3 p-2.5 rounded-2xl hover:bg-white/[0.03] transition-colors text-left"
+                      className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.03] border border-transparent hover:border-white/[0.04] transition-all text-left group"
                     >
                       {/* Profil Resmi */}
-                      <div className="w-10 h-10 rounded-full border border-white/10 overflow-hidden bg-[#1A1A1A] shrink-0 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full border border-white/10 group-hover:border-[#D4A017]/30 overflow-hidden bg-[#1A1A1A] shrink-0 flex items-center justify-center transition-colors duration-300">
                         {user.avatar_url ? (
                           <img
                             src={user.avatar_url}
@@ -751,7 +859,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
 
                       {/* Bilgiler */}
                       <div className="min-w-0 flex-1">
-                        <span className="font-semibold text-white truncate text-xs block">
+                        <span className="font-semibold text-white group-hover:text-[#D4A017] truncate text-xs block transition-colors duration-300">
                           {displayName}
                         </span>
                         <span className="text-[10px] text-white/30 block -mt-0.5">
