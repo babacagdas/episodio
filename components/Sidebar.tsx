@@ -64,8 +64,8 @@ export default function Sidebar() {
 
   return (
     <div className="hidden md:flex fixed left-0 top-0 h-full w-[240px] bg-[#0A0A0A] border-r border-white/5 flex-col py-8 px-6 z-50">
-      <div className="mb-12">
-        <img alt="Episodio Logo" className="h-24 w-auto object-contain" src="/logo.png" />
+      <div className="mb-12 -ml-2 pr-4">
+        <img alt="Episodio Logo" className="w-full max-w-[180px] h-auto object-contain" src="/logo.png" />
       </div>
       <nav className="flex flex-col gap-6">
         {navItems.map(({ href, icon, label }) => {

@@ -5,11 +5,11 @@ export default function Splash() {
     <div suppressHydrationWarning className="bg-[#0A0A0A] min-h-screen text-on-background font-body-md text-body-md overflow-hidden antialiased">
       {/* Cinematic Background */}
       <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-black/50 z-10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/60 to-transparent z-20" />
+        <div className="absolute inset-0 bg-black/10 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/30 to-transparent z-20" />
         <img
           alt=""
-          className="w-full h-full object-cover opacity-50 blur-[2px]"
+          className="w-full h-full object-cover opacity-90 blur-[2px]"
           src="/splash_bg.jpg"
         />
       </div>
@@ -21,7 +21,7 @@ export default function Splash() {
 
         {/* Center Brand Area */}
         <div className="flex flex-col items-center text-center max-w-md w-full">
-          <img alt="Episodio Logo" className="h-40 md:h-56 w-auto object-contain hover:scale-105 transition-transform duration-700" src="/logo.png" />
+          <img alt="Episodio Logo" className="h-80 md:h-[448px] w-auto object-contain hover:scale-105 transition-transform duration-700" src="/logo.png" />
         </div>
 
         {/* Bottom Action Area */}

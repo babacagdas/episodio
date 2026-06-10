@@ -45,7 +45,7 @@ export default function SignIn() {
         <div className="w-full bg-[#141414]/80 backdrop-blur-2xl border border-white/5 rounded-2xl p-8 md:p-10 shadow-[0_0_60px_rgba(0,0,0,0.6)] flex flex-col gap-7">
 
           <div className="flex flex-col items-center gap-3">
-            <img alt="Episodio Logo" className="h-[120px] w-auto object-contain" src="/logo.png" />
+            <img alt="Episodio Logo" className="h-[180px] w-auto object-contain" src="/logo.png" />
             <p className="text-white/30 text-xs uppercase tracking-[0.2em]">Hesabına giriş yap</p>
           </div>
 
