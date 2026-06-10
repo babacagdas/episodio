@@ -8,6 +8,7 @@ const navItems = [
   { href: '/home', icon: 'home', label: 'Ana Sayfa' },
   { href: '/search', icon: 'search', label: 'Keşfet' },
   { href: '/watchlist', icon: 'bookmark', label: 'Listem' },
+  { href: '/chat', icon: 'chat', label: 'Mesajlar' },
   { href: '/profile', icon: 'person', label: 'Profil' },
 ];
 

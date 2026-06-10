@@ -182,8 +182,15 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                 {profile.bio && <p className="text-sm text-white/55 mt-2 max-w-xl">{profile.bio}</p>}
               </div>
               {!isOwnProfile && (
-                <div className="pb-2">
+                <div className="pb-2 flex items-center gap-2">
                   <FollowButton targetUserId={profile.id} initialFollowing={isFollowing} />
+                  <Link
+                    href={`/chat?user=${profile.id}`}
+                    className="px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/15 text-white font-label-bold text-label-bold transition-all border border-white/10 flex items-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-base">chat</span>
+                    <span>Mesaj Gönder</span>
+                  </Link>
                 </div>
               )}
             </div>
