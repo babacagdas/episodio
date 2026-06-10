@@ -443,7 +443,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
             {/* Header */}
             <div className="px-5 py-5 border-b border-white/[0.05] flex items-center justify-between bg-black/10">
               <div>
-                <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">Gelen Kutusu</h1>
+                <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">Mesajlarım</h1>
                 <p className="text-[10px] text-white/30 uppercase tracking-widest font-semibold mt-0.5">
                   {chats.length} sohbet • {chats.reduce((acc, curr) => acc + curr.unreadCount, 0)} okunmamış
                 </p>
@@ -625,10 +625,10 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                   {/* Profil Bağlantısı Butonu */}
                   <Link
                     href={`/u/${activeChat.otherUser.username}`}
-                    className="px-3.5 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.05] hover:bg-white/10 hover:border-[#D4A017]/30 hover:text-[#D4A017] text-xs font-semibold text-white/80 transition-all duration-300 flex items-center gap-1"
+                    className="px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.05] hover:bg-white/10 hover:border-[#D4A017]/30 hover:text-[#D4A017] text-[10px] font-semibold text-white/80 transition-all duration-300 flex items-center gap-0.5"
                   >
                     <span>Profili Gör</span>
-                    <span className="material-symbols-outlined text-[10px]">chevron_right</span>
+                    <span className="material-symbols-outlined text-[8px]">chevron_right</span>
                   </Link>
                 </div>
 
@@ -706,14 +706,14 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                 <div className="p-4 bg-[#0A0A0A]/40 backdrop-blur-md border-t border-white/[0.05]">
                   <form
                     onSubmit={handleSendMessage}
-                    className="bg-white/[0.02] border border-white/[0.06] focus-within:border-[#D4A017]/40 focus-within:ring-2 focus-within:ring-[#D4A017]/5 rounded-2xl p-2 flex items-center gap-2 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.2)]"
+                    className="bg-white/[0.02] border border-white/[0.06] focus-within:border-[#D4A017]/40 focus-within:ring-2 focus-within:ring-[#D4A017]/5 rounded-full py-1.5 px-3 flex items-center gap-2 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.2)]"
                   >
                     {/* Emoji Picker Butonu ve Listesi */}
-                    <div className="relative flex items-center px-1">
+                    <div className="relative flex items-center">
                       <button
                         type="button"
                         onClick={() => setShowEmojiPicker((prev) => !prev)}
-                        className={`w-8 h-8 rounded-xl hover:bg-white/[0.04] flex items-center justify-center transition-colors ${showEmojiPicker ? 'text-[#D4A017]' : 'text-white/30 hover:text-white/70'}`}
+                        className={`w-7 h-7 rounded-full hover:bg-white/[0.04] flex items-center justify-center transition-colors ${showEmojiPicker ? 'text-[#D4A017]' : 'text-white/30 hover:text-white/70'}`}
                         title="Emoji Ekle"
                       >
                         <span className="material-symbols-outlined text-lg">sentiment_satisfied</span>
@@ -722,7 +722,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                       {showEmojiPicker && (
                         <>
                           <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)} />
-                          <div className="absolute bottom-12 left-0 z-50 bg-[#141414] border border-white/[0.08] rounded-xl p-2 shadow-2xl grid grid-cols-6 gap-1.5 w-[210px] animate-[chatScaleIn_0.2s_cubic-bezier(0.34,1.56,0.64,1)_forwards]">
+                          <div className="absolute bottom-10 left-0 z-50 bg-[#141414] border border-white/[0.08] rounded-xl p-2 shadow-2xl grid grid-cols-6 gap-1.5 w-[210px] animate-[chatScaleIn_0.2s_cubic-bezier(0.34,1.56,0.64,1)_forwards]">
                             {popularEmojis.map((emoji) => (
                               <button
                                 key={emoji}
@@ -746,16 +746,16 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                       placeholder="Bir mesaj yazın..."
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
-                      className="flex-1 bg-transparent border-0 px-2 py-2 text-xs text-white placeholder-white/20 focus:outline-none focus:ring-0"
+                      className="flex-1 bg-transparent border-0 px-2 py-1 text-xs text-white placeholder-white/20 focus:outline-none focus:ring-0"
                     />
 
                     {/* Gönder Butonu */}
                     <button
                       type="submit"
                       disabled={!inputMessage.trim()}
-                      className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#E50914] to-[#B80710] hover:from-[#f40f1c] hover:to-[#cd0812] disabled:opacity-30 disabled:pointer-events-none hover:scale-105 active:scale-95 text-white flex items-center justify-center transition-all shadow-[0_4px_12px_rgba(229,9,20,0.3)] hover:shadow-[0_4px_15px_rgba(229,9,20,0.5)] shrink-0 border border-red-500/10"
+                      className="w-7 h-7 rounded-full bg-gradient-to-br from-[#E50914] to-[#B80710] hover:from-[#f40f1c] hover:to-[#cd0812] disabled:opacity-30 disabled:pointer-events-none hover:scale-105 active:scale-95 text-white flex items-center justify-center transition-all shadow-[0_4px_12px_rgba(229,9,20,0.3)] hover:shadow-[0_4px_15px_rgba(229,9,20,0.5)] shrink-0 border border-red-500/10"
                     >
-                      <span className="material-symbols-outlined text-base">send</span>
+                      <span className="material-symbols-outlined text-sm">send</span>
                     </button>
                   </form>
                 </div>
