@@ -64,9 +64,9 @@ export default function Sidebar() {
 
   return (
     <div className="hidden md:flex fixed left-0 top-0 h-full w-[240px] bg-[#0A0A0A] border-r border-white/5 flex-col py-8 px-6 z-50">
-      <span className="text-xl font-black text-white uppercase tracking-tighter font-['Be_Vietnam_Pro'] mb-12 block">
-        EPISODIO<span className="text-[#E50914]">.</span>
-      </span>
+      <div className="mb-12">
+        <img alt="Episodio Logo" className="h-6 w-auto object-contain" src="/logo.png" />
+      </div>
       <nav className="flex flex-col gap-6">
         {navItems.map(({ href, icon, label }) => {
           const active = pathname === href;

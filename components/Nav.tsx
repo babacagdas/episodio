@@ -15,9 +15,9 @@ const navItems = [
 export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
   return (
     <header className="bg-[#0A0A0A]/70 backdrop-blur-xl flex justify-between items-center w-full px-6 py-4 top-0 z-50 border-b border-white/5 sticky md:hidden">
-      <span className="text-xl font-black text-white uppercase tracking-tighter font-['Be_Vietnam_Pro']">
-        EPISODIO<span className="text-[#E50914]">.</span>
-      </span>
+      <Link href="/home">
+        <img alt="Episodio Logo" className="h-5 w-auto object-contain" src="/logo.png" />
+      </Link>
       {rightElement ?? <span className="material-symbols-outlined text-white cursor-pointer">notifications</span>}
     </header>
   );
