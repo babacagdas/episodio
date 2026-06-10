@@ -9,6 +9,7 @@ import FriendsActivitySection from './FriendsActivitySection';
 import NotificationsBell from './NotificationsBell';
 import CurrentlyWatchingCard from './CurrentlyWatchingCard';
 import PersonalizedRecommendation from './PersonalizedRecommendation';
+import WelcomeHeader from './WelcomeHeader';
 
 async function TrendingGrid() {
   const shows = await getTrendingShows();
@@ -33,13 +34,7 @@ export default async function Home() {
       <Sidebar />
 
       <main className="md:ml-[240px] px-margin-mobile md:px-12 py-8 max-w-[1440px] mx-auto overflow-x-hidden">
-        <div className="hidden md:flex justify-between items-end mb-10">
-          <div>
-            <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-1">Hoş geldin</p>
-            <h1 className="font-display-xl text-display-xl text-white">Merhaba 👋</h1>
-          </div>
-          <NotificationsBell />
-        </div>
+        <WelcomeHeader />
 
         <CurrentlyWatchingCard />
 

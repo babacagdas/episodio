@@ -16,6 +16,16 @@ export interface Season {
   poster_path: string | null;
 }
 
+export interface EpisodeShort {
+  id: number;
+  name: string;
+  overview: string;
+  air_date: string;
+  episode_number: number;
+  season_number: number;
+  still_path: string | null;
+}
+
 export interface ShowDetail {
   id: number;
   name: string;
@@ -30,6 +40,7 @@ export interface ShowDetail {
   genres: { id: number; name: string }[];
   status: string;
   seasons: Season[];
+  next_episode_to_air?: EpisodeShort | null;
 }
 
 export interface Episode {
