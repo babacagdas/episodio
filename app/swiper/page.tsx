@@ -183,7 +183,7 @@ export default function SwiperPage() {
   const skipOpacity = isDragging ? Math.max(0, Math.min(1, -dragX / 100)) : 0;
 
   return (
-    <div className="font-body-md min-h-screen bg-[#070707] text-white antialiased pb-24 md:pb-0 overflow-x-hidden flex">
+    <div className="font-body-md min-h-screen bg-[#070707] text-white antialiased overflow-x-hidden">
       <Sidebar />
 
       {/* Üst Bar (Mobil) */}
@@ -195,7 +195,7 @@ export default function SwiperPage() {
         <div className="w-9 h-9" />
       </header>
 
-      <main className="md:ml-[240px] flex-1 flex flex-col h-full w-full items-center justify-center relative bg-[#090909] py-8 px-4 overflow-hidden min-h-[calc(100vh-68px)] md:min-h-screen">
+      <main className="md:ml-[240px] flex-1 flex flex-col items-center justify-center relative bg-[#090909] py-4 px-4 overflow-hidden h-[calc(100dvh-68px)] md:h-screen pb-20 md:pb-4">
         
         {/* Sinematik Arka Plan Blobları */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-10">
@@ -204,7 +204,7 @@ export default function SwiperPage() {
         </div>
 
         {/* Eşleştirici Alanı */}
-        <div className="w-full max-w-sm flex flex-col gap-6 relative z-10 flex-1 justify-center py-4">
+        <div className="w-full max-w-sm flex flex-col gap-4 relative z-10 flex-1 justify-center py-2 h-full min-h-0">
           {loading ? (
             <div className="aspect-[2/3] w-full max-w-sm rounded-3xl bg-[#141414]/80 border border-white/5 flex flex-col items-center justify-center gap-3">
               <span className="w-10 h-10 border-4 border-white/10 border-t-[#E50914] rounded-full animate-spin" />
@@ -244,7 +244,7 @@ export default function SwiperPage() {
             </div>
           ) : (
             // Aktif Sürükleme Kartı
-            <div className="relative flex-1 flex flex-col justify-center">
+            <div className="relative flex-1 flex flex-col justify-center items-center min-h-0">
               <div
                 onMouseDown={onMouseDown}
                 onMouseMove={onMouseMove}
@@ -258,7 +258,7 @@ export default function SwiperPage() {
                   transition: transitionStyle,
                   cursor: isDragging ? 'grabbing' : 'grab',
                 }}
-                className="w-full aspect-[2/3] rounded-3xl overflow-hidden bg-[#141414] border border-white/[0.08] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] relative select-none touch-none"
+                className="h-[46dvh] md:h-auto md:w-full aspect-[2/3] rounded-3xl overflow-hidden bg-[#141414] border border-white/[0.08] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] relative select-none touch-none"
               >
                 {/* Afiş */}
                 {activeShow.poster_path ? (
@@ -279,7 +279,7 @@ export default function SwiperPage() {
                 {/* LIKE (Beğen) Rozeti */}
                 <div
                   style={{ opacity: likeOpacity }}
-                  className="absolute top-8 left-8 border-4 border-green-500 text-green-500 font-black text-2xl uppercase tracking-widest px-4 py-1.5 rounded-xl rotate-[-12deg] z-20 pointer-events-none bg-black/20 backdrop-blur-sm shadow-[0_4px_15px_rgba(34,197,94,0.2)]"
+                  className="absolute top-6 left-6 border-4 border-green-500 text-green-500 font-black text-xl uppercase tracking-widest px-3 py-1 rounded-xl rotate-[-12deg] z-20 pointer-events-none bg-black/20 backdrop-blur-sm shadow-[0_4px_15px_rgba(34,197,94,0.2)]"
                 >
                   KAYDET
                 </div>
@@ -287,36 +287,36 @@ export default function SwiperPage() {
                 {/* SKIP (Pas Geç) Rozeti */}
                 <div
                   style={{ opacity: skipOpacity }}
-                  className="absolute top-8 right-8 border-4 border-red-500 text-red-500 font-black text-2xl uppercase tracking-widest px-4 py-1.5 rounded-xl rotate-[12deg] z-20 pointer-events-none bg-black/20 backdrop-blur-sm shadow-[0_4px_15px_rgba(239,68,68,0.2)]"
+                  className="absolute top-6 right-6 border-4 border-red-500 text-red-500 font-black text-xl uppercase tracking-widest px-3 py-1 rounded-xl rotate-[12deg] z-20 pointer-events-none bg-black/20 backdrop-blur-sm shadow-[0_4px_15px_rgba(239,68,68,0.2)]"
                 >
                   GEÇ
                 </div>
 
                 {/* Karartma Degrade */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent pointer-events-none z-10" />
 
                 {/* Şov Bilgileri */}
-                <div className="absolute bottom-0 left-0 w-full p-6 z-20 text-left pointer-events-none flex flex-col gap-2">
+                <div className="absolute bottom-0 left-0 w-full p-4 z-20 text-left pointer-events-none flex flex-col gap-1.5">
                   <div className="flex items-center gap-2">
                     {activeShow.vote_average > 0 && (
                       <div className="flex items-center gap-0.5 bg-black/40 border border-white/10 px-2 py-0.5 rounded-lg backdrop-blur-md">
-                        <span className="material-symbols-outlined text-[#D4A017] text-xs">star</span>
-                        <span className="text-[11px] font-bold text-white/90">
+                        <span className="material-symbols-outlined text-[#D4A017] text-[10px]">star</span>
+                        <span className="text-[10px] font-bold text-white/90">
                           {activeShow.vote_average.toFixed(1)}
                         </span>
                       </div>
                     )}
                     {activeShow.first_air_date && (
-                      <span className="text-[10px] text-white/50 bg-white/5 border border-white/5 px-2 py-0.5 rounded-lg backdrop-blur-md">
+                      <span className="text-[9px] text-white/50 bg-white/5 border border-white/5 px-1.5 py-0.5 rounded-md backdrop-blur-md">
                         {new Date(activeShow.first_air_date).getFullYear()}
                       </span>
                     )}
                   </div>
-                  <h2 className="text-xl font-extrabold text-white tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+                  <h2 className="text-base font-extrabold text-white tracking-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                     {activeShow.name}
                   </h2>
                   {activeShow.overview && (
-                    <p className="text-xs text-white/60 line-clamp-3 leading-relaxed mt-1 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                    <p className="text-[10px] text-white/55 line-clamp-2 leading-relaxed drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                       {activeShow.overview}
                     </p>
                   )}
@@ -324,32 +324,32 @@ export default function SwiperPage() {
               </div>
 
               {/* Alt Kontrol Butonları */}
-              <div className="flex justify-center items-center gap-6 mt-6">
+              <div className="flex justify-center items-center gap-6 mt-4">
                 {/* GEÇ Butonu (Sola fırlat) */}
                 <button
                   onClick={() => swipe('left')}
-                  className="w-12 h-12 rounded-full bg-white/[0.02] hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 active:scale-90 text-white/50 hover:text-red-500 flex items-center justify-center transition-all shadow-[0_4px_15px_rgba(0,0,0,0.3)]"
+                  className="w-11 h-11 rounded-full bg-white/[0.02] hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 active:scale-90 text-white/50 hover:text-red-500 flex items-center justify-center transition-all shadow-[0_4px_15px_rgba(0,0,0,0.3)]"
                   title="Pas Geç"
                 >
-                  <span className="material-symbols-outlined text-2xl font-bold">close</span>
+                  <span className="material-symbols-outlined text-xl font-bold">close</span>
                 </button>
 
                 {/* İNCELE Butonu (Şov Detayına Git) */}
                 <Link
                   href={`/show/${activeShow.id}`}
-                  className="w-10 h-10 rounded-full bg-white/[0.02] hover:bg-[#D4A017]/10 border border-white/10 hover:border-[#D4A017]/20 active:scale-90 text-white/40 hover:text-[#D4A017] flex items-center justify-center transition-all shadow-[0_4px_15px_rgba(0,0,0,0.3)]"
+                  className="w-9 h-9 rounded-full bg-white/[0.02] hover:bg-[#D4A017]/10 border border-white/10 hover:border-[#D4A017]/20 active:scale-90 text-white/40 hover:text-[#D4A017] flex items-center justify-center transition-all shadow-[0_4px_15px_rgba(0,0,0,0.3)]"
                   title="Detayları İncele"
                 >
-                  <span className="material-symbols-outlined text-xl">info</span>
+                  <span className="material-symbols-outlined text-lg">info</span>
                 </Link>
 
                 {/* BEĞEN Butonu (Sağa fırlat) */}
                 <button
                   onClick={() => swipe('right')}
-                  className="w-12 h-12 rounded-full bg-gradient-to-br from-[#E50914]/20 to-[#B80710]/20 hover:from-[#E50914] hover:to-[#B80710] border border-[#E50914]/20 hover:border-transparent active:scale-90 text-[#E50914] hover:text-white flex items-center justify-center transition-all shadow-[0_4px_15px_rgba(229,9,20,0.15)] hover:shadow-[0_4px_20px_rgba(229,9,20,0.4)]"
+                  className="w-11 h-11 rounded-full bg-gradient-to-br from-[#E50914]/20 to-[#B80710]/20 hover:from-[#E50914] hover:to-[#B80710] border border-[#E50914]/20 hover:border-transparent active:scale-90 text-[#E50914] hover:text-white flex items-center justify-center transition-all shadow-[0_4px_15px_rgba(229,9,20,0.15)] hover:shadow-[0_4px_20px_rgba(229,9,20,0.4)]"
                   title="İzleme Listeme Ekle"
                 >
-                  <span className="material-symbols-outlined text-2xl">favorite</span>
+                  <span className="material-symbols-outlined text-xl">favorite</span>
                 </button>
               </div>
             </div>
