@@ -26,6 +26,7 @@ interface Message {
 interface ChatListItem {
   otherUser: Profile;
   lastMessage: Message | null;
+  unreadCount: number;
 }
 
 interface ChatClientProps {
@@ -108,9 +109,13 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
           const userMessages = messagesData.filter(
             (m) => m.sender_id === profile.id || m.receiver_id === profile.id
           );
+          const unreadCount = userMessages.filter(
+            (m) => m.sender_id === profile.id && m.receiver_id === currentUser.id && !m.is_read
+          ).length;
           return {
             otherUser: profile,
             lastMessage: userMessages[0] || null,
+            unreadCount,
           };
         })
         .sort((a, b) => {
@@ -178,6 +183,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
             const newTemp: ChatListItem = {
               otherUser: data,
               lastMessage: null,
+              unreadCount: 0,
             };
             setChats((prev) => [newTemp, ...prev.filter((c) => c.otherUser.id !== targetUserId)]);
             setSelectedUserId(targetUserId);
@@ -187,6 +193,37 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
       }
     }
   }, [targetUserId, loadingChats, chats, supabase]);
+
+  // Seçili sohbetin okunmamış mesajlarını okundu olarak işaretle
+  const markChatAsRead = useCallback(async (otherId: string) => {
+    try {
+      await supabase
+        .from('direct_messages')
+        .update({ is_read: true })
+        .eq('sender_id', otherId)
+        .eq('receiver_id', currentUser.id)
+        .eq('is_read', false);
+      
+      // Sol listedeki unread sayılarını güncellemek için sohbet listesini sessizce yenileyelim
+      const { data: messagesData } = await supabase
+        .from('direct_messages')
+        .select('*')
+        .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
+        .order('created_at', { ascending: false })
+        .limit(300);
+      
+      if (messagesData) {
+        setChats(prev => prev.map(chat => {
+          if (chat.otherUser.id === otherId) {
+            return { ...chat, unreadCount: 0 };
+          }
+          return chat;
+        }));
+      }
+    } catch (err) {
+      console.error('Okundu işaretlenirken hata:', err);
+    }
+  }, [currentUser.id, supabase]);
 
   // Seçili sohbetin mesajlarını yükle
   useEffect(() => {
@@ -206,6 +243,9 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
 
         if (error) throw error;
         setMessages(data ?? []);
+        
+        // Mesajları okundu olarak işaretle
+        markChatAsRead(selectedUserId);
       } catch (err) {
         console.error('Mesajlar yüklenirken hata:', err);
       } finally {
@@ -214,7 +254,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
     };
 
     fetchMessages();
-  }, [selectedUserId, supabase]);
+  }, [selectedUserId, markChatAsRead, supabase]);
 
   // Mesajlar geldikçe veya yeni mesaj eklendikçe en alta kaydır
   useEffect(() => {
@@ -244,10 +284,13 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
               (newMsg.sender_id === currentUser.id && newMsg.receiver_id === activeChatId)
             ) {
               setMessages((prev) => [...prev, newMsg]);
+              if (newMsg.sender_id === activeChatId) {
+                markChatAsRead(activeChatId);
+              }
+            } else {
+              // Sohbet listesindeki son mesajı güncelle ve listenin tepesine taşı
+              loadChats();
             }
-
-            // Sohbet listesindeki son mesajı güncelle ve listenin tepesine taşı
-            loadChats();
           }
         }
       )
@@ -315,6 +358,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
       const newTemp: ChatListItem = {
         otherUser: user,
         lastMessage: null,
+        unreadCount: 0,
       };
       setChats((prev) => [newTemp, ...prev]);
     }
@@ -341,11 +385,11 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
   });
 
   return (
-    <div className="font-body-md text-body-md antialiased min-h-screen bg-[#0A0A0A] text-white overflow-hidden flex">
+    <div className="font-body-md text-body-md antialiased h-[100dvh] bg-[#0A0A0A] text-white overflow-hidden flex">
       <Sidebar />
 
       {/* Ana Sohbet Konteyneri */}
-      <main className="md:ml-[240px] flex-1 flex h-screen w-full md:w-[calc(100%-240px)] relative bg-[#0C0C0C]">
+      <main className="md:ml-[240px] flex-1 flex h-full w-full md:w-[calc(100%-240px)] relative bg-[#0C0C0C]">
         
         {/* SOL PANEL: Sohbet Listesi */}
         <div
@@ -376,7 +420,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                 placeholder="Sohbetlerde ara..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/[0.04] border border-white/5 focus:border-white/10 rounded-full py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/20 focus:outline-none transition-all"
+                className="w-full bg-white/[0.04] border border-white/5 focus:border-white/10 rounded-full py-2.5 pl-10 pr-4 text-base text-white placeholder-white/20 focus:outline-none transition-all"
               />
             </div>
           </div>
@@ -411,6 +455,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                 const isActive = selectedUserId === chat.otherUser.id;
                 const displayName = chat.otherUser.full_name || chat.otherUser.username;
                 const lastMsg = chat.lastMessage;
+                const isUnread = chat.unreadCount > 0;
 
                 return (
                   <button
@@ -423,7 +468,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                     }`}
                   >
                     {/* Profil Resmi */}
-                    <div className="w-11 h-11 rounded-full border border-white/10 overflow-hidden bg-[#1A1A1A] shrink-0 flex items-center justify-center">
+                    <div className="w-11 h-11 rounded-full border border-white/10 overflow-hidden bg-[#1A1A1A] shrink-0 flex items-center justify-center relative">
                       {chat.otherUser.avatar_url ? (
                         <img
                           src={chat.otherUser.avatar_url}
@@ -435,16 +480,19 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                           person
                         </span>
                       )}
+                      {isUnread && (
+                        <span className="absolute -top-0.5 -right-0.5 bg-[#E50914] w-3 h-3 rounded-full border border-[#0E0E0E]" />
+                      )}
                     </div>
 
                     {/* Bilgiler */}
                     <div className="min-w-0 flex-1">
                       <div className="flex justify-between items-baseline gap-1 mb-0.5">
-                        <span className="font-semibold text-white truncate text-sm">
+                        <span className={`font-semibold truncate text-sm ${isUnread ? 'text-[#D4A017]' : 'text-white'}`}>
                           {displayName}
                         </span>
                         {lastMsg && (
-                          <span className="text-[10px] text-white/20 shrink-0">
+                          <span className={`text-[10px] shrink-0 ${isUnread ? 'text-[#D4A017] font-semibold' : 'text-white/20'}`}>
                             {new Date(lastMsg.created_at).toLocaleTimeString([], {
                               hour: '2-digit',
                               minute: '2-digit',
@@ -452,7 +500,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-white/40 truncate leading-normal">
+                      <p className={`text-xs truncate leading-normal ${isUnread ? 'text-white/80 font-medium' : 'text-white/40'}`}>
                         {lastMsg
                           ? lastMsg.sender_id === currentUser.id
                             ? `Siz: ${lastMsg.content}`
@@ -600,7 +648,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                   placeholder="Bir mesaj yazın..."
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  className="flex-1 bg-white/[0.04] border border-white/5 focus:border-white/10 rounded-full px-5 py-3 text-sm text-white placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 transition-all"
+                  className="flex-1 bg-white/[0.04] border border-white/5 focus:border-white/10 rounded-full px-5 py-3 text-base text-white placeholder-white/20 focus:outline-none focus:ring-1 focus:ring-white/10 transition-all"
                 />
                 <button
                   type="submit"

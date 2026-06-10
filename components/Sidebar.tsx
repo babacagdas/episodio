@@ -15,10 +15,51 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [loggedIn, setLoggedIn] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
+    let channel: any = null;
+
+    const fetchUnreadCount = async (uid: string) => {
+      const { count } = await supabase
+        .from('direct_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', uid)
+        .eq('is_read', false);
+      setUnreadCount(count ?? 0);
+    };
+
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setLoggedIn(true);
+        fetchUnreadCount(user.id);
+
+        channel = supabase
+          .channel('sidebar_unread_messages')
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'direct_messages',
+            },
+            () => {
+              fetchUnreadCount(user.id);
+            }
+          )
+          .subscribe();
+      }
+    }
+
+    init();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   return (
@@ -35,7 +76,14 @@ export default function Sidebar() {
               href={href}
               className={`flex items-center gap-3 font-label-bold text-label-bold transition-colors ${active ? 'text-[#D4A017]' : 'text-gray-400 hover:text-white'}`}
             >
-              <span className="material-symbols-outlined" style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}>{icon}</span>
+              <span className="relative">
+                <span className="material-symbols-outlined" style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}>{icon}</span>
+                {href === '/chat' && unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-[#E50914] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </span>
               {label}
             </Link>
           );
