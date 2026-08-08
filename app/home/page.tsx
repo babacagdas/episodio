@@ -5,7 +5,7 @@ import Sidebar from '@/components/Sidebar';
 import { BottomNav, MobileHeader } from '@/components/Nav';
 import ShowCard from '@/components/ShowCard';
 import { CardGridSkeleton } from '@/components/Skeletons';
-import { getTrendingShows } from '@/lib/tmdb';
+import { getTrendingShows, getLatestTvTrailers } from '@/lib/tmdb';
 import FriendsActivitySection from './FriendsActivitySection';
 import NotificationsBell from './NotificationsBell';
 import CurrentlyWatchingCard from './CurrentlyWatchingCard';
@@ -14,6 +14,7 @@ import HomeTopBar from './HomeTopBar';
 import HomeHero from './HomeHero';
 import HomeListRail from './HomeListRail';
 import HomeRightRail from './HomeRightRail';
+import HomeTrailersSection from './HomeTrailersSection';
 import WelcomeOnboardingModal from './WelcomeOnboardingModal';
 import DeferredClientSection from './DeferredClientSection';
 
@@ -71,6 +72,11 @@ async function TrendingGrid() {
   );
 }
 
+async function TrailersContainer() {
+  const trailers = await getLatestTvTrailers();
+  return <HomeTrailersSection trailers={trailers} />;
+}
+
 export default function Home() {
   return (
     <div className="font-body-md text-body-md antialiased pb-32 md:pb-0 pt-[60px] md:pt-0">
@@ -97,6 +103,10 @@ export default function Home() {
 
             <Suspense fallback={<SectionFallback tall />}>
               <PersonalizedRecommendation />
+            </Suspense>
+
+            <Suspense fallback={<SectionFallback tall />}>
+              <TrailersContainer />
             </Suspense>
 
             <section className="mb-8">

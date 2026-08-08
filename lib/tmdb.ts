@@ -55,6 +55,18 @@ export interface Episode {
   air_date: string;
 }
 
+export interface TrailerItem {
+  id: string;
+  showId: number;
+  showName: string;
+  videoTitle: string;
+  youtubeKey: string;
+  backdropPath: string | null;
+  posterPath: string | null;
+  voteAverage: number;
+  firstAirDate: string;
+}
+
 function getTmdbApiKey(): string {
   return process.env.TMDB_API_KEY ?? process.env.NEXT_PUBLIC_TMDB_API_KEY ?? '';
 }
@@ -163,4 +175,65 @@ export async function discoverShowsByGenre(genreId: number, page = 1): Promise<S
   if (!res.ok) return [];
   const data = await res.json();
   return (data.results ?? []) as Show[];
+}
+
+export async function getLatestTvTrailers(): Promise<TrailerItem[]> {
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) return [];
+
+  try {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/trending/tv/week?api_key=${apiKey}&language=tr-TR`,
+      { next: { revalidate: 3600 } }
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const shows = (data.results ?? []) as (Show & { backdrop_path?: string | null })[];
+
+    const trailers: TrailerItem[] = [];
+    await Promise.all(
+      shows.slice(0, 8).map(async (show) => {
+        try {
+          let videoRes = await fetch(
+            `https://api.themoviedb.org/3/tv/${show.id}/videos?api_key=${apiKey}&language=tr-TR`,
+            { next: { revalidate: 3600 } }
+          );
+          let videoData = videoRes.ok ? await videoRes.json() : { results: [] };
+          let results = (videoData.results ?? []) as { key: string; site: string; type: string; name: string }[];
+
+          if (results.length === 0) {
+            videoRes = await fetch(
+              `https://api.themoviedb.org/3/tv/${show.id}/videos?api_key=${apiKey}&language=en-US`,
+              { next: { revalidate: 3600 } }
+            );
+            videoData = videoRes.ok ? await videoRes.json() : { results: [] };
+            results = (videoData.results ?? []) as { key: string; site: string; type: string; name: string }[];
+          }
+
+          const youtubeVideos = results.filter((v) => v.site === 'YouTube');
+          const trailer = youtubeVideos.find((v) => v.type === 'Trailer') || youtubeVideos[0];
+
+          if (trailer) {
+            trailers.push({
+              id: trailer.key,
+              showId: show.id,
+              showName: show.name,
+              videoTitle: trailer.name || `${show.name} Fragmanı`,
+              youtubeKey: trailer.key,
+              backdropPath: show.backdrop_path ?? null,
+              posterPath: show.poster_path ?? null,
+              voteAverage: show.vote_average ?? 0,
+              firstAirDate: show.first_air_date ?? '',
+            });
+          }
+        } catch {
+          // ignore
+        }
+      })
+    );
+
+    return trailers;
+  } catch {
+    return [];
+  }
 }
