@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
@@ -19,7 +19,7 @@ interface ActivityItem {
 }
 
 const STATUS_LABEL: Record<string, { label: string; icon: string; color: string }> = {
-  watching: { label: 'izlemeye başladı', icon: 'play_arrow', color: '#E50914' },
+  watching: { label: 'izlemeye başladı', icon: 'play_arrow', color: '#C91520' },
   completed: { label: 'bitirdi', icon: 'check_circle', color: '#22c55e' },
   dropped: { label: 'bıraktı', icon: 'cancel', color: 'rgba(255,255,255,0.4)' },
 };
@@ -35,11 +35,13 @@ function timeAgo(date: string) {
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w92';
 
-export default function FriendsActivitySection() {
+export default function FriendsActivitySection({ compact = false }: { compact?: boolean } = {}) {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [hasFollowing, setHasFollowing] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   const loadActivities = useCallback(async () => {
     setLoading(true);
@@ -58,6 +60,7 @@ export default function FriendsActivitySection() {
     // Sadece takip edilenleri getir
     const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
     const followingIds = (follows ?? []).map((f: any) => f.following_id);
+    setHasFollowing(followingIds.length > 0);
 
     if (followingIds.length === 0) {
       setActivities([]);
@@ -141,87 +144,119 @@ export default function FriendsActivitySection() {
 
   useEffect(() => { loadActivities(); }, [loadActivities]);
 
+  const visibleActivities = showAll ? activities : activities.slice(0, 5);
+
+  const handleShowMore = () => {
+    setShowAll(true);
+  };
+
+  const displayItems = visibleActivities.map(activity => {
+        const name = activity.profile?.full_name || activity.profile?.username || 'Kullanıcı';
+        const username = activity.profile?.username;
+        const profilePath = `/u/${username ?? activity.user_id}`;
+        let textBefore = '';
+        let highlightText = '';
+        let link = '/home';
+
+        if (activity.type === 'watch_status' && activity.status) {
+          if (activity.status === 'watching') {
+            textBefore = ' izlemeye başladı: ';
+          } else if (activity.status === 'completed') {
+            textBefore = ' bitirdi: ';
+          } else {
+            textBefore = ' bıraktı: ';
+          }
+          highlightText = activity.show_name;
+          link = `/show/${activity.show_id}`;
+        } else if (activity.type === 'review') {
+          textBefore = ' yorum yaptı: ';
+          highlightText = activity.show_name;
+          link = `/show/${activity.show_id}`;
+        }
+
+        return {
+          id: activity.id,
+          name,
+          avatar: activity.profile?.avatar_url || null,
+          textBefore,
+          highlightText,
+          time: timeAgo(activity.created_at),
+          link,
+          profilePath
+        };
+      });
+
   return (
     <>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="font-headline-md text-headline-md text-white">Arkadaş Aktivitesi</h2>
+        <h2 className="text-base font-bold text-white uppercase tracking-wider">Aktiviteler</h2>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-8">
+        <div className="flex justify-center py-6">
           <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
         </div>
       ) : !isLoggedIn ? (
-        <div className="glass-card p-5 text-sm text-white/40">
-          Aktivite akışını görmek için <Link href="/signin" className="text-[#E50914]">giriş yap</Link>.
+        <div className="rounded-xl border border-white/[0.05] bg-transparent p-4 text-[12.5px] text-white/40">
+          Aktivite akışını görmek için <Link href="/signin" className="text-[#C91520] font-bold">giriş yap</Link>.
+        </div>
+      ) : !hasFollowing ? (
+        <div className="rounded-xl border border-white/[0.05] bg-transparent p-4">
+          <p className="text-[12.5px] font-semibold leading-relaxed text-white/45">
+            Aktivitelerini görmek için arkadaşlarını takip et.
+          </p>
+          <Link
+            href="/search"
+            className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider text-[#C91520] transition-colors hover:text-white"
+          >
+            Arkadaş bul
+            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+          </Link>
         </div>
       ) : activities.length === 0 ? (
-        <div className="glass-card p-5 text-sm text-white/40">
-          Takip ettiğin kişilerde henüz aktivite yok. Birilerini takip etmeye başla!
+        <div className="rounded-xl border border-white/[0.05] bg-transparent p-4 text-[12.5px] font-semibold leading-relaxed text-white/45">
+          Takip ettiğin kişilerde henüz aktivite yok.
         </div>
       ) : (
-        <div className="flex flex-col gap-3 max-w-2xl">
-          {(showAll ? activities : activities.slice(0, 5)).map(activity => {
-            const name = activity.profile?.full_name || activity.profile?.username || 'Kullanıcı';
-            const username = activity.profile?.username;
-            const poster = activity.poster_path ? `${POSTER_BASE}${activity.poster_path}` : null;
-
-            return (
-              <div key={activity.id} className="flex gap-3 items-start">
-                <Link href={username ? `/u/${username}` : '#'} className="w-9 h-9 rounded-full border border-white/10 shrink-0 overflow-hidden bg-[#141414] flex items-center justify-center">
-                  {activity.profile?.avatar_url
-                    ? <img alt={name} className="w-full h-full object-cover" src={activity.profile.avatar_url} />
-                    : <span className="material-symbols-outlined text-white/30 text-lg">person</span>
-                  }
-                </Link>
-
-                <div className="flex-1 min-w-0 bg-white/[0.03] rounded-2xl rounded-tl-sm px-4 py-3">
-                  <div className="flex items-start justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <Link href={username ? `/u/${username}` : '#'} className="text-sm font-semibold text-white hover:text-white/80 transition-colors">{name}</Link>
-                      {activity.type === 'watch_status' && activity.status && (
-                        <>
-                          <span className="material-symbols-outlined text-sm" style={{ color: STATUS_LABEL[activity.status].color, fontVariationSettings: "'FILL' 1" }}>
-                            {STATUS_LABEL[activity.status].icon}
-                          </span>
-                          <span className="text-xs text-white/50">{STATUS_LABEL[activity.status].label}</span>
-                        </>
-                      )}
-                      {activity.type === 'review' && <span className="text-xs text-white/50">yorum yaptı</span>}
-                    </div>
-                    <span className="text-[11px] text-white/25 shrink-0">{timeAgo(activity.created_at)}</span>
-                  </div>
-
-                  <Link href={`/show/${activity.show_id}`} className="flex items-center gap-2 mt-1 group">
-                    {poster && <img src={poster} alt={activity.show_name} className="w-8 h-12 rounded object-cover shrink-0" />}
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-white group-hover:text-[#D4A017] transition-colors truncate">{activity.show_name}</p>
-                      {activity.type === 'review' && activity.rating && (
-                        <div className="flex items-center gap-0.5 mt-0.5">
-                          {[1,2,3,4,5].map(s => (
-                            <span key={s} className="material-symbols-outlined text-[11px]" style={{ color: s <= activity.rating! ? '#D4A017' : 'rgba(255,255,255,0.15)', fontVariationSettings: s <= activity.rating! ? "'FILL' 1" : "'FILL' 0" }}>star</span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-
-                  {activity.type === 'review' && activity.content && (
-                    <p className="text-sm text-white/55 mt-2 line-clamp-2 leading-relaxed">{activity.content}</p>
+        <div ref={listRef} className="flex flex-col gap-3.5 select-none">
+          {displayItems.map(item => (
+            <div key={item.id} className="flex items-center justify-between gap-3 text-[12.5px] leading-tight">
+              <div className="flex items-center gap-2.5 min-w-0">
+                {/* Avatar */}
+                <div className="h-6 w-6 shrink-0 overflow-hidden rounded-full border border-white/10 bg-white/5 flex items-center justify-center">
+                  {item.avatar ? (
+                    <img src={item.avatar} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="material-symbols-outlined text-white/45 text-[10px]">person</span>
                   )}
                 </div>
-              </div>
-            );
-          })}
 
-          {!showAll && activities.length > 5 && (
+                {/* Text */}
+                <p className="truncate text-white/45 font-semibold text-[11.5px] pt-0.5">
+                  <Link href={item.profilePath || '/home'} className="text-white font-bold hover:text-[#C91520] transition-colors">
+                    {item.name}
+                  </Link>
+                  {item.textBefore}
+                  {item.highlightText && (
+                    <Link href={item.link} className="text-white font-bold hover:text-[#C91520] transition-colors">
+                      {item.highlightText}
+                    </Link>
+                  )}
+                </p>
+              </div>
+
+              {/* Time */}
+              <span className="text-white/25 text-[10.5px] font-bold shrink-0">{item.time}</span>
+            </div>
+          ))}
+
+          {activities.length > 5 && !showAll && (
             <button
               type="button"
-              onClick={() => setShowAll(true)}
-              className="self-start text-sm text-white/70 hover:text-white transition-colors"
+              onClick={handleShowMore}
+              className="self-start pt-1 text-[11px] font-bold text-[#C91520] transition-colors hover:text-white uppercase tracking-wider"
             >
-              Daha fazlasını gör
-              <div className="h-px w-full bg-[#E50914] mt-1" />
+              Tüm aktiviteleri gör &gt;
             </button>
           )}
         </div>

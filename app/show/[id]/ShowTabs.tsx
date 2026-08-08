@@ -241,7 +241,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
   }
 
   async function toggleLike(reviewId: string) {
-    if (!userId) { window.location.href = '/signin'; return; }
+    if (!userId) { window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     const supabase = createClient();
     const review = reviews.find(r => r.id === reviewId);
     if (!review) return;
@@ -286,7 +286,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
               if (t === 'notes') { loadNote(); }
             }}
             className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors ${
-              tab === t ? 'text-white border-b-2 border-[#E50914]' : 'text-white/40 hover:text-white'
+              tab === t ? 'text-white border-b-2 border-[#C91520]' : 'text-white/40 hover:text-white'
             }`}
           >
             {t === 'episodes' ? 'Bölümler' : t === 'reviews' ? 'Yorumlar' : t === 'notes' ? 'Notum' : 'Benzer'}
@@ -440,7 +440,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                   <button
                     onClick={submitReview}
                     disabled={submitting || !myContent.trim() || myRating === 0}
-                    className="px-3.5 py-2 bg-[#E50914] text-white text-sm font-semibold rounded-full hover:bg-red-700 transition-all disabled:opacity-40"
+                    className="px-3.5 py-2 bg-[#C91520] text-white text-sm font-semibold rounded-full hover:bg-[#A8121B] transition-all disabled:opacity-40"
                   >
                     {submitting ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin block" /> : 'Paylaş'}
                   </button>
@@ -448,17 +448,17 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                 <button
                   type="button"
                   onClick={() => setMySpoiler((prev) => !prev)}
-                  className={`mt-2 text-[11px] font-semibold transition-colors ${mySpoiler ? 'text-[#E50914]' : 'text-white/35 hover:text-white/70'}`}
+                  className={`mt-2 text-[11px] font-semibold transition-colors ${mySpoiler ? 'text-[#C91520]' : 'text-white/35 hover:text-white/70'}`}
                 >
                   {mySpoiler ? 'Spoiler etiketi açık' : 'Spoiler etiketi ekle'}
                 </button>
                 {submitError && (
-                  <p className="mt-2 text-xs text-[#E50914]">{submitError}</p>
+                  <p className="mt-2 text-xs text-[#C91520]">{submitError}</p>
                 )}
               </div>
             </div>
           ) : (
-            <p className="text-sm text-white/30 mb-6">Yorum yazmak için <Link href="/signin" className="text-[#E50914]">giriş yap</Link>.</p>
+            <p className="text-sm text-white/30 mb-6">Yorum yazmak için <Link href="/signin" className="text-[#C91520]">giriş yap</Link>.</p>
           )}
 
           {/* Liste */}
@@ -474,15 +474,16 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
               {reviews.map((r) => {
                 const name = r.profiles?.full_name || r.profiles?.username || 'Kullanıcı';
                 const username = r.profiles?.username;
+                const profilePath = `/u/${username ?? r.user_id}`;
                 return (
                   <div key={r.id} className="flex gap-3">
-                    <Link href={username ? `/u/${username}` : '#'} className="w-9 h-9 rounded-full bg-[#1A1A1A] border border-white/10 shrink-0 overflow-hidden flex items-center justify-center">
+                    <Link href={profilePath} className="w-9 h-9 rounded-full bg-[#1A1A1A] border border-white/10 shrink-0 overflow-hidden flex items-center justify-center">
                       {r.profiles?.avatar_url ? <img src={r.profiles.avatar_url} alt={name} className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-white/20 text-lg">person</span>}
                     </Link>
                     <div className="flex-1 min-w-0">
                       <div className="bg-white/[0.04] rounded-2xl rounded-tl-sm px-4 py-3">
                         <div className="flex items-center justify-between mb-1">
-                          <Link href={username ? `/u/${username}` : '#'} className="text-sm font-semibold text-white hover:text-white/80 transition-colors">{name}</Link>
+                          <Link href={profilePath} className="text-sm font-semibold text-white hover:text-white/80 transition-colors">{name}</Link>
                           <div className="flex items-center gap-0.5">
                             {[1,2,3,4,5].map(s => (
                               <span key={s} className="material-symbols-outlined text-[11px]" style={{ color: s <= r.rating ? '#D4A017' : 'rgba(255,255,255,0.15)', fontVariationSettings: s <= r.rating ? "'FILL' 1" : "'FILL' 0" }}>star</span>
@@ -493,7 +494,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                           <button
                             type="button"
                             onClick={() => setRevealedSpoilers((prev) => ({ ...prev, [r.id]: true }))}
-                            className="mt-1 text-xs font-semibold text-[#E50914] hover:text-white transition-colors"
+                            className="mt-1 text-xs font-semibold text-[#C91520] hover:text-white transition-colors"
                           >
                             Spoiler var — Göster
                           </button>
@@ -506,7 +507,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                         <button
                           onClick={() => toggleLike(r.id)}
                           className="flex items-center gap-1 text-[11px] font-semibold transition-colors"
-                          style={{ color: r.likedByMe ? '#E50914' : 'rgba(255,255,255,0.3)' }}
+                          style={{ color: r.likedByMe ? '#C91520' : 'rgba(255,255,255,0.3)' }}
                         >
                           <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: r.likedByMe ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
                           {r.likeCount > 0 && r.likeCount}
@@ -515,7 +516,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                           <button
                             type="button"
                             onClick={() => deleteReview(r.id)}
-                            className="text-[11px] font-semibold text-white/30 hover:text-[#E50914] transition-colors"
+                            className="text-[11px] font-semibold text-white/30 hover:text-[#C91520] transition-colors"
                           >
                             Sil
                           </button>
@@ -534,7 +535,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
       {tab === 'notes' && (
         <div className="mb-16 max-w-xl">
           {!userId ? (
-            <p className="text-sm text-white/30">Not eklemek için <Link href="/signin" className="text-[#E50914]">giriş yap</Link>.</p>
+            <p className="text-sm text-white/30">Not eklemek için <Link href="/signin" className="text-[#C91520]">giriş yap</Link>.</p>
           ) : (
             <div className="space-y-4">
               <textarea
@@ -566,7 +567,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                 <button
                   onClick={saveNote}
                   disabled={noteSaving || !noteContent.trim()}
-                  className="px-5 py-2 bg-[#E50914] text-white text-sm font-semibold rounded-full hover:bg-red-700 transition-all disabled:opacity-40 flex items-center gap-2"
+                  className="px-5 py-2 bg-[#C91520] text-white text-sm font-semibold rounded-full hover:bg-[#A8121B] transition-all disabled:opacity-40 flex items-center gap-2"
                 >
                   {noteSaving ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : noteSaved ? '✓ Kaydedildi' : 'Kaydet'}
                 </button>

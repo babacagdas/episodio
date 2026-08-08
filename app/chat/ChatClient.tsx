@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -39,9 +39,11 @@ interface ChatClientProps {
 }
 
 const popularEmojis = ['😀', '😂', '😍', '👍', '🔥', '❤️', '🎬', '🍿', '😮', '😢', '👏', '🎉'];
+const CHAT_LIST_MESSAGE_LIMIT = 120;
+const MESSAGE_PAGE_LIMIT = 80;
 
 export default function ChatClient({ currentUser }: ChatClientProps) {
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const searchParams = useSearchParams();
   const targetUserId = searchParams.get('user');
 
@@ -51,6 +53,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [connections, setConnections] = useState<Profile[]>([]);
+  const [connectionsLoaded, setConnectionsLoaded] = useState(false);
   
   // Arayüz State'leri
   const [loadingChats, setLoadingChats] = useState(true);
@@ -73,10 +76,10 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
     try {
       const { data: messagesData, error } = await supabase
         .from('direct_messages')
-        .select('*')
+        .select('id, sender_id, receiver_id, content, created_at, is_read')
         .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
         .order('created_at', { ascending: false })
-        .limit(300);
+        .limit(CHAT_LIST_MESSAGE_LIMIT);
 
       if (error) throw error;
 
@@ -107,11 +110,17 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
         return;
       }
 
+      const messagesByUser = new Map<string, Message[]>();
+      messagesData.forEach((message) => {
+        const otherId = message.sender_id === currentUser.id ? message.receiver_id : message.sender_id;
+        const existing = messagesByUser.get(otherId) ?? [];
+        existing.push(message);
+        messagesByUser.set(otherId, existing);
+      });
+
       const activeChats: ChatListItem[] = profilesData
         .map((profile) => {
-          const userMessages = messagesData.filter(
-            (m) => m.sender_id === profile.id || m.receiver_id === profile.id
-          );
+          const userMessages = messagesByUser.get(profile.id) ?? [];
           const unreadCount = userMessages.filter(
             (m) => m.sender_id === profile.id && m.receiver_id === currentUser.id && !m.is_read
           ).length;
@@ -135,38 +144,41 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
     }
   }, [currentUser.id, supabase]);
 
-  // Sayfa yüklendiğinde sohbetleri ve bağlantıları (takipçi/takip edilen) getir
+  const loadConnections = useCallback(async () => {
+    if (connectionsLoaded) return;
+    try {
+      const [followingRes, followersRes] = await Promise.all([
+        supabase.from('follows').select('following_id').eq('follower_id', currentUser.id),
+        supabase.from('follows').select('follower_id').eq('following_id', currentUser.id),
+      ]);
+
+      const followingIds = (followingRes.data ?? []).map((f) => f.following_id);
+      const followerIds = (followersRes.data ?? []).map((f) => f.follower_id);
+      const uniqueIds = Array.from(new Set([...followingIds, ...followerIds]));
+
+      if (uniqueIds.length === 0) {
+        setConnectionsLoaded(true);
+        return;
+      }
+
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username, full_name, avatar_url')
+        .in('id', uniqueIds);
+
+      if (profiles) {
+        setConnections(profiles);
+      }
+      setConnectionsLoaded(true);
+    } catch (err) {
+      console.error('Takipçiler çekilirken hata oluştu:', err);
+    }
+  }, [connectionsLoaded, currentUser.id, supabase]);
+
+  // Sayfa yüklendiğinde sadece sohbet özetlerini getir
   useEffect(() => {
     loadChats();
-
-    const fetchConnections = async () => {
-      try {
-        const [followingRes, followersRes] = await Promise.all([
-          supabase.from('follows').select('following_id').eq('follower_id', currentUser.id),
-          supabase.from('follows').select('follower_id').eq('following_id', currentUser.id),
-        ]);
-
-        const followingIds = (followingRes.data ?? []).map((f) => f.following_id);
-        const followerIds = (followersRes.data ?? []).map((f) => f.follower_id);
-        const uniqueIds = Array.from(new Set([...followingIds, ...followerIds]));
-
-        if (uniqueIds.length === 0) return;
-
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('id, username, full_name, avatar_url')
-          .in('id', uniqueIds);
-
-        if (profiles) {
-          setConnections(profiles);
-        }
-      } catch (err) {
-        console.error('Takipçiler çekilirken hata oluştu:', err);
-      }
-    };
-
-    fetchConnections();
-  }, [currentUser.id, loadChats, supabase]);
+  }, [loadChats]);
 
   // URL'deki ?user= parametresini dinle
   useEffect(() => {
@@ -199,30 +211,27 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
 
   // Seçili sohbetin okunmamış mesajlarını okundu olarak işaretle
   const markChatAsRead = useCallback(async (otherId: string) => {
+    setChats(prev => prev.map(chat => (
+      chat.otherUser.id === otherId ? { ...chat, unreadCount: 0 } : chat
+    )));
+    setMessages(prev => prev.map(message => (
+      message.sender_id === otherId && message.receiver_id === currentUser.id
+        ? { ...message, is_read: true }
+        : message
+    )));
+
     try {
-      await supabase
+      const { error } = await supabase
         .from('direct_messages')
         .update({ is_read: true })
         .eq('sender_id', otherId)
         .eq('receiver_id', currentUser.id)
         .eq('is_read', false);
+
+      if (error) throw error;
       
       // Sol listedeki unread sayılarını güncellemek için sohbet listesini sessizce yenileyelim
-      const { data: messagesData } = await supabase
-        .from('direct_messages')
-        .select('*')
-        .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-        .order('created_at', { ascending: false })
-        .limit(300);
-      
-      if (messagesData) {
-        setChats(prev => prev.map(chat => {
-          if (chat.otherUser.id === otherId) {
-            return { ...chat, unreadCount: 0 };
-          }
-          return chat;
-        }));
-      }
+      window.dispatchEvent(new Event('episodio:messages-read'));
     } catch (err) {
       console.error('Okundu işaretlenirken hata:', err);
     }
@@ -240,12 +249,13 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
       try {
         const { data, error } = await supabase
           .from('direct_messages')
-          .select('*')
-          .or(`sender_id.eq.${selectedUserId},receiver_id.eq.${selectedUserId}`)
-          .order('created_at', { ascending: true });
+          .select('id, sender_id, receiver_id, content, created_at, is_read')
+          .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${selectedUserId}),and(sender_id.eq.${selectedUserId},receiver_id.eq.${currentUser.id})`)
+          .order('created_at', { ascending: false })
+          .limit(MESSAGE_PAGE_LIMIT);
 
         if (error) throw error;
-        setMessages(data ?? []);
+        setMessages((data ?? []).reverse());
         
         // Mesajları okundu olarak işaretle
         markChatAsRead(selectedUserId);
@@ -300,12 +310,29 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'direct_messages',
+        },
+        (payload) => {
+          const updatedMsg = payload.new as Message;
+          if (updatedMsg.sender_id !== currentUser.id && updatedMsg.receiver_id !== currentUser.id) return;
+
+          setMessages((prev) => prev.map((message) => (
+            message.id === updatedMsg.id ? { ...message, ...updatedMsg } : message
+          )));
+          loadChats();
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUser.id, loadChats, supabase]);
+  }, [currentUser.id, loadChats, markChatAsRead, supabase]);
 
   // Mesaj Gönder
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -426,10 +453,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
       <main className="md:ml-[240px] flex-1 flex h-full w-full md:w-[calc(100%-240px)] relative bg-[#090909] overflow-hidden">
         
         {/* Sinematik Arka Plan Işık Huzmeleri */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-[0.15]">
-          <div className="absolute -top-[10%] -right-[10%] w-[400px] h-[400px] bg-[#E50914] rounded-full filter blur-[150px] animate-pulse duration-[8000ms]" />
-          <div className="absolute -bottom-[10%] -left-[10%] w-[350px] h-[350px] bg-[#D4A017] rounded-full filter blur-[120px] opacity-70 animate-pulse duration-[10000ms]" />
-        </div>
+        <div className="absolute inset-0 pointer-events-none z-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent_26%)]" />
 
         {/* İçerik Katmanı */}
         <div className="flex-1 flex h-full w-full relative z-10">
@@ -441,19 +465,18 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
             } w-full md:w-[350px] border-r border-white/[0.04] flex-col h-full bg-[#0A0A0A]/40 backdrop-blur-2xl shrink-0`}
           >
             {/* Header */}
-            <div className="px-5 py-5 border-b border-white/[0.05] flex items-center justify-between bg-black/10">
-              <div>
-                <h1 className="text-lg font-bold tracking-tight bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">Mesajlarım</h1>
-                <p className="text-[10px] text-white/30 uppercase tracking-widest font-semibold mt-0.5">
-                  {chats.length} sohbet • {chats.reduce((acc, curr) => acc + curr.unreadCount, 0)} okunmamış
-                </p>
-              </div>
+            <div className="px-5 py-5 border-b border-white/[0.05] grid grid-cols-[2.25rem_1fr_2.25rem] items-center bg-black/10">
+              <div />
+              <h1 className="text-center text-xl font-bold tracking-tight bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">Mesajlarım</h1>
               <button
-                onClick={() => setShowNewChatModal(true)}
-                className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#E50914] to-[#B80710] hover:from-[#f40f1c] hover:to-[#cd0812] active:scale-95 text-white flex items-center justify-center transition-all shadow-[0_4px_15px_rgba(229,9,20,0.3)] hover:shadow-[0_4px_20px_rgba(229,9,20,0.5)] border border-red-500/10 group"
+                onClick={() => {
+                  setShowNewChatModal(true);
+                  void loadConnections();
+                }}
+                className="w-9 h-9 rounded-xl active:scale-95 text-[#C91520] hover:text-white flex items-center justify-center transition-colors group"
                 title="Yeni Sohbet Başlat"
               >
-                <span className="material-symbols-outlined text-lg group-hover:rotate-90 transition-transform duration-300">add</span>
+                <span className="material-symbols-outlined text-2xl font-bold group-hover:rotate-90 transition-transform duration-300">add</span>
               </button>
             </div>
 
@@ -468,7 +491,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                   placeholder="Sohbetlerde ara..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white/[0.02] border border-white/[0.06] focus:border-[#D4A017]/40 focus:ring-2 focus:ring-[#D4A017]/5 rounded-xl py-2 pl-10 pr-4 text-xs text-white placeholder-white/20 focus:outline-none transition-all duration-300"
+                  className="w-full bg-white/[0.02] border border-white/[0.06] focus:border-[#D4A017]/40 focus:ring-2 focus:ring-[#D4A017]/5 rounded-full py-2 pl-10 pr-4 text-[16px] md:text-xs text-white placeholder-white/20 focus:outline-none transition-all duration-300"
                 />
               </div>
             </div>
@@ -492,8 +515,11 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                   <span className="material-symbols-outlined text-4xl mb-2">forum</span>
                   <p className="text-sm">Henüz sohbet bulunamadı.</p>
                   <button
-                    onClick={() => setShowNewChatModal(true)}
-                    className="mt-3 text-xs text-[#E50914] font-semibold hover:underline"
+                    onClick={() => {
+                      setShowNewChatModal(true);
+                      void loadConnections();
+                    }}
+                    className="mt-3 text-xs text-[#C91520] font-semibold hover:underline"
                   >
                     Yeni sohbet başlat
                   </button>
@@ -508,10 +534,13 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                   return (
                     <button
                       key={chat.otherUser.id}
-                      onClick={() => setSelectedUserId(chat.otherUser.id)}
+                      onClick={() => {
+                        setSelectedUserId(chat.otherUser.id);
+                        if (chat.unreadCount > 0) void markChatAsRead(chat.otherUser.id);
+                      }}
                       className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left ${
                         isActive
-                          ? 'bg-gradient-to-r from-white/[0.07] to-white/[0.01] border-l-2 border-[#D4A017] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]'
+                          ? 'bg-white/[0.06] border-l-2 border-[#D4A017]'
                           : 'hover:bg-white/[0.03] border-l-2 border-transparent hover:translate-x-0.5'
                       }`}
                     >
@@ -529,7 +558,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                           </span>
                         )}
                         {isUnread && (
-                          <span className="absolute -top-0.5 -right-0.5 bg-[#E50914] w-3 h-3 rounded-full border border-[#0E0E0E]" />
+                          <span className="absolute -top-0.5 -right-0.5 bg-[#C91520] w-3 h-3 rounded-full border border-[#0E0E0E]" />
                         )}
                       </div>
 
@@ -559,7 +588,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                         </div>
 
                         {isUnread && (
-                          <div className="shrink-0 bg-gradient-to-r from-[#E50914] to-[#B80710] text-white text-[9px] font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-[0_0_10px_rgba(229,9,20,0.4)] animate-pulse">
+                          <div className="shrink-0 bg-[#C91520] text-white text-[9px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                             {chat.unreadCount}
                           </div>
                         )}
@@ -581,13 +610,18 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
               <>
                 {/* Üst Bar */}
                 <div className="h-16 border-b border-white/[0.05] flex items-center justify-between px-5 shrink-0 bg-[#0A0A0A]/40 backdrop-blur-md">
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0">
                     {/* Mobilde Geri Butonu */}
                     <button
-                      onClick={() => setSelectedUserId(null)}
-                      className="md:hidden w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center mr-1 text-white hover:bg-white/10 active:scale-95 transition-all"
+                      onClick={() => {
+                        setSelectedUserId(null);
+                        window.dispatchEvent(new Event('episodio:messages-read'));
+                        void loadChats();
+                      }}
+                      className="md:hidden flex h-8 w-5 items-center justify-center text-white/75 hover:text-white active:scale-95 transition-all"
+                      aria-label="Sohbet listesine dön"
                     >
-                      <span className="material-symbols-outlined text-lg">arrow_back</span>
+                      <span className="text-3xl leading-none">‹</span>
                     </button>
 
                     {/* Profil Resmi */}
@@ -609,23 +643,31 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                     </Link>
 
                     {/* İsim ve Kullanıcı Adı */}
-                    <div className="min-w-0">
-                      <Link
-                        href={`/u/${activeChat.otherUser.username}`}
-                        className="font-semibold text-white hover:text-[#D4A017] transition-colors text-sm block truncate"
-                      >
-                        {activeChat.otherUser.full_name || activeChat.otherUser.username}
-                      </Link>
-                      <span className="text-[10px] text-white/30 block -mt-0.5">
+                    <div className="min-w-0 ml-1.5">
+                      <div className="flex min-w-0 items-center gap-1">
+                        <Link
+                          href={`/u/${activeChat.otherUser.username}`}
+                          className="min-w-0 truncate text-[15px] font-bold leading-tight text-white transition-colors hover:text-[#D4A017] md:text-sm md:font-semibold"
+                        >
+                          {activeChat.otherUser.full_name || activeChat.otherUser.username}
+                        </Link>
+                        <Link
+                          href={`/u/${activeChat.otherUser.username}`}
+                          className="md:hidden shrink-0 text-white/35 transition-colors hover:text-white/70"
+                          aria-label="Profili gör"
+                        >
+                          <span className="text-lg leading-none">›</span>
+                        </Link>
+                      </div>
+                      <span className="block text-[11px] font-semibold leading-tight text-white/38 md:text-[10px] md:font-normal">
                         @{activeChat.otherUser.username}
                       </span>
                     </div>
                   </div>
 
-                  {/* Profil Bağlantısı Butonu */}
                   <Link
                     href={`/u/${activeChat.otherUser.username}`}
-                    className="px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.05] hover:bg-white/10 hover:border-[#D4A017]/30 hover:text-[#D4A017] text-[10px] font-semibold text-white/80 transition-all duration-300 flex items-center gap-0.5"
+                    className="hidden md:flex px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.05] hover:bg-white/10 hover:border-[#D4A017]/30 hover:text-[#D4A017] text-[10px] font-semibold text-white/80 transition-all duration-300 items-center gap-0.5"
                   >
                     <span>Profili Gör</span>
                     <span className="material-symbols-outlined text-[8px]">chevron_right</span>
@@ -636,7 +678,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                 <div className="flex-1 overflow-y-auto p-5 space-y-4">
                   {loadingMessages ? (
                     <div className="flex items-center justify-center h-full">
-                      <span className="w-6 h-6 border-2 border-white/10 border-t-[#E50914] rounded-full animate-spin" />
+                      <span className="w-6 h-6 border-2 border-white/10 border-t-[#C91520] rounded-full animate-spin" />
                     </div>
                   ) : messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-white/20">
@@ -675,10 +717,10 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                             </span>
                           )}
                           <div
-                            className={`flex max-w-[70%] flex-col rounded-2xl px-4 py-2.5 ${
+                            className={`flex max-w-[76%] flex-col rounded-[1.15rem] px-4 py-2.5 ${
                               isMe
-                                ? 'bg-gradient-to-br from-[#E50914] to-[#A5070E] border border-red-500/10 text-white self-end rounded-tr-sm shadow-[0_4px_15px_rgba(229,9,20,0.25)]'
-                                : 'bg-white/[0.04] border border-white/[0.03] text-white/90 self-start rounded-tl-sm shadow-[0_2px_10px_rgba(0,0,0,0.1)]'
+                                ? 'bg-[#C91520]/90 text-white self-end rounded-br-md shadow-[0_8px_22px_rgba(201,21,32,0.16)]'
+                                : 'bg-white/[0.035] text-white/90 self-start rounded-bl-md ring-1 ring-white/[0.045]'
                             }`}
                           >
                             <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
@@ -706,7 +748,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                 <div className="p-4 bg-[#0A0A0A]/40 backdrop-blur-md border-t border-white/[0.05]">
                   <form
                     onSubmit={handleSendMessage}
-                    className="bg-white/[0.02] border border-white/[0.06] focus-within:border-[#D4A017]/40 focus-within:ring-2 focus-within:ring-[#D4A017]/5 rounded-full py-1.5 px-3 flex items-center gap-2 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.2)]"
+                    className="bg-white/[0.02] border border-white/[0.06] rounded-full py-1.5 px-3 flex items-center gap-2 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.2)]"
                   >
                     {/* Emoji Picker Butonu ve Listesi */}
                     <div className="relative flex items-center">
@@ -746,16 +788,17 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                       placeholder="Bir mesaj yazın..."
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
-                      className="flex-1 bg-transparent border-0 px-2 py-1 text-xs text-white placeholder-white/20 focus:outline-none focus:ring-0"
+                      className="flex-1 bg-transparent border-0 px-2 py-1 text-[16px] md:text-xs text-white placeholder-white/20 focus:outline-none focus:ring-0"
                     />
 
                     {/* Gönder Butonu */}
                     <button
                       type="submit"
                       disabled={!inputMessage.trim()}
-                      className="w-7 h-7 rounded-full bg-gradient-to-br from-[#E50914] to-[#B80710] hover:from-[#f40f1c] hover:to-[#cd0812] disabled:opacity-30 disabled:pointer-events-none hover:scale-105 active:scale-95 text-white flex items-center justify-center transition-all shadow-[0_4px_12px_rgba(229,9,20,0.3)] hover:shadow-[0_4px_15px_rgba(229,9,20,0.5)] shrink-0 border border-red-500/10"
+                      className="flex h-7 w-7 shrink-0 items-center justify-center text-[#C91520] transition-colors hover:text-[#F06A73] disabled:pointer-events-none disabled:opacity-30 active:scale-95"
+                      aria-label="Mesaj gönder"
                     >
-                      <span className="material-symbols-outlined text-sm">send</span>
+                      <span className="material-symbols-outlined translate-x-1 -translate-y-1 -rotate-12 text-[20px]">send</span>
                     </button>
                   </form>
                 </div>
@@ -764,11 +807,11 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
               // Boş Ekran
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center relative">
                 <div className="absolute inset-0 pointer-events-none opacity-5 flex items-center justify-center">
-                  <img src="/logo.png" alt="Logo Watermark" className="w-[300px] h-auto object-contain select-none filter invert" />
+                  <img src="/logo.png" alt="Logo Watermark" className="w-[280px] h-auto object-contain select-none" />
                 </div>
                 <div className="relative z-10 max-w-sm flex flex-col items-center">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-white/[0.04] to-white/[0.01] border border-white/[0.06] flex items-center justify-center mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.4)] hover:scale-105 transition-transform duration-300">
-                    <span className="material-symbols-outlined text-[#D4A017] text-4xl drop-shadow-[0_0_15px_rgba(212,160,23,0.3)]">
+                  <div className="w-20 h-20 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mb-6 shadow-[0_10px_30px_rgba(0,0,0,0.28)]">
+                    <span className="material-symbols-outlined text-[#D4A017] text-4xl">
                       forum
                     </span>
                   </div>
@@ -777,7 +820,10 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                     Arkadaşlarınızla en sevdiğiniz film ve diziler hakkında konuşmak için soldan bir sohbet seçin veya yeni bir mesajlaşma başlatın.
                   </p>
                   <button
-                    onClick={() => setShowNewChatModal(true)}
+                    onClick={() => {
+                      setShowNewChatModal(true);
+                      void loadConnections();
+                    }}
                     className="px-5 py-2.5 rounded-full bg-white/[0.03] hover:bg-white/10 hover:text-[#D4A017] border border-white/[0.05] hover:border-[#D4A017]/30 text-xs text-white/70 font-semibold transition-all duration-300 flex items-center gap-2"
                   >
                     <span className="material-symbols-outlined text-sm">add</span>
@@ -829,7 +875,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                   placeholder="Kullanıcı adı ara..."
                   value={modalSearchQuery}
                   onChange={(e) => setModalSearchQuery(e.target.value)}
-                  className="w-full bg-white/[0.02] border border-white/[0.06] focus:border-[#D4A017]/40 focus:ring-2 focus:ring-[#D4A017]/5 rounded-xl py-2 pl-9 pr-4 text-xs text-white placeholder-white/20 focus:outline-none transition-all duration-300"
+                  className="w-full bg-white/[0.02] border border-white/[0.06] focus:border-[#D4A017]/40 focus:ring-2 focus:ring-[#D4A017]/5 rounded-xl py-2 pl-9 pr-4 text-[16px] md:text-xs text-white placeholder-white/20 focus:outline-none transition-all duration-300"
                 />
               </div>
             </div>

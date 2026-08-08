@@ -5,11 +5,13 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import FollowButton from './FollowButton';
 import FollowListsModal from './FollowListsModal';
+import WatchedShowsSection from './WatchedShowsSection';
 import ListPreviewCard from '@/components/ListPreviewCard';
 import { getTvBackdropPath } from '@/lib/tmdb';
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 const TMDB_BACKDROP = 'https://image.tmdb.org/t/p/w1280';
+const ACTOR_PROFILE_BASE = 'https://image.tmdb.org/t/p/w342';
 
 interface PageParams {
   username: string;
@@ -21,6 +23,7 @@ interface Profile {
   full_name: string;
   bio: string;
   avatar_url: string;
+  activity_visible: boolean | null;
   cover_show_id?: number | null;
 }
 
@@ -37,6 +40,12 @@ interface PublicListRow {
   visibility: 'public' | 'private';
 }
 
+interface FavoriteActorRow {
+  actor_id: number;
+  actor_name: string;
+  actor_profile_path: string | null;
+}
+
 export default async function UserProfilePage({ params }: { params: Promise<PageParams> }) {
   const { username } = await params;
   const normalizedUsername = decodeURIComponent(username).trim().replace(/^@+/, '');
@@ -49,7 +58,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   // Use safe step-by-step lookup instead of OR filter parsing.
   const { data: byUsername } = await supabase
     .from('profiles')
-    .select('id, username, full_name, bio, avatar_url, cover_show_id')
+    .select('id, username, full_name, bio, avatar_url, activity_visible, cover_show_id')
     .eq('username', loweredUsername)
     .maybeSingle();
   profileData = (byUsername as Profile | null) ?? null;
@@ -57,7 +66,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   if (!profileData) {
     const { data: byId } = await supabase
       .from('profiles')
-      .select('id, username, full_name, bio, avatar_url, cover_show_id')
+      .select('id, username, full_name, bio, avatar_url, activity_visible, cover_show_id')
       .eq('id', normalizedUsername)
       .maybeSingle();
     profileData = (byId as Profile | null) ?? null;
@@ -72,7 +81,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     );
     const { data: adminByUsername } = await admin
       .from('profiles')
-      .select('id, username, full_name, bio, avatar_url, cover_show_id')
+      .select('id, username, full_name, bio, avatar_url, activity_visible, cover_show_id')
       .eq('username', loweredUsername)
       .maybeSingle();
     profileData = (adminByUsername as Profile | null) ?? null;
@@ -80,7 +89,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     if (!profileData) {
       const { data: adminById } = await admin
         .from('profiles')
-        .select('id, username, full_name, bio, avatar_url, cover_show_id')
+        .select('id, username, full_name, bio, avatar_url, activity_visible, cover_show_id')
         .eq('id', normalizedUsername)
         .maybeSingle();
       profileData = (adminById as Profile | null) ?? null;
@@ -108,7 +117,20 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     if (path) coverImageUrl = `${TMDB_BACKDROP}${path}`;
   }
 
-  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, reviewRes, notesRes] = await Promise.all([
+  const isOwnProfile = user?.id === profile.id;
+  const canViewWatched = isOwnProfile || profile.activity_visible !== false;
+  let favoriteActorsVisible = true;
+  const { data: favoriteVisibilityData, error: favoriteVisibilityError } = await supabase
+    .from('profiles')
+    .select('favorite_actors_visible')
+    .eq('id', profile.id)
+    .maybeSingle();
+  if (!favoriteVisibilityError && favoriteVisibilityData && 'favorite_actors_visible' in favoriteVisibilityData) {
+    favoriteActorsVisible = (favoriteVisibilityData as { favorite_actors_visible?: boolean | null }).favorite_actors_visible !== false;
+  }
+  const canViewFavoriteActors = isOwnProfile || favoriteActorsVisible;
+
+  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, watchedShowsRes, reviewRes, notesRes] = await Promise.all([
     supabase.from('watchlist').select('show_id, show_name, poster_path').eq('user_id', profile.id).order('added_at', { ascending: false }).limit(24),
     supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profile.id),
     supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profile.id),
@@ -116,7 +138,12 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     supabase.from('lists').select('id, name, description, visibility').eq('user_id', profile.id).eq('visibility', 'public').order('created_at', { ascending: false }).limit(12),
     supabase.from('list_items').select('list_id, poster_path'),
     supabase.from('list_likes').select('list_id'),
-    supabase.from('watch_status').select('*', { count: 'exact', head: true }).eq('user_id', profile.id).eq('status', 'completed'),
+    canViewWatched
+      ? supabase.from('watch_status').select('*', { count: 'exact', head: true }).eq('user_id', profile.id).eq('status', 'completed')
+      : Promise.resolve({ count: 0 }),
+    canViewWatched
+      ? supabase.from('watch_status').select('show_id, show_name, poster_path').eq('user_id', profile.id).eq('status', 'completed').order('updated_at', { ascending: false }).limit(12)
+      : Promise.resolve({ data: [] }),
     supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('user_id', profile.id),
     supabase.from('show_notes').select('show_id, show_name, poster_path, content').eq('user_id', profile.id).eq('is_public', true).order('updated_at', { ascending: false }).limit(20),
   ]);
@@ -124,9 +151,10 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   const watchlist = (watchlistData ?? []) as WatchlistRow[];
   const followers = followersRes.count ?? 0;
   const following = followingRes.count ?? 0;
-  const watchedCount = watchedRes.count ?? 0;
+  const watchedCount = canViewWatched ? watchedRes.count ?? 0 : 0;
+  const watchedStatValue: number | string = canViewWatched ? watchedCount : 'Gizli';
+  const watchedShows = (watchedShowsRes.data ?? []) as WatchlistRow[];
   const reviewCount = reviewRes.count ?? 0;
-  const isOwnProfile = user?.id === profile.id;
   const isFollowing = !!relationRes.data;
   const displayName = profile.full_name || profile.username || 'Kullanıcı';
   const publicLists = (listsRes.data ?? []) as PublicListRow[];
@@ -140,6 +168,16 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     if (row.poster_path && postersByListId[row.list_id].length < 4) postersByListId[row.list_id].push(row.poster_path);
   });
   const publicNotes = (notesRes.data ?? []) as { show_id: number; show_name: string; poster_path: string | null; content: string }[];
+  const favoriteActorsRes = canViewFavoriteActors
+    ? await supabase
+      .from('actor_swipes')
+      .select('actor_id, actor_name, actor_profile_path')
+      .eq('user_id', profile.id)
+      .eq('action', 'like')
+      .order('created_at', { ascending: false })
+      .limit(18)
+    : { data: [] };
+  const favoriteActors = (favoriteActorsRes.data ?? []) as FavoriteActorRow[];
   const likesByListId: Record<string, number> = {};
   (likesRes.data ?? []).forEach((row: { list_id: string }) => {
     if (!listIdSet.has(row.list_id)) return;
@@ -163,7 +201,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
             ) : null}
             <div
               className={`absolute inset-0 pointer-events-none ${
-                coverImageUrl ? 'bg-[#E50914]/[0.06]' : 'bg-gradient-to-br from-[#E50914]/30 via-[#141414] to-[#0A0A0A]'
+                coverImageUrl ? 'bg-[#C91520]/[0.06]' : 'bg-gradient-to-br from-[#C91520]/30 via-[#141414] to-[#0A0A0A]'
               }`}
               aria-hidden
             />
@@ -182,13 +220,13 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                 {profile.bio && <p className="text-sm text-white/55 mt-2 max-w-xl">{profile.bio}</p>}
               </div>
               {!isOwnProfile && (
-                <div className="pb-2 flex items-center gap-2">
+                <div className="pb-2 flex items-center justify-center gap-2">
                   <FollowButton targetUserId={profile.id} initialFollowing={isFollowing} />
                   <Link
                     href={`/chat?user=${profile.id}`}
-                    className="px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/15 text-white font-label-bold text-label-bold transition-all border border-white/10 flex items-center gap-1.5"
+                    className="flex items-center gap-1 rounded-full border border-white/10 bg-white/10 px-3.5 py-2 text-xs font-semibold text-white transition-all hover:bg-white/15 md:gap-1.5 md:px-6 md:py-2.5 md:text-sm"
                   >
-                    <span className="material-symbols-outlined text-base">chat</span>
+                    <span className="material-symbols-outlined text-[15px] md:text-base">chat</span>
                     <span>Mesaj Gönder</span>
                   </Link>
                 </div>
@@ -214,7 +252,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
           <div className="grid grid-cols-3 gap-4 md:hidden">
             {[
               { val: watchlist.length, label: 'Listede' },
-              { val: watchedCount, label: 'İzlendi' },
+              { val: watchedStatValue, label: 'İzlendi' },
               { val: reviewCount, label: 'Yorum' },
             ].map(({ val, label }) => (
               <div key={label} className="text-center">
@@ -233,7 +271,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
             />
             <div className="w-px h-8 bg-white/10" />
             {[
-              { val: watchedCount, label: 'İzlendi' },
+              { val: watchedStatValue, label: 'İzlendi' },
               { val: watchlist.length, label: 'Listede' },
               { val: reviewCount, label: 'Yorum' },
             ].map(({ val, label }) => (
@@ -244,6 +282,13 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
             ))}
           </div>
         </section>
+
+        <WatchedShowsSection
+          profileId={profile.id}
+          canViewWatched={canViewWatched}
+          initialShows={watchedShows}
+          totalCount={watchedCount}
+        />
 
         <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-8 mb-16">
           <h2 className="text-white font-semibold mb-4">İzleme Listesi</h2>
@@ -299,6 +344,32 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
             </div>
           )}
         </section>
+
+        {canViewFavoriteActors && favoriteActors.length > 0 && (
+          <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-2 mb-16">
+            <h2 className="text-white font-semibold mb-4">Favori Oyuncular</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+              {favoriteActors.map((actor) => {
+                const profileImage = actor.actor_profile_path ? `${ACTOR_PROFILE_BASE}${actor.actor_profile_path}` : null;
+                return (
+                  <div key={actor.actor_id} className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/5 bg-[#141414] shadow-md transition-all duration-300 hover:border-white/20 hover:scale-[1.02]">
+                    {profileImage
+                      ? <img src={profileImage} alt={actor.actor_name} className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" />
+                      : <div className="flex h-full w-full items-center justify-center"><span className="material-symbols-outlined text-4xl text-white/20">person</span></div>
+                    }
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-80" />
+                    <div className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center text-emerald-300/90">
+                      <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                    </div>
+                    <div className="absolute bottom-0 left-0 w-full p-3">
+                      <h4 className="truncate text-xs font-bold text-white sm:text-sm">{actor.actor_name}</h4>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {publicNotes.length > 0 && (
           <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-2 mb-16">

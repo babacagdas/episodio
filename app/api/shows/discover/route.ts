@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const page = searchParams.get('page') || '1';
+  const rawPage = Number(searchParams.get('page') || '1');
+  const page = Number.isInteger(rawPage) && rawPage >= 1 && rawPage <= 500 ? rawPage : 1;
 
   const apiKey = process.env.TMDB_API_KEY ?? process.env.NEXT_PUBLIC_TMDB_API_KEY;
   if (!apiKey) return NextResponse.json([]);

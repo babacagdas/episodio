@@ -158,7 +158,7 @@ export async function discoverShowsByGenre(genreId: number, page = 1): Promise<S
   if (!apiKey) return [];
   const res = await fetch(
     `https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&language=tr-TR&with_genres=${genreId}&sort_by=popularity.desc&page=${page}`,
-    { cache: 'no-store' }
+    { next: { revalidate: 86400 } }
   );
   if (!res.ok) return [];
   const data = await res.json();

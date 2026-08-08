@@ -77,8 +77,7 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
         role="dialog"
         aria-modal="true"
         aria-labelledby="discover-filter-title"
-        className="fixed z-[100] left-4 right-4 top-[4.75rem] max-h-[min(85vh,calc(100dvh-6rem))]
-          md:left-auto md:right-10 md:w-full md:max-w-md md:top-24 lg:top-28
+        className="fixed z-[100] left-1/2 top-1/2 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 max-h-[min(85vh,calc(100dvh-2rem))]
           flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0d0d0d] shadow-2xl"
       >
         <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
@@ -86,7 +85,7 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
             <h2 id="discover-filter-title" className="text-lg font-bold tracking-tight text-white">
               Filtreler
             </h2>
-            <p className="mt-1 h-px w-12 rounded-full bg-[#E50914]" />
+            <p className="mt-1 h-px w-12 rounded-full bg-[#C91520]" />
           </div>
           <button
             type="button"
@@ -117,7 +116,7 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
                     <span className="block pb-1">{cat.label}</span>
                     <span
                       className={`block h-0.5 w-full rounded-full transition ${
-                        selected ? 'bg-[#E50914]' : 'bg-[#E50914]/25'
+                        selected ? 'bg-[#C91520]' : 'bg-[#C91520]/25'
                       }`}
                     />
                   </button>
@@ -130,7 +129,7 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
             <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/40">Yıl</p>
             <div className="overflow-hidden rounded-lg bg-black">
               <div
-                className="overflow-y-auto overscroll-y-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(229,9,20,0.45)_transparent]"
+                className="overflow-y-auto overscroll-y-contain pr-1 [scrollbar-width:thin] [scrollbar-color:rgba(201,21,32,0.45)_transparent]"
                 style={{ maxHeight: YEAR_LIST_MAX_HEIGHT }}
               >
                 <button
@@ -141,7 +140,7 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
                   }`}
                 >
                   Tüm yıllar
-                  {year === '' && <span className="ml-auto h-0.5 w-8 shrink-0 rounded-full bg-[#E50914]" />}
+                  {year === '' && <span className="ml-auto h-0.5 w-8 shrink-0 rounded-full bg-[#C91520]" />}
                 </button>
                 {YEARS.map((y) => {
                   const active = String(y) === year;
@@ -155,7 +154,7 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
                       }`}
                     >
                       {y}
-                      {active && <span className="ml-auto h-0.5 w-8 shrink-0 rounded-full bg-[#E50914]" />}
+                      {active && <span className="ml-auto h-0.5 w-8 shrink-0 rounded-full bg-[#C91520]" />}
                     </button>
                   );
                 })}
@@ -169,7 +168,7 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
               onClick={onClose}
               className="bg-transparent pb-1 text-sm font-semibold text-white/60 transition hover:text-white"
             >
-              <span className="inline-block border-b-2 border-[#E50914] pb-0.5">Vazgeç</span>
+              <span className="inline-block border-b-2 border-[#C91520] pb-0.5">Vazgeç</span>
             </button>
             <button
               type="button"
@@ -177,7 +176,7 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
               onClick={handleApply}
               className="bg-transparent pb-1 text-sm font-semibold text-white transition hover:text-white/90 disabled:cursor-not-allowed disabled:opacity-35"
             >
-              <span className="inline-block border-b-2 border-[#E50914] pb-0.5">{busy ? 'Yükleniyor…' : 'Uygula'}</span>
+              <span className="inline-block border-b-2 border-[#C91520] pb-0.5">{busy ? 'Yükleniyor…' : 'Uygula'}</span>
             </button>
           </div>
         </div>

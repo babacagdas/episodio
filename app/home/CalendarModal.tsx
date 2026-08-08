@@ -97,7 +97,7 @@ export default function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) return { text: 'Yayınlandı', color: 'bg-white/10 border-white/10 text-white/50' };
-    if (diffDays === 0) return { text: 'Bugün', color: 'bg-[#E50914]/20 border-[#E50914]/40 text-white font-bold' };
+    if (diffDays === 0) return { text: 'Bugün', color: 'bg-[#C91520]/20 border-[#C91520]/40 text-white font-bold' };
     if (diffDays === 1) return { text: 'Yarın', color: 'bg-[#D4A017]/20 border-[#D4A017]/40 text-[#D4A017] font-bold' };
     return { text: `${diffDays} gün kaldı`, color: 'bg-white/5 border-white/10 text-white/70' };
   };
@@ -128,7 +128,7 @@ export default function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
       />
 
       {/* Modal Gövdesi */}
-      <div className="relative bg-[#111111] border border-white/10 w-full max-w-2xl rounded-3xl overflow-hidden flex flex-col max-h-[85vh] shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative bg-[#111111] border border-white/10 w-full max-w-2xl rounded-xl overflow-hidden flex flex-col max-h-[85vh] shadow-[0_18px_46px_rgba(0,0,0,0.38)] animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#141414]">
           <div>
@@ -150,7 +150,7 @@ export default function CalendarModal({ isOpen, onClose }: CalendarModalProps) {
         <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#111111]">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <span className="w-8 h-8 border-2 border-white/10 border-t-[#E50914] rounded-full animate-spin" />
+              <span className="w-8 h-8 border-2 border-white/10 border-t-[#C91520] rounded-full animate-spin" />
               <span className="text-xs text-white/40">Dizi takviminiz hazırlanıyor...</span>
             </div>
           ) : episodes.length === 0 ? (

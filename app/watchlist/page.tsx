@@ -32,7 +32,7 @@ export default function WatchlistPage() {
           <div className="flex flex-col items-center justify-center py-20 text-white/20">
             <span className="material-symbols-outlined text-5xl mb-3">bookmark</span>
             <p className="text-sm">İzleme listene henüz dizi eklemedin.</p>
-            <Link href="/search" className="mt-4 text-xs text-[#E50914] hover:text-white transition-colors">
+            <Link href="/search" className="mt-4 text-xs text-[#C91520] hover:text-white transition-colors">
               Keşfetmeye başla →
             </Link>
           </div>

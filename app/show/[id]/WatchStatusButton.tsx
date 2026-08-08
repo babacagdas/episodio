@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 type Status = 'watching' | 'completed' | 'dropped' | null;
 
 const OPTIONS: { value: Status; label: string; icon: string; color: string }[] = [
-  { value: 'watching', label: 'İzliyorum', icon: 'play_arrow', color: 'bg-[#E50914] border-[#E50914]' },
+  { value: 'watching', label: 'İzliyorum', icon: 'play_arrow', color: 'bg-[#C91520] border-[#C91520]' },
   { value: 'completed', label: 'Bitirdim', icon: 'check_circle', color: 'bg-green-600 border-green-600' },
   { value: 'dropped', label: 'Bıraktım', icon: 'cancel', color: 'bg-white/20 border-white/30' },
 ];
@@ -38,7 +38,7 @@ export default function WatchStatusButton({ showId, showName, posterPath }: {
   async function setWatchStatus(newStatus: Status) {
     const supabase = createClient();
     const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) { window.location.href = '/signin'; return; }
+    if (!authData.user) { window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
 
     if (newStatus === status) {
       await supabase.from('watch_status').delete()
@@ -65,10 +65,10 @@ export default function WatchStatusButton({ showId, showName, posterPath }: {
       <button
         onClick={() => setOpen(prev => !prev)}
         disabled={loading}
-        className={`px-6 py-2.5 font-semibold text-sm rounded-full transition-colors flex items-center gap-2 shadow-[0_0_20px_rgba(229,9,20,0.3)] border ${
+        className={`px-5 py-3 font-semibold text-sm rounded-xl transition-colors flex items-center gap-2 border ${
           current
             ? `${current.color} text-white`
-            : 'bg-[#E50914] border-[#E50914] text-white hover:bg-red-700'
+            : 'bg-[#C91520] border-[#C91520] text-white hover:bg-[#A8121B]'
         } disabled:opacity-50`}
       >
         <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -94,7 +94,7 @@ export default function WatchStatusButton({ showId, showName, posterPath }: {
                   {opt.icon}
                 </span>
                 {opt.label}
-                {status === opt.value && <span className="ml-auto material-symbols-outlined text-base text-[#E50914]">check</span>}
+                {status === opt.value && <span className="ml-auto material-symbols-outlined text-base text-[#C91520]">check</span>}
               </button>
             ))}
           </div>

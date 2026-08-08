@@ -42,21 +42,23 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
 
       <main className="md:ml-[240px] md:w-[calc(100%-240px)] w-full overflow-x-hidden">
         {/* Hero */}
-        <section className="relative w-full h-[530px] md:h-[600px]">
+        <section className="relative w-full h-[560px] md:h-[680px]">
           <div className="absolute inset-0">
             {backdrop
-              ? <img alt={show.name} className="w-full h-full object-cover object-top" src={backdrop} />
+              ? <img alt={show.name} className="w-full h-full object-cover object-center" src={backdrop} />
               : <div className="w-full h-full bg-[#141414]" />
             }
           </div>
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #0A0A0A 0%, rgba(10,10,10,0.4) 60%, transparent 100%)' }} />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,#070707_0%,rgba(7,7,7,0.78)_38%,rgba(7,7,7,0.16)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_top,#070707_0%,rgba(7,7,7,0.78)_18%,rgba(7,7,7,0.2)_62%,rgba(7,7,7,0.05)_100%)]" />
 
-          <div className="absolute bottom-0 left-0 w-full px-margin-mobile md:px-12 pb-10 flex flex-col items-start max-w-[1200px] mx-auto">
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 tracking-tight">{show.name}</h1>
+          <div className="absolute bottom-0 left-0 w-full px-margin-mobile md:px-12 pb-12 md:pb-16 flex flex-col items-start max-w-[1180px] mx-auto">
+            <p className="premium-kicker mb-3">Dizi Detayı</p>
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-normal leading-[0.98] max-w-4xl">{show.name}</h1>
 
             <div className="flex flex-wrap items-center gap-2 mb-3">
               {show.genres.map((g) => (
-                <span key={g.id} className="px-2.5 py-0.5 rounded-full bg-white/10 text-white/60 text-xs font-medium border border-white/10">{g.name}</span>
+                <span key={g.id} className="px-2.5 py-1 rounded-md bg-white/10 text-white/70 text-xs font-semibold border border-white/10">{g.name}</span>
               ))}
               {year && <span className="text-white/40 text-xs">• {year}</span>}
               {show.number_of_seasons > 0 && <span className="text-white/40 text-xs">• {show.number_of_seasons} Sezon</span>}

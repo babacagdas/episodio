@@ -62,7 +62,7 @@ export default function FollowListsModal({
 
   async function toggleFollow(targetUserId: string) {
     if (!currentUserId) {
-      window.location.href = '/signin';
+      window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
       return;
     }
 
@@ -136,14 +136,14 @@ export default function FollowListsModal({
                 <button
                   type="button"
                   onClick={() => loadList('followers')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold ${tab === 'followers' ? 'bg-[#E50914] text-white' : 'bg-white/5 text-white/70'}`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold ${tab === 'followers' ? 'bg-[#C91520] text-white' : 'bg-white/5 text-white/70'}`}
                 >
                   Takipçi
                 </button>
                 <button
                   type="button"
                   onClick={() => loadList('following')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold ${tab === 'following' ? 'bg-[#E50914] text-white' : 'bg-white/5 text-white/70'}`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold ${tab === 'following' ? 'bg-[#C91520] text-white' : 'bg-white/5 text-white/70'}`}
                 >
                   Takip
                 </button>
@@ -183,7 +183,7 @@ export default function FollowListsModal({
                           type="button"
                           onClick={() => toggleFollow(item.id)}
                           className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-                            followingMap[item.id] ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-[#E50914] text-white hover:bg-red-700'
+                            followingMap[item.id] ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-[#C91520] text-white hover:bg-[#A8121B]'
                           }`}
                         >
                           {followingMap[item.id] ? 'Takiptesin' : 'Takip Et'}

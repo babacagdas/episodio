@@ -1,26 +1,32 @@
 'use client';
+
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 const navItems = [
   { href: '/home', icon: 'home', label: 'Ana Sayfa' },
-  { href: '/search', icon: 'search', label: 'Keşfet' },
-  { href: '/swiper', icon: 'style', label: 'Eşleştirici' },
-  { href: '/watchlist', icon: 'bookmark', label: 'Listem' },
+  { href: '/search', icon: 'explore', label: 'Keşfet' },
   { href: '/chat', icon: 'chat', label: 'Mesajlar' },
-  { href: '/profile', icon: 'person', label: 'Profil' },
+  { href: '/profile', icon: 'person', label: 'Profilim' },
+];
+
+const shortcutItems = [
+  { href: '/watchlist', icon: 'bookmark', label: 'İzleme Listesi' },
+  { href: '/swiper', icon: 'style', label: 'Mutlaka İzlenecekler' },
+  { href: '/actor-match', icon: 'person_search', label: 'Oyuncu Eşleştirici' },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [loggedIn, setLoggedIn] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const supabase = createClient();
     let channel: any = null;
+    let userId: string | null = null;
 
     const fetchUnreadCount = async (uid: string) => {
       const { count } = await supabase
@@ -31,80 +37,126 @@ export default function Sidebar() {
       setUnreadCount(count ?? 0);
     };
 
+    const refreshUnread = () => {
+      if (userId) void fetchUnreadCount(userId);
+    };
+
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        setLoggedIn(true);
+        userId = user.id;
         fetchUnreadCount(user.id);
 
         channel = supabase
           .channel('sidebar_unread_messages')
-          .on(
-            'postgres_changes',
-            {
-              event: '*',
-              schema: 'public',
-              table: 'direct_messages',
-            },
-            () => {
-              fetchUnreadCount(user.id);
-            }
-          )
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_messages' }, () => {
+            fetchUnreadCount(user.id);
+          })
           .subscribe();
       }
     }
 
     init();
+    window.addEventListener('focus', refreshUnread);
+    window.addEventListener('episodio:messages-read', refreshUnread);
 
     return () => {
-      if (channel) {
-        supabase.removeChannel(channel);
-      }
+      window.removeEventListener('focus', refreshUnread);
+      window.removeEventListener('episodio:messages-read', refreshUnread);
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
   return (
-    <div className="hidden md:flex fixed left-0 top-0 h-full w-[240px] bg-[#0A0A0A] border-r border-white/5 flex-col pb-8 pt-4 px-4 z-50">
-      <div className="mb-5 -ml-1 pr-1">
-        <img alt="Episodio Logo" className="w-full max-w-[200px] h-auto object-contain" src="/logo.png" />
-      </div>
-      <nav className="flex flex-col gap-6">
+    <aside className="hidden md:flex fixed left-0 top-0 z-50 h-full w-[240px] flex-col border-r border-white/[0.08] bg-transparent px-5 py-6">
+      <Link href="/home" className="mx-auto mb-8 block w-[150px]">
+        <Image
+          alt="Episodio Logo"
+          className="h-auto w-full object-contain"
+          src="/logo.png"
+          width={300}
+          height={86}
+          priority
+          sizes="150px"
+        />
+      </Link>
+
+      <nav className="space-y-1">
         {navItems.map(({ href, icon, label }) => {
-          const active = pathname === href;
+          const baseHref = href.split('?')[0];
+          const active = pathname === baseHref || pathname.startsWith(`${baseHref}/`);
           return (
             <Link
-              key={label}
+              key={`${href}-${label}`}
               href={href}
-              className={`flex items-center gap-3 font-label-bold text-label-bold transition-colors ${active ? 'text-[#D4A017]' : 'text-gray-400 hover:text-white'}`}
+              className={`group relative flex h-11 items-center gap-3 rounded-xl px-4 text-[13.5px] font-semibold transition-all duration-300 ${
+                active
+                  ? 'bg-[#C91520]/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+                  : 'text-white/60 hover:bg-white/[0.03] hover:text-white'
+              }`}
             >
-              <span className="relative">
-                <span className="material-symbols-outlined" style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}>{icon}</span>
-                {href === '/chat' && unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-[#E50914] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                    {unreadCount}
-                  </span>
-                )}
+              <span
+                className={`material-symbols-outlined text-[20px] transition-colors duration-300 ${
+                  active ? 'text-[#C91520]' : 'text-white/50 group-hover:text-white'
+                }`}
+                style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
+              >
+                {icon}
               </span>
-              {label}
+              <span className="min-w-0 flex-1 truncate">{label}</span>
+              {href === '/chat' && unreadCount > 0 && (
+                <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-[#C91520] px-1.5 text-[10px] font-extrabold text-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </Link>
           );
         })}
       </nav>
-      <div className="mt-auto">
-        {loggedIn && (
-          <button
-            onClick={async () => {
-              const supabase = createClient();
-              await supabase.auth.signOut();
-              window.location.href = '/';
-            }}
-            className="flex items-center gap-3 text-white/40 hover:text-white transition-colors w-full"
-          >
-            <span className="material-symbols-outlined">logout</span>
-            <span className="font-label-bold text-label-bold">Çıkış Yap</span>
-          </button>
-        )}
+
+      <div className="mt-7">
+        <p className="mb-3 px-4 text-[10px] font-bold uppercase tracking-[0.15em] text-white/30">Kısayollar</p>
+        <nav className="space-y-1">
+          {shortcutItems.map(({ href, icon, label }) => (
+            <Link
+              key={label}
+              href={href}
+              className="group flex h-10 items-center gap-3 rounded-xl px-4 text-[13px] font-semibold text-white/50 transition-all duration-300 hover:bg-white/[0.03] hover:text-white"
+            >
+              <span className="material-symbols-outlined text-[19px] text-white/40 group-hover:text-white">{icon}</span>
+              <span className="truncate">{label}</span>
+            </Link>
+          ))}
+        </nav>
       </div>
-    </div>
+
+      <div className="mt-auto flex flex-col gap-3 px-1">
+        <a
+          href="https://www.instagram.com/episodiotr/"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Episodio Instagram"
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/45 transition-all duration-200 hover:border-[#C91520]/40 hover:bg-[#C91520]/10 hover:text-white"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="5" />
+            <circle cx="12" cy="12" r="4" />
+            <circle cx="17.5" cy="6.5" r="0.7" fill="currentColor" stroke="none" />
+          </svg>
+        </a>
+        <p className="max-w-[180px] text-[10px] leading-relaxed text-white/22">
+          © 2026 episodio. Tüm hakları saklıdır.
+        </p>
+      </div>
+    </aside>
   );
 }

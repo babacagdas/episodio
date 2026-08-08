@@ -192,28 +192,38 @@ export default function SwiperPage() {
           <span className="material-symbols-outlined text-lg">arrow_back</span>
         </Link>
         <span className="font-bold text-sm text-white tracking-tight">Dizi Eşleştirici</span>
-        <div className="w-9 h-9" />
+        <Link href="/actor-match" className="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all" title="Oyuncu Eşleştirici">
+          <span className="material-symbols-outlined text-lg">person_search</span>
+        </Link>
       </header>
 
       <main className="md:ml-[240px] flex-1 flex flex-col items-center justify-center relative bg-[#090909] py-4 px-4 overflow-hidden h-[calc(100dvh-68px)] md:h-screen pb-20 md:pb-4">
         
         {/* Sinematik Arka Plan Blobları */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-10">
-          <div className="absolute top-[10%] right-[10%] w-[350px] h-[350px] bg-[#E50914] rounded-full filter blur-[120px] animate-pulse duration-[7000ms]" />
-          <div className="absolute bottom-[10%] left-[10%] w-[300px] h-[300px] bg-[#D4A017] rounded-full filter blur-[100px] opacity-75 animate-pulse duration-[9000ms]" />
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.12),transparent_18rem),radial-gradient(circle_at_22%_72%,rgba(201,21,32,0.16),transparent_24rem),linear-gradient(135deg,#050505_0%,#111_46%,rgba(201,21,32,0.13)_100%)] opacity-70" />
+          <div className="absolute inset-0 bg-[#070707]/55" />
         </div>
 
         {/* Eşleştirici Alanı */}
-        <div className="w-full max-w-sm flex flex-col gap-4 relative z-10 flex-1 justify-center py-2 h-full min-h-0">
+        <Link
+          href="/actor-match"
+          className="absolute right-5 top-5 z-20 hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-white/55 transition-colors hover:border-white/20 hover:text-white md:flex"
+        >
+          <span className="material-symbols-outlined text-[17px]">person_search</span>
+          Oyuncu Eşleştirici
+        </Link>
+
+        <div className="w-full max-w-[25rem] flex flex-col gap-4 relative z-10 flex-1 justify-center py-2 h-full min-h-0 md:max-w-md">
           {loading ? (
-            <div className="aspect-[2/3] w-full max-w-sm rounded-3xl bg-[#141414]/80 border border-white/5 flex flex-col items-center justify-center gap-3">
-              <span className="w-10 h-10 border-4 border-white/10 border-t-[#E50914] rounded-full animate-spin" />
+            <div className="aspect-[2/3] w-full max-w-sm rounded-2xl bg-[#141414]/80 border border-white/10 flex flex-col items-center justify-center gap-3">
+              <span className="w-10 h-10 border-4 border-white/10 border-t-[#C91520] rounded-full animate-spin" />
               <p className="text-xs text-white/30 font-medium">Diziler yükleniyor...</p>
             </div>
           ) : !activeShow ? (
             // Deste Bittiğinde Gösterilecek Alan
-            <div className="w-full rounded-3xl bg-[#111111]/85 border border-white/[0.08] p-8 text-center flex flex-col items-center gap-6 shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl animate-[chatScaleIn_0.3s_ease-out_forwards]">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#D4A017]/25 to-[#D4A017]/5 border border-[#D4A017]/20 flex items-center justify-center">
+            <div className="w-full rounded-2xl bg-[#111111]/92 border border-white/[0.1] p-8 text-center flex flex-col items-center gap-6 shadow-[0_18px_46px_rgba(0,0,0,0.38)] backdrop-blur-lg animate-[chatScaleIn_0.3s_ease-out_forwards]">
+              <div className="w-16 h-16 rounded-xl bg-[#D4A017]/10 border border-[#D4A017]/20 flex items-center justify-center">
                 <span className="material-symbols-outlined text-[#D4A017] text-3xl">style</span>
               </div>
               <div>
@@ -225,7 +235,7 @@ export default function SwiperPage() {
               <div className="flex flex-col gap-2 w-full">
                 <Link
                   href="/watchlist"
-                  className="w-full py-3 bg-gradient-to-br from-[#E50914] to-[#B80710] hover:from-[#f40f1c] hover:to-[#cd0812] rounded-xl text-xs font-semibold text-white transition-all text-center flex items-center justify-center gap-1.5 shadow-[0_4px_15px_rgba(229,9,20,0.3)] border border-red-500/10"
+                  className="w-full py-3 bg-[#C91520] hover:bg-[#A8121B] rounded-xl text-xs font-semibold text-white transition-colors text-center flex items-center justify-center gap-1.5 border border-[#C91520]/25"
                 >
                   <span className="material-symbols-outlined text-sm">bookmark</span>
                   <span>İzleme Listeme Git</span>
@@ -258,7 +268,7 @@ export default function SwiperPage() {
                   transition: transitionStyle,
                   cursor: isDragging ? 'grabbing' : 'grab',
                 }}
-                className="h-[46dvh] md:h-auto md:w-full aspect-[2/3] rounded-3xl overflow-hidden bg-[#141414] border border-white/[0.08] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)] relative select-none touch-none"
+                className="h-[52dvh] max-h-[33rem] md:h-auto md:w-full aspect-[2/3] rounded-2xl overflow-hidden bg-[#141414] border border-white/[0.1] shadow-[0_26px_56px_-14px_rgba(0,0,0,0.78)] relative select-none touch-none"
               >
                 {/* Afiş */}
                 {activeShow.poster_path ? (
@@ -287,7 +297,7 @@ export default function SwiperPage() {
                 {/* SKIP (Pas Geç) Rozeti */}
                 <div
                   style={{ opacity: skipOpacity }}
-                  className="absolute top-6 right-6 border-4 border-red-500 text-red-500 font-black text-xl uppercase tracking-widest px-3 py-1 rounded-xl rotate-[12deg] z-20 pointer-events-none bg-black/20 backdrop-blur-sm shadow-[0_4px_15px_rgba(239,68,68,0.2)]"
+                  className="absolute top-6 right-6 border-4 border-[#C91520] text-[#C91520] font-black text-xl uppercase tracking-widest px-3 py-1 rounded-xl rotate-[12deg] z-20 pointer-events-none bg-black/20 backdrop-blur-sm shadow-[0_4px_15px_rgba(201,21,32,0.18)]"
                 >
                   GEÇ
                 </div>
@@ -328,7 +338,7 @@ export default function SwiperPage() {
                 {/* GEÇ Butonu (Sola fırlat) */}
                 <button
                   onClick={() => swipe('left')}
-                  className="w-11 h-11 rounded-full bg-white/[0.02] hover:bg-red-500/10 border border-white/10 hover:border-red-500/20 active:scale-90 text-white/50 hover:text-red-500 flex items-center justify-center transition-all shadow-[0_4px_15px_rgba(0,0,0,0.3)]"
+                  className="w-11 h-11 rounded-full bg-[#C91520]/10 hover:bg-[#C91520]/18 border border-[#C91520]/25 hover:border-[#C91520]/55 active:scale-90 text-[#F06A73] hover:text-white flex items-center justify-center transition-all shadow-[0_4px_15px_rgba(201,21,32,0.14)]"
                   title="Pas Geç"
                 >
                   <span className="material-symbols-outlined text-xl font-bold">close</span>
@@ -346,7 +356,7 @@ export default function SwiperPage() {
                 {/* BEĞEN Butonu (Sağa fırlat) */}
                 <button
                   onClick={() => swipe('right')}
-                  className="w-11 h-11 rounded-full bg-gradient-to-br from-[#E50914]/20 to-[#B80710]/20 hover:from-[#E50914] hover:to-[#B80710] border border-[#E50914]/20 hover:border-transparent active:scale-90 text-[#E50914] hover:text-white flex items-center justify-center transition-all shadow-[0_4px_15px_rgba(229,9,20,0.15)] hover:shadow-[0_4px_20px_rgba(229,9,20,0.4)]"
+                  className="w-11 h-11 rounded-full bg-emerald-500/10 hover:bg-emerald-500/18 border border-emerald-400/25 hover:border-emerald-400/55 active:scale-90 text-emerald-300 hover:text-white flex items-center justify-center transition-all shadow-[0_4px_15px_rgba(16,185,129,0.14)]"
                   title="İzleme Listeme Ekle"
                 >
                   <span className="material-symbols-outlined text-xl">favorite</span>

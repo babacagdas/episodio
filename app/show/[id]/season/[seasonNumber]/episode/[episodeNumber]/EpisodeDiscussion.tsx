@@ -240,7 +240,7 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
   }
 
   async function toggleLike(commentId: string) {
-    if (!userId) { window.location.href = '/signin'; return; }
+    if (!userId) { window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
     const supabase = createClient();
     const comment = comments.find(c => c.id === commentId);
     if (!comment) return;
@@ -367,7 +367,7 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
                 type="button"
                 onClick={submitComment}
                 disabled={submitting || !content.trim() || rating === 0}
-                className="w-10 h-10 shrink-0 bg-[#E50914] text-white rounded-full hover:bg-red-700 transition-all disabled:opacity-40 flex items-center justify-center"
+                className="w-10 h-10 shrink-0 bg-[#C91520] text-white rounded-full hover:bg-[#A8121B] transition-all disabled:opacity-40 flex items-center justify-center"
               >
                 {submitting ? <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin block" /> : <span className="material-symbols-outlined text-[18px]">send</span>}
               </button>
@@ -375,14 +375,14 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
             <button
               type="button"
               onClick={() => setCommentSpoiler((prev) => !prev)}
-              className={`mt-2 text-[11px] font-semibold transition-colors ${commentSpoiler ? 'text-[#E50914]' : 'text-white/35 hover:text-white/70'}`}
+              className={`mt-2 text-[11px] font-semibold transition-colors ${commentSpoiler ? 'text-[#C91520]' : 'text-white/35 hover:text-white/70'}`}
             >
               {commentSpoiler ? 'Spoiler etiketi açık' : 'Spoiler etiketi ekle'}
             </button>
           </div>
         </div>
       ) : (
-        <p className="text-sm text-white/30 mb-6">Yorum yazmak için <Link href="/signin" className="text-[#E50914]">giriş yap</Link>.</p>
+        <p className="text-sm text-white/30 mb-6">Yorum yazmak için <Link href="/signin" className="text-[#C91520]">giriş yap</Link>.</p>
       )}
 
       {!loaded ? (
@@ -397,15 +397,16 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
           {comments.map(comment => {
             const name = comment.profile?.full_name || comment.profile?.username || 'Kullanıcı';
             const username = comment.profile?.username;
+            const profilePath = `/u/${username ?? comment.user_id}`;
             return (
               <div key={comment.id} className="flex gap-3">
-                <Link href={username ? `/u/${username}` : '#'} className="w-9 h-9 rounded-full bg-[#1A1A1A] border border-white/10 shrink-0 overflow-hidden flex items-center justify-center">
+                <Link href={profilePath} className="w-9 h-9 rounded-full bg-[#1A1A1A] border border-white/10 shrink-0 overflow-hidden flex items-center justify-center">
                   {comment.profile?.avatar_url ? <img src={comment.profile.avatar_url} alt={name} className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-white/20 text-lg">person</span>}
                 </Link>
                 <div className="flex-1 min-w-0">
                   <div className="bg-white/[0.04] rounded-2xl rounded-tl-sm px-4 py-3">
                     <div className="flex items-center justify-between mb-1">
-                      <Link href={username ? `/u/${username}` : '#'} className="text-sm font-semibold text-white hover:text-white/80 transition-colors">{name}</Link>
+                      <Link href={profilePath} className="text-sm font-semibold text-white hover:text-white/80 transition-colors">{name}</Link>
                       <div className="flex items-center gap-0.5">
                         {[1,2,3,4,5].map(s => (
                           <span key={s} className="material-symbols-outlined text-[11px]" style={{ color: s <= comment.rating ? '#D4A017' : 'rgba(255,255,255,0.15)', fontVariationSettings: s <= comment.rating ? "'FILL' 1" : "'FILL' 0" }}>star</span>
@@ -416,7 +417,7 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
                       <button
                         type="button"
                         onClick={() => setRevealedSpoilers((prev) => ({ ...prev, [comment.id]: true }))}
-                        className="text-xs font-semibold text-[#E50914] hover:text-white transition-colors"
+                        className="text-xs font-semibold text-[#C91520] hover:text-white transition-colors"
                       >
                         Spoiler var — Göster
                       </button>
@@ -427,7 +428,7 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
 
                   <div className="flex items-center gap-4 mt-1.5 px-2">
                     <span className="text-[11px] text-white/25">{timeAgo(comment.created_at)}</span>
-                    <button onClick={() => toggleLike(comment.id)} className="flex items-center gap-1 text-[11px] font-semibold transition-colors" style={{ color: comment.likedByMe ? '#E50914' : 'rgba(255,255,255,0.3)' }}>
+                    <button onClick={() => toggleLike(comment.id)} className="flex items-center gap-1 text-[11px] font-semibold transition-colors" style={{ color: comment.likedByMe ? '#C91520' : 'rgba(255,255,255,0.3)' }}>
                       <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: comment.likedByMe ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
                       {comment.likeCount > 0 && comment.likeCount}
                     </button>
@@ -438,7 +439,7 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
                       <button
                         type="button"
                         onClick={() => deleteComment(comment.id)}
-                        className="text-[11px] font-semibold text-white/30 hover:text-[#E50914] transition-colors"
+                        className="text-[11px] font-semibold text-white/30 hover:text-[#C91520] transition-colors"
                       >
                         Sil
                       </button>
@@ -451,19 +452,20 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
                       {comment.replies.map(reply => {
                         const rName = reply.profile?.full_name || reply.profile?.username || 'Kullanıcı';
                         const rUsername = reply.profile?.username;
+                        const replyProfilePath = `/u/${rUsername ?? reply.user_id}`;
                         return (
                           <div key={reply.id} className="flex gap-2">
-                            <Link href={rUsername ? `/u/${rUsername}` : '#'} className="w-7 h-7 rounded-full bg-[#1A1A1A] border border-white/10 shrink-0 overflow-hidden flex items-center justify-center">
+                            <Link href={replyProfilePath} className="w-7 h-7 rounded-full bg-[#1A1A1A] border border-white/10 shrink-0 overflow-hidden flex items-center justify-center">
                               {reply.profile?.avatar_url ? <img src={reply.profile.avatar_url} alt={rName} className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-white/20 text-sm">person</span>}
                             </Link>
                             <div className="flex-1">
                               <div className="bg-white/[0.03] rounded-2xl rounded-tl-sm px-3 py-2">
-                                <Link href={rUsername ? `/u/${rUsername}` : '#'} className="text-xs font-semibold text-white hover:text-white/80 transition-colors">{rName}</Link>
+                                <Link href={replyProfilePath} className="text-xs font-semibold text-white hover:text-white/80 transition-colors">{rName}</Link>
                                 {reply.isSpoiler && !revealedSpoilers[reply.id] ? (
                                   <button
                                     type="button"
                                     onClick={() => setRevealedSpoilers((prev) => ({ ...prev, [reply.id]: true }))}
-                                    className="mt-0.5 text-[11px] font-semibold text-[#E50914] hover:text-white transition-colors"
+                                    className="mt-0.5 text-[11px] font-semibold text-[#C91520] hover:text-white transition-colors"
                                   >
                                     Spoiler var — Göster
                                   </button>
@@ -533,13 +535,13 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
                           }}
                         />
                       </div>
-                      <button type="button" onClick={() => submitReply(comment.id)} disabled={replySubmitting || !replyContent.trim()} className="px-3 py-1.5 bg-[#E50914] text-white text-xs font-semibold rounded-full disabled:opacity-40">
+                      <button type="button" onClick={() => submitReply(comment.id)} disabled={replySubmitting || !replyContent.trim()} className="px-3 py-1.5 bg-[#C91520] text-white text-xs font-semibold rounded-full disabled:opacity-40">
                         {replySubmitting ? '...' : 'Gönder'}
                       </button>
                       <button
                         type="button"
                         onClick={() => setReplySpoiler((prev) => !prev)}
-                        className={`text-[11px] font-semibold transition-colors ${replySpoiler ? 'text-[#E50914]' : 'text-white/30 hover:text-white'}`}
+                        className={`text-[11px] font-semibold transition-colors ${replySpoiler ? 'text-[#C91520]' : 'text-white/30 hover:text-white'}`}
                       >
                         Spoiler
                       </button>

@@ -33,7 +33,7 @@ export default function MentionMenu({
                 key={u.id}
                 type="button"
                 onClick={() => onPick(u)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.04] border-b border-[#E50914]/35 last:border-b-0"
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.04] border-b border-[#C91520]/35 last:border-b-0"
               >
                 <div className="w-8 h-8 rounded-full bg-[#0f0f0f] border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
                   {u.avatar_url ? (

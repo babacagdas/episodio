@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useWatchlist } from '@/lib/useWatchlist';
 import { useLists } from '@/lib/useLists';
@@ -12,6 +13,12 @@ import type { User } from '@supabase/supabase-js';
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 const TMDB_BACKDROP = 'https://image.tmdb.org/t/p/w1280';
+const ACTOR_PROFILE_BASE = 'https://image.tmdb.org/t/p/w342';
+const WATCHED_PAGE_SIZE = 12;
+const AVATAR_MAX_SOURCE_BYTES = 5 * 1024 * 1024;
+const AVATAR_MAX_OUTPUT_BYTES = 220 * 1024;
+const AVATAR_SIZE = 320;
+const AVATAR_QUALITY_STEPS = [0.82, 0.72, 0.62, 0.52];
 
 interface Profile {
   username: string;
@@ -28,7 +35,49 @@ interface TmdbTvSearchItem {
   poster_path: string | null;
 }
 
+async function compressAvatar(file: File): Promise<File> {
+  const imageUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = imageUrl;
+    });
+
+    const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+    const sourceX = Math.max(0, (image.naturalWidth - sourceSize) / 2);
+    const sourceY = Math.max(0, (image.naturalHeight - sourceSize) / 2);
+    const canvas = document.createElement('canvas');
+    canvas.width = AVATAR_SIZE;
+    canvas.height = AVATAR_SIZE;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas hazirlanamadi.');
+
+    ctx.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, AVATAR_SIZE, AVATAR_SIZE);
+
+    let blob: Blob | null = null;
+    for (const quality of AVATAR_QUALITY_STEPS) {
+      blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, 'image/webp', quality);
+      });
+      if (blob && blob.size <= AVATAR_MAX_OUTPUT_BYTES) break;
+    }
+    if (!blob) throw new Error('Fotoğraf sıkıştırılamadı.');
+
+    return new File([blob], 'avatar.webp', { type: 'image/webp' });
+  } finally {
+    URL.revokeObjectURL(imageUrl);
+  }
+}
+
 export default function ProfileContent() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const initialTab = tabParam === 'lists' || tabParam === 'watched' || tabParam === 'actors'
+    ? tabParam
+    : 'watchlist';
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile>({
     username: '',
@@ -38,11 +87,13 @@ export default function ProfileContent() {
     activity_visible: true,
     cover_show_id: null,
   });
-  const { watchlist, loading } = useWatchlist();
-  const { lists, sharedLists, likedLists, countsByListId, postersByListId, likesByListId, createList, loading: listsLoading, error: listsError } = useLists();
-  const [activeTab, setActiveTab] = useState<'watchlist' | 'watched' | 'lists' | 'notes'>('watchlist');
+  const [activeTab, setActiveTab] = useState<'watchlist' | 'watched' | 'lists' | 'actors'>(initialTab);
+  const [listCount, setListCount] = useState(0);
+  const { watchlist, loading } = useWatchlist(!!user && activeTab === 'watchlist');
+  const { lists, sharedLists, likedLists, countsByListId, postersByListId, likesByListId, createList, loading: listsLoading, error: listsError } = useLists(!!user && activeTab === 'lists');
   const [listsSubTab, setListsSubTab] = useState<'mine' | 'shared'>('mine');
   const [editOpen, setEditOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [form, setForm] = useState<Profile>({
     username: '',
     full_name: '',
@@ -75,17 +126,51 @@ export default function ProfileContent() {
   const [followingCount, setFollowingCount] = useState(0);
   const [watchedCount, setWatchedCount] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
-  const [notes, setNotes] = useState<{ show_id: number; show_name: string; poster_path: string | null; content: string; is_public: boolean }[]>([]);
-  const [notesLoaded, setNotesLoaded] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [favoriteActors, setFavoriteActors] = useState<{ actor_id: number; actor_name: string; actor_profile_path: string | null }[]>([]);
+  const [favoriteActorsLoaded, setFavoriteActorsLoaded] = useState(false);
   const [watchedShows, setWatchedShows] = useState<{ show_id: number; show_name: string; poster_path: string | null }[]>([]);
   const [watchedLoading, setWatchedLoading] = useState(false);
+  const [watchedLoadingMore, setWatchedLoadingMore] = useState(false);
+  const [watchedLoaded, setWatchedLoaded] = useState(false);
+  const [favoriteActorsVisible, setFavoriteActorsVisible] = useState(true);
+  const [favoriteActorsVisibilityColumnAvailable, setFavoriteActorsVisibilityColumnAvailable] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
+    let cancelled = false;
+    let statsTimer: number | null = null;
+    const loadStats = async (userId: string) => {
+      setStatsLoading(true);
+      const [followersRes, followingRes, watchedRes, reviewRes, watchlistRes] = await Promise.all([
+        supabase.from('follows').select('follower_id', { count: 'exact', head: true }).eq('following_id', userId),
+        supabase.from('follows').select('following_id', { count: 'exact', head: true }).eq('follower_id', userId),
+        supabase.from('watch_status').select('show_id', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'completed'),
+        supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+        supabase.from('watchlist').select('show_id', { count: 'exact', head: true }).eq('user_id', userId),
+      ]);
+
+      if (cancelled) return;
+      setFollowersCount(followersRes.count ?? 0);
+      setFollowingCount(followingRes.count ?? 0);
+      setWatchedCount(watchedRes.count ?? 0);
+      setReviewCount(reviewRes.count ?? 0);
+      setListCount(watchlistRes.count ?? 0);
+      setStatsLoading(false);
+    };
     supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
+      if (!data.user) {
+        setStatsLoading(false);
+        return;
+      }
+      if (cancelled) return;
       setUser(data.user);
-      const { data: p } = await supabase.from('profiles').select('*').eq('id', data.user.id).single();
+      const { data: p } = await supabase
+        .from('profiles')
+        .select('username, full_name, bio, avatar_url, activity_visible, cover_show_id')
+        .eq('id', data.user.id)
+        .single();
+      if (cancelled) return;
       if (p) {
         setProfile({
           ...p,
@@ -102,39 +187,96 @@ export default function ProfileContent() {
           cover_show_id: null,
         };
         await supabase.from('profiles').insert({ id: data.user.id, ...initial });
+        if (cancelled) return;
         setProfile(initial);
       }
 
-      const [followersRes, followingRes, watchedRes, reviewRes] = await Promise.all([
-        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', data.user.id),
-        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', data.user.id),
-        supabase.from('watch_status').select('*', { count: 'exact', head: true }).eq('user_id', data.user.id).eq('status', 'completed'),
-        supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('user_id', data.user.id),
-      ]);
-      setFollowersCount(followersRes.count ?? 0);
-      setFollowingCount(followingRes.count ?? 0);
-      setWatchedCount(watchedRes.count ?? 0);
-      setReviewCount(reviewRes.count ?? 0);
+      const localFavoriteVisibility = window.localStorage.getItem(`episodio:favoriteActorsVisible:${data.user.id}`);
+      if (localFavoriteVisibility !== null) {
+        setFavoriteActorsVisible(localFavoriteVisibility === 'true');
+      }
+
+      const { data: favoriteVisibilityData, error: favoriteVisibilityError } = await supabase
+        .from('profiles')
+        .select('favorite_actors_visible')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      if (!cancelled && !favoriteVisibilityError && favoriteVisibilityData && 'favorite_actors_visible' in favoriteVisibilityData) {
+        const visible = (favoriteVisibilityData as { favorite_actors_visible?: boolean | null }).favorite_actors_visible !== false;
+        setFavoriteActorsVisible(visible);
+        setFavoriteActorsVisibilityColumnAvailable(true);
+        window.localStorage.setItem(`episodio:favoriteActorsVisible:${data.user.id}`, String(visible));
+      }
+
+      statsTimer = window.setTimeout(() => {
+        void loadStats(data.user.id);
+      }, 180);
 
       // Notları yükle
-      const { data: notesData } = await supabase
-        .from('show_notes')
-        .select('show_id, show_name, poster_path, content, is_public')
-        .eq('user_id', data.user.id)
-        .order('updated_at', { ascending: false });
-      setNotes(notesData ?? []);
-      setNotesLoaded(true);
 
       // İzlediklerim
+    });
+    return () => {
+      cancelled = true;
+      if (statsTimer) window.clearTimeout(statsTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'lists' || tab === 'watchlist' || tab === 'watched' || tab === 'actors') {
+      setActiveTab(tab);
+    }
+    const listsTab = searchParams.get('listsTab');
+    if (listsTab === 'mine' || listsTab === 'shared') {
+      setListsSubTab(listsTab);
+    }
+    if (searchParams.get('createList') === '1') {
+      setActiveTab('lists');
+      setListsSubTab('mine');
+      setListModalOpen(true);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (activeTab === 'watchlist' && !loading) {
+      setListCount(watchlist.length);
+    }
+  }, [activeTab, loading, watchlist.length]);
+
+  useEffect(() => {
+    if (!user || activeTab !== 'actors' || favoriteActorsLoaded) return;
+    const supabase = createClient();
+    void (async () => {
+      const { data: actorsData } = await supabase
+        .from('actor_swipes')
+        .select('actor_id, actor_name, actor_profile_path')
+        .eq('user_id', user.id)
+        .eq('action', 'like')
+        .order('created_at', { ascending: false });
+      setFavoriteActors(actorsData ?? []);
+      setFavoriteActorsLoaded(true);
+    })();
+  }, [activeTab, favoriteActorsLoaded, user]);
+
+  useEffect(() => {
+    if (!user || activeTab !== 'watched' || watchedLoaded) return;
+    const supabase = createClient();
+    setWatchedLoading(true);
+    void (async () => {
       const { data: watchedData } = await supabase
         .from('watch_status')
         .select('show_id, show_name, poster_path')
-        .eq('user_id', data.user.id)
+        .eq('user_id', user.id)
         .eq('status', 'completed')
-        .order('updated_at', { ascending: false });
+        .order('updated_at', { ascending: false })
+        .range(0, WATCHED_PAGE_SIZE - 1);
       setWatchedShows(watchedData ?? []);
-    });
-  }, []);
+      setWatchedLoaded(true);
+      setWatchedLoading(false);
+    })();
+  }, [activeTab, user, watchedLoaded]);
 
   const activeCoverShowId = editOpen ? (form.cover_show_id ?? null) : (profile.cover_show_id ?? null);
 
@@ -196,6 +338,7 @@ export default function ProfileContent() {
   const avatar = avatarPreview || profile.avatar_url || null;
 
   function openEdit() {
+    setSettingsOpen(false);
     setForm(profile);
     setAvatarPreview(null);
     setAvatarFile(null);
@@ -206,11 +349,31 @@ export default function ProfileContent() {
     setEditOpen(true);
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
+    setSaveError('');
+
+    if (!file.type.startsWith('image/')) {
+      setSaveError('Lütfen geçerli bir görsel dosyası seç.');
+      return;
+    }
+
+    if (file.size > AVATAR_MAX_SOURCE_BYTES) {
+      setSaveError('Profil fotoğrafı en fazla 5 MB olabilir.');
+      return;
+    }
+
+    try {
+      const compressed = await compressAvatar(file);
+      setAvatarFile(compressed);
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+      setAvatarPreview(URL.createObjectURL(compressed));
+    } catch {
+      setSaveError('Fotoğraf hazırlanamadı. Başka bir görsel dene.');
+    } finally {
+      e.target.value = '';
+    }
   }
 
   async function handleSave() {
@@ -221,9 +384,11 @@ export default function ProfileContent() {
     let avatar_url = form.avatar_url;
 
     if (avatarFile) {
-      const ext = avatarFile.name.split('.').pop();
-      const path = `${user.id}/avatar.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, avatarFile, { upsert: true });
+      const path = `${user.id}/avatar.webp`;
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, avatarFile, {
+        upsert: true,
+        contentType: 'image/webp',
+      });
       if (uploadError) {
         setSaveError('Fotoğraf yüklenemedi.');
         setSaving(false);
@@ -231,6 +396,11 @@ export default function ProfileContent() {
       }
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
       avatar_url = urlData.publicUrl;
+      await supabase.storage.from('avatars').remove([
+        `${user.id}/avatar.jpg`,
+        `${user.id}/avatar.jpeg`,
+        `${user.id}/avatar.png`,
+      ]);
     }
 
     const updated: Profile = {
@@ -253,6 +423,96 @@ export default function ProfileContent() {
       setEditOpen(false);
     }
     setSaving(false);
+  }
+
+  async function toggleWatchedVisibility() {
+    if (!user) return;
+    const nextVisible = !profile.activity_visible;
+    const previousVisible = profile.activity_visible;
+    setSaveError('');
+    setProfile((prev) => ({ ...prev, activity_visible: nextVisible }));
+    setForm((prev) => ({ ...prev, activity_visible: nextVisible }));
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        activity_visible: nextVisible,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      setProfile((prev) => ({ ...prev, activity_visible: previousVisible }));
+      setForm((prev) => ({ ...prev, activity_visible: previousVisible }));
+      setSaveError(error.message);
+    }
+  }
+
+  async function toggleFavoriteActorsVisibility() {
+    if (!user) return;
+    const nextVisible = !favoriteActorsVisible;
+    const previousVisible = favoriteActorsVisible;
+    setSaveError('');
+    setFavoriteActorsVisible(nextVisible);
+    window.localStorage.setItem(`episodio:favoriteActorsVisible:${user.id}`, String(nextVisible));
+
+    if (!favoriteActorsVisibilityColumnAvailable) return;
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        favorite_actors_visible: nextVisible,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+
+    if (error) {
+      setFavoriteActorsVisible(previousVisible);
+      window.localStorage.setItem(`episodio:favoriteActorsVisible:${user.id}`, String(previousVisible));
+      setSaveError(error.message);
+    }
+  }
+
+  async function removeFavoriteActor(actorId: number) {
+    if (!user) return;
+    const previousActors = favoriteActors;
+    setFavoriteActors((prev) => prev.filter((actor) => actor.actor_id !== actorId));
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('actor_swipes')
+      .update({ action: 'pass' })
+      .eq('user_id', user.id)
+      .eq('actor_id', actorId);
+
+    if (error) {
+      setFavoriteActors(previousActors);
+      setSaveError(error.message);
+    }
+  }
+
+  async function loadMoreWatched() {
+    if (!user || watchedLoadingMore) return;
+    setWatchedLoadingMore(true);
+    const from = watchedShows.length;
+    const to = from + WATCHED_PAGE_SIZE - 1;
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('watch_status')
+      .select('show_id, show_name, poster_path')
+      .eq('user_id', user.id)
+      .eq('status', 'completed')
+      .order('updated_at', { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      setSaveError(error.message);
+    } else if (data?.length) {
+      setWatchedShows((prev) => [...prev, ...data]);
+    }
+    setWatchedLoadingMore(false);
   }
 
   async function handleCreateList() {
@@ -334,7 +594,7 @@ export default function ProfileContent() {
                   <span className="material-symbols-outlined text-white text-2xl">photo_camera</span>
                 </div>
               </div>
-              <button onClick={() => fileRef.current?.click()} className="text-xs text-[#E50914] hover:text-white transition-colors">Fotoğraf Değiştir</button>
+              <button onClick={() => fileRef.current?.click()} className="text-xs text-[#C91520] hover:text-white transition-colors">Fotoğraf Değiştir</button>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
               <div className="flex flex-col items-center gap-1.5 w-full">
                 <button
@@ -344,7 +604,7 @@ export default function ProfileContent() {
                     setCoverSearchResults([]);
                     setCoverModalOpen(true);
                   }}
-                  className="text-xs text-[#E50914] hover:text-white transition-colors font-medium"
+                  className="text-xs text-[#C91520] hover:text-white transition-colors font-medium"
                 >
                   Kapak değiştir
                 </button>
@@ -365,7 +625,7 @@ export default function ProfileContent() {
               <div>
                 <label className="text-xs text-white/30 uppercase tracking-wider mb-1.5 block">Ad Soyad</label>
                 <input
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#E50914]/50 focus:outline-none transition-colors"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors"
                   placeholder="Ad Soyad"
                   value={form.full_name}
                   onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
@@ -376,7 +636,7 @@ export default function ProfileContent() {
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-sm">@</span>
                   <input
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 pl-8 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#E50914]/50 focus:outline-none transition-colors"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 pl-8 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors"
                     placeholder="kullaniciadi"
                     value={form.username}
                     onChange={e => setForm(f => ({ ...f, username: e.target.value.toLowerCase().replace(/\s/g, '') }))}
@@ -386,7 +646,7 @@ export default function ProfileContent() {
               <div>
                 <label className="text-xs text-white/30 uppercase tracking-wider mb-1.5 block">Biyografi</label>
                 <textarea
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#E50914]/50 focus:outline-none transition-colors resize-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors resize-none"
                   placeholder="Kendinden bahset..."
                   rows={3}
                   value={form.bio}
@@ -395,14 +655,14 @@ export default function ProfileContent() {
               </div>
               <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
                 <div>
-                  <p className="text-sm text-white font-medium">Aktivite Akışı</p>
-                  <p className="text-xs text-white/35 mt-0.5">Takipçilerin ne yaptığını görebilsin</p>
+                  <p className="text-sm text-white font-medium">İzlediklerim Görünürlüğü</p>
+                  <p className="text-xs text-white/35 mt-0.5">Açıkken profilini ziyaret edenler izlediklerini görebilir</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, activity_visible: !f.activity_visible }))}
                   className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${
-                    form.activity_visible ? 'bg-[#E50914]' : 'bg-white/20'
+                    form.activity_visible ? 'bg-[#C91520]' : 'bg-white/20'
                   }`}
                 >
                   <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
@@ -412,12 +672,12 @@ export default function ProfileContent() {
               </div>
             </div>
 
-            {saveError && <p className="text-xs text-[#E50914] bg-[#E50914]/10 border border-[#E50914]/20 rounded-lg px-3 py-2">{saveError}</p>}
+            {saveError && <p className="text-xs text-[#C91520] bg-[#C91520]/10 border border-[#C91520]/20 rounded-lg px-3 py-2">{saveError}</p>}
 
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full bg-[#E50914] text-white font-semibold text-sm py-3 rounded-xl hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-[#C91520] text-white font-semibold text-sm py-3 rounded-xl hover:bg-[#A8121B] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Kaydet'}
             </button>
@@ -440,7 +700,7 @@ export default function ProfileContent() {
               </button>
             </div>
             <input
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#E50914]/50 focus:outline-none transition-colors shrink-0"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors shrink-0"
               placeholder="Dizi adı ara (TMDB)…"
               value={coverSearchQuery}
               onChange={(e) => setCoverSearchQuery(e.target.value)}
@@ -505,14 +765,14 @@ export default function ProfileContent() {
             </div>
 
             <input
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#E50914]/50 focus:outline-none transition-colors"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors"
               placeholder="Liste adı (örn: En İyi Bilim Kurgu)"
               value={listName}
               onChange={(e) => setListName(e.target.value)}
             />
 
             <textarea
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#E50914]/50 focus:outline-none transition-colors resize-none"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors resize-none"
               placeholder="Kısa açıklama (opsiyonel)"
               rows={3}
               value={listDescription}
@@ -523,14 +783,14 @@ export default function ProfileContent() {
               <button
                 type="button"
                 onClick={() => setListVisibility('public')}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${listVisibility === 'public' ? 'bg-[#E50914] text-white' : 'bg-white/5 text-white/60'}`}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${listVisibility === 'public' ? 'bg-[#C91520] text-white' : 'bg-white/5 text-white/60'}`}
               >
                 Herkese Açık
               </button>
               <button
                 type="button"
                 onClick={() => setListVisibility('private')}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${listVisibility === 'private' ? 'bg-[#E50914] text-white' : 'bg-white/5 text-white/60'}`}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${listVisibility === 'private' ? 'bg-[#C91520] text-white' : 'bg-white/5 text-white/60'}`}
               >
                 Gizli
               </button>
@@ -554,7 +814,7 @@ export default function ProfileContent() {
               ) : (
                 <>
                   <input
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#E50914]/50 focus:outline-none transition-colors"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors"
                     placeholder="Kullanıcı ara…"
                     value={inviteQuery}
                     onChange={(e) => searchInvite(e.target.value)}
@@ -590,12 +850,12 @@ export default function ProfileContent() {
               <p className="text-[11px] text-white/25 mt-2">Davet gönderilir; kabul edince liste ortak olur.</p>
             </div>
 
-            {listMessage && <p className="text-xs text-[#E50914]">{listMessage}</p>}
+            {listMessage && <p className="text-xs text-[#C91520]">{listMessage}</p>}
 
             <button
               onClick={handleCreateList}
               disabled={listSaving || !listName.trim()}
-              className="w-full bg-[#E50914] text-white font-semibold text-sm py-3 rounded-xl hover:bg-red-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-[#C91520] text-white font-semibold text-sm py-3 rounded-xl hover:bg-[#A8121B] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {listSaving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Listeyi Oluştur'}
             </button>
@@ -611,13 +871,75 @@ export default function ProfileContent() {
           <div
             className={`absolute inset-0 pointer-events-none ${
               coverImageUrl
-                ? 'bg-[#E50914]/[0.06]'
-                : 'bg-gradient-to-br from-[#E50914]/30 via-[#141414] to-[#0A0A0A]'
+                ? 'bg-[#C91520]/[0.06]'
+                : 'bg-gradient-to-br from-[#C91520]/30 via-[#141414] to-[#0A0A0A]'
             }`}
             aria-hidden
           />
+          {user && (
+            <div className="absolute bottom-3 right-4 z-20 md:bottom-5 md:right-8">
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(true)}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/75 shadow-[0_10px_28px_rgba(0,0,0,0.35)] backdrop-blur-md transition-colors hover:border-white/25 hover:bg-black/60 hover:text-white"
+                aria-label="Ayarlar"
+                title="Ayarlar"
+              >
+                <span className="material-symbols-outlined text-[20px]">settings</span>
+              </button>
+            </div>
+          )}
         </div>
-        <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-10 sm:-mt-11 md:-mt-[4.25rem] lg:-mt-24 z-10">
+        {settingsOpen && (
+          <div
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 px-5 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Profil ayarları"
+            onClick={() => setSettingsOpen(false)}
+          >
+            <div
+              className="w-full max-w-[320px] overflow-hidden rounded-2xl border border-white/10 bg-[#101010]/95 p-2 shadow-[0_24px_80px_rgba(0,0,0,0.5)]"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-3 py-2">
+                <h3 className="text-sm font-bold text-white">Ayarlar</h3>
+                <button
+                  type="button"
+                  onClick={() => setSettingsOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-white/45 transition-colors hover:bg-white/[0.06] hover:text-white"
+                  aria-label="Kapat"
+                >
+                  <span className="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              </div>
+              <div className="mt-1 space-y-1">
+                <button
+                  type="button"
+                  onClick={openEdit}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-white/80 transition-colors hover:bg-white/[0.06] hover:text-white"
+                >
+                  <span className="material-symbols-outlined text-[19px]">edit</span>
+                  Profili Düzenle
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setSettingsOpen(false);
+                    const supabase = createClient();
+                    await supabase.auth.signOut();
+                    window.location.href = '/';
+                  }}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-white/60 transition-colors hover:bg-[#C91520]/10 hover:text-[#F06A73]"
+                >
+                  <span className="material-symbols-outlined text-[19px]">logout</span>
+                  Çıkış Yap
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-11 sm:-mt-12 md:-mt-[4.25rem] lg:-mt-24 z-10">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-2 sm:gap-3 md:gap-md">
             <div className="w-[5.5rem] h-[5.5rem] sm:w-24 sm:h-24 md:w-[8.5rem] md:h-[8.5rem] lg:w-36 lg:h-36 rounded-full border-[3px] sm:border-4 border-[#0A0A0A] overflow-hidden bg-[#141414] shrink-0 flex items-center justify-center">
               {avatar
@@ -627,11 +949,10 @@ export default function ProfileContent() {
             </div>
             <div className="text-center md:text-left flex-1 mb-2 min-w-0">
               <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">{displayName}</h2>
-              {profile.username && <p className="text-sm text-white/30 mt-0.5">@{profile.username}</p>}
+              {profile.username && <p className="text-sm text-white/30 mt-2">@{profile.username}</p>}
               {profile.bio && <p className="text-sm text-white/50 mt-2 max-w-md">{profile.bio}</p>}
-              {!profile.bio && user?.email && <p className="text-sm text-white/20 mt-1">{user.email}</p>}
             </div>
-            <div className="flex flex-wrap justify-center md:justify-end gap-2 sm:gap-3 mt-3 sm:mt-4 md:mt-0 pb-2 w-full md:w-auto">
+            <div className="hidden">
               <button
                 onClick={openEdit}
                 className="px-4 py-2 sm:px-5 sm:py-2 bg-transparent border border-white/20 rounded-full text-xs sm:text-sm font-semibold text-white hover:bg-white/5 transition-colors"
@@ -654,7 +975,7 @@ export default function ProfileContent() {
               )}
             </div>
             {user && (
-              <div className="md:hidden w-full flex justify-center mt-2">
+              <div className="md:hidden w-full flex justify-center mt-0">
                 <div className="flex items-center gap-8">
                   <FollowListsModal
                     profileId={user.id}
@@ -671,12 +992,12 @@ export default function ProfileContent() {
       </section>
 
       {/* Stats */}
-      <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-4 md:mt-6">
+      <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-2 md:mt-6">
         <div className="grid grid-cols-3 gap-2.5 md:hidden">
           {[
-            { val: watchlist.length, label: 'Listede' },
-            { val: watchedCount, label: 'İzlendi' },
-            { val: reviewCount, label: 'Yorum' },
+            { val: statsLoading ? '...' : listCount, label: 'Listede' },
+            { val: statsLoading ? '...' : watchedCount, label: 'İzlendi' },
+            { val: statsLoading ? '...' : reviewCount, label: 'Yorum' },
           ].map(({ val, label }) => (
             <div key={label} className="text-center">
               <span className="block text-base font-bold text-white">{val}</span>
@@ -697,9 +1018,9 @@ export default function ProfileContent() {
           )}
           <div className="w-px h-8 bg-white/10" />
           {[
-            { val: watchedCount, label: 'İzlendi' },
-            { val: watchlist.length, label: 'Listede' },
-            { val: reviewCount, label: 'Yorum' },
+            { val: statsLoading ? '...' : watchedCount, label: 'İzlendi' },
+            { val: statsLoading ? '...' : listCount, label: 'Listede' },
+            { val: statsLoading ? '...' : reviewCount, label: 'Yorum' },
           ].map(({ val, label }) => (
             <div key={label} className="text-center">
               <span className="block text-2xl font-bold text-white">{val}</span>
@@ -711,16 +1032,27 @@ export default function ProfileContent() {
 
       {/* Tabs */}
       <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-8 border-b border-white/10 overflow-x-hidden">
-        <nav className="flex flex-wrap gap-x-6 gap-y-3 md:gap-8">
-          {(['watchlist', 'watched', 'lists', 'notes'] as const).map((tab) => (
+        <nav className="grid grid-cols-4 gap-0 md:flex md:gap-8">
+          {(['watchlist', 'watched', 'lists', 'actors'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-3 text-sm font-semibold whitespace-nowrap transition-colors ${
-                activeTab === tab ? 'text-white border-b-2 border-[#E50914]' : 'text-white/30 hover:text-white'
+              className={`min-w-0 px-0.5 pb-3 text-center text-[10.5px] font-semibold leading-tight whitespace-nowrap transition-colors min-[390px]:text-[11.5px] sm:text-sm md:px-0 ${
+                activeTab === tab ? 'text-white border-b-2 border-[#C91520]' : 'text-white/30 hover:text-white'
               }`}
             >
-              {tab === 'watchlist' ? 'İzleme Listesi' : tab === 'watched' ? 'İzlediklerim' : tab === 'lists' ? 'Listelerim' : 'Notlarım'}
+              {tab === 'watchlist'
+                ? 'İzleme Listesi'
+                : tab === 'watched'
+                  ? 'İzlediklerim'
+                  : tab === 'lists'
+                    ? 'Listelerim'
+                    : (
+                      <>
+                        <span className="md:hidden">Oyuncularım</span>
+                        <span className="hidden md:inline">Favori Oyuncularım</span>
+                      </>
+                    )}
             </button>
           ))}
         </nav>
@@ -734,14 +1066,14 @@ export default function ProfileContent() {
               <button
                 type="button"
                 onClick={() => setListsSubTab('mine')}
-                className={`pb-2 text-sm font-semibold transition-colors ${listsSubTab === 'mine' ? 'text-white border-b-2 border-[#E50914]' : 'text-white/30 hover:text-white'}`}
+                className={`pb-2 text-sm font-semibold transition-colors ${listsSubTab === 'mine' ? 'text-white border-b-2 border-[#C91520]' : 'text-white/30 hover:text-white'}`}
               >
                 Listelerim
               </button>
               <button
                 type="button"
                 onClick={() => setListsSubTab('shared')}
-                className={`pb-2 text-sm font-semibold transition-colors ${listsSubTab === 'shared' ? 'text-white border-b-2 border-[#E50914]' : 'text-white/30 hover:text-white'}`}
+                className={`pb-2 text-sm font-semibold transition-colors ${listsSubTab === 'shared' ? 'text-white border-b-2 border-[#C91520]' : 'text-white/30 hover:text-white'}`}
               >
                 Ortak Listeler
               </button>
@@ -750,7 +1082,7 @@ export default function ProfileContent() {
               <button
                 type="button"
                 onClick={() => setListModalOpen(true)}
-                className="px-4 py-2 bg-[#E50914] text-white text-xs font-semibold rounded-full hover:bg-red-700 transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 bg-[#C91520] text-white text-xs font-semibold rounded-full hover:bg-[#A8121B] transition-colors flex items-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-base">add</span>
                 Liste Oluştur
@@ -758,11 +1090,11 @@ export default function ProfileContent() {
             </div>
 
             {listsError && (
-              <p className="text-xs text-[#E50914] mb-4">Listeler yüklenemedi: {listsError}</p>
+              <p className="text-xs text-[#C91520] mb-4">Listeler yüklenemedi: {listsError}</p>
             )}
 
             {listsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-28 rounded-xl bg-white/[0.04] border border-white/10 animate-pulse" />)}
               </div>
             ) : listsSubTab === 'shared' ? (
@@ -772,7 +1104,7 @@ export default function ProfileContent() {
                   <p className="text-sm">Henüz ortak listen yok</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   {sharedLists.map((list) => (
                     <ListPreviewCard
                       key={list.id}
@@ -794,7 +1126,7 @@ export default function ProfileContent() {
                 <button
                   type="button"
                   onClick={() => setListModalOpen(true)}
-                  className="mt-4 text-xs text-[#E50914] hover:text-white transition-colors"
+                  className="mt-4 text-xs text-[#C91520] hover:text-white transition-colors"
                 >
                   İlk listeni oluştur →
                 </button>
@@ -804,12 +1136,12 @@ export default function ProfileContent() {
                 <section>
                   <div className="inline-flex flex-col gap-2 mb-4">
                     <p className="text-sm font-semibold text-white">Kendi Listelerin</p>
-                    <div className="h-[2px] w-14 bg-[#E50914]" />
+                    <div className="h-[2px] w-14 bg-[#C91520]" />
                   </div>
                   {lists.length === 0 ? (
                     <p className="text-sm text-white/30">Henüz kendi listen yok.</p>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                       {lists.map((list) => (
                         <ListPreviewCard
                           key={list.id}
@@ -829,12 +1161,12 @@ export default function ProfileContent() {
                 <section>
                   <div className="inline-flex flex-col gap-2 mb-4">
                     <p className="text-sm font-semibold text-white">Beğendiğin Listeler</p>
-                    <div className="h-[2px] w-14 bg-[#E50914]" />
+                    <div className="h-[2px] w-14 bg-[#C91520]" />
                   </div>
                   {likedLists.length === 0 ? (
                     <p className="text-sm text-white/30">Beğendiğin bir liste yok.</p>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                       {likedLists.map((list) => (
                         <ListPreviewCard
                           key={list.id}
@@ -854,68 +1186,145 @@ export default function ProfileContent() {
             )}
           </>
         ) : activeTab === 'watched' ? (
-          watchedLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+          <>
+            <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-white/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-white">İzlediklerim Görünürlüğü</p>
+                <p className="mt-0.5 text-xs text-white/35">
+                  {profile.activity_visible
+                    ? 'Profilini ziyaret edenler izlediğin dizileri görebilir.'
+                    : 'İzlediğin dizileri şu an sadece sen görebilirsin.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={toggleWatchedVisibility}
+                className={`inline-flex w-fit items-center justify-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
+                  profile.activity_visible
+                    ? 'border-[#C91520]/50 bg-[#C91520]/10 text-white hover:bg-[#C91520]/20'
+                    : 'border-white/10 bg-transparent text-white/55 hover:border-white/20 hover:text-white'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[14px]">
+                  {profile.activity_visible ? 'visibility' : 'visibility_off'}
+                </span>
+                {profile.activity_visible ? 'Herkese Açık' : 'Gizli'}
+              </button>
             </div>
-          ) : watchedShows.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-white/20">
-              <span className="material-symbols-outlined text-5xl mb-3">check_circle</span>
-              <p className="text-sm">Henüz bitirdiğin dizi yok</p>
-              <Link href="/search" className="mt-4 text-xs text-[#E50914] hover:text-white transition-colors">Dizi keşfet →</Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {watchedShows.map((show) => {
-                const poster = show.poster_path ? `${POSTER_BASE}${show.poster_path}` : null;
-                return (
-                  <Link key={show.show_id} href={`/show/${show.show_id}`} className="relative aspect-[2/3] rounded-xl overflow-hidden bg-[#141414] border border-white/5 group hover:border-white/20 hover:scale-[1.02] transition-all duration-300 block">
-                    {poster
-                      ? <img alt={show.show_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={poster} />
-                      : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-4xl">movie</span></div>
-                    }
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity" />
-                    <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-600 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-white text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>
-                    </div>
-                    <div className="absolute bottom-0 left-0 w-full p-3">
-                      <h4 className="text-xs font-semibold text-white truncate">{show.show_name}</h4>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )
-        ) : activeTab === 'notes' ? (
-          !notesLoaded ? (
-            <div className="flex justify-center py-12"><span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>
-          ) : notes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-white/20">
-              <span className="material-symbols-outlined text-5xl mb-3">note</span>
-              <p className="text-sm">Henüz not eklemedin</p>
-            </div>
-          ) : (
-            <div className="space-y-4 max-w-2xl">
-              {notes.map((note) => (
-                <Link key={note.show_id} href={`/show/${note.show_id}`} className="flex gap-4 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 rounded-2xl p-4 transition-colors block">
-                  <div className="w-12 h-16 rounded-lg overflow-hidden bg-[#1A1A1A] shrink-0">
-                    {note.poster_path
-                      ? <img src={`https://image.tmdb.org/t/p/w92${note.poster_path}`} alt={note.show_name} className="w-full h-full object-cover" />
-                      : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-sm">movie</span></div>
-                    }
+
+            {watchedLoading ? (
+              <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
+                {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
+              </div>
+            ) : watchedShows.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-white/20">
+                <span className="material-symbols-outlined text-5xl mb-3">check_circle</span>
+                <p className="text-sm">Henüz bitirdiğin dizi yok</p>
+                <Link href="/search" className="mt-4 text-xs text-[#C91520] hover:text-white transition-colors">Dizi keşfet →</Link>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
+                  {watchedShows.map((show) => {
+                    const poster = show.poster_path ? `${POSTER_BASE}${show.poster_path}` : null;
+                    return (
+                      <Link key={show.show_id} href={`/show/${show.show_id}`} className="relative aspect-[2/3] rounded-xl overflow-hidden bg-[#141414] border border-white/5 group hover:border-white/20 hover:scale-[1.02] transition-all duration-300 block">
+                        {poster
+                          ? <img alt={show.show_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={poster} />
+                          : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-4xl">movie</span></div>
+                        }
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity" />
+                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-green-600 flex items-center justify-center">
+                          <span className="material-symbols-outlined text-white text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>check</span>
+                        </div>
+                        <div className="absolute bottom-0 left-0 w-full p-3">
+                          <h4 className="text-xs font-semibold text-white truncate">{show.show_name}</h4>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+                {watchedShows.length < watchedCount && (
+                  <div className="mt-8 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={loadMoreWatched}
+                      disabled={watchedLoadingMore}
+                      className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-2.5 text-xs font-semibold text-white/70 transition-colors hover:border-white/20 hover:text-white disabled:opacity-50"
+                    >
+                      {watchedLoadingMore ? <span className="h-3.5 w-3.5 rounded-full border-2 border-white/20 border-t-white animate-spin" /> : null}
+                      Devamını Gör
+                    </button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="text-sm font-semibold text-white truncate">{note.show_name}</p>
-                      <span className="text-[10px] text-white/25 shrink-0">{note.is_public ? '🌐 Herkese açık' : '🔒 Gizli'}</span>
-                    </div>
-                    <p className="text-sm text-white/55 line-clamp-3 leading-relaxed">{note.content}</p>
-                  </div>
-                </Link>
-              ))}
+                )}
+              </>
+            )}
+          </>
+        ) : activeTab === 'actors' ? (
+          <>
+            <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-white/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-white">Favori Oyuncular Görünürlüğü</p>
+                <p className="mt-0.5 text-xs text-white/35">
+                  {favoriteActorsVisible
+                    ? 'Profilini ziyaret edenler favori oyuncularını görebilir.'
+                    : 'Favori oyuncularını şu an sadece sen görebilirsin.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={toggleFavoriteActorsVisibility}
+                className={`inline-flex w-fit items-center justify-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${
+                  favoriteActorsVisible
+                    ? 'border-emerald-400/40 bg-emerald-500/10 text-white hover:bg-emerald-500/20'
+                    : 'border-white/10 bg-transparent text-white/55 hover:border-white/20 hover:text-white'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[14px]">
+                  {favoriteActorsVisible ? 'visibility' : 'visibility_off'}
+                </span>
+                {favoriteActorsVisible ? 'Herkese Açık' : 'Gizli'}
+              </button>
             </div>
-          )
-        ) : loading ? (
+
+            {!favoriteActorsLoaded ? (
+              <div className="flex justify-center py-12"><span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>
+            ) : favoriteActors.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-white/20">
+                <span className="material-symbols-outlined text-5xl mb-3">favorite</span>
+                <p className="text-sm">Henüz favori oyuncun yok</p>
+                <Link href="/actor-match" className="mt-4 text-xs text-[#C91520] hover:text-white transition-colors">Oyuncu keşfet →</Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+                {favoriteActors.map((actor) => {
+                  const profileImage = actor.actor_profile_path ? `${ACTOR_PROFILE_BASE}${actor.actor_profile_path}` : null;
+                  return (
+                    <div key={actor.actor_id} className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/5 bg-[#141414] shadow-md transition-all duration-300 hover:border-white/20 hover:scale-[1.02]">
+                      {profileImage
+                        ? <img src={profileImage} alt={actor.actor_name} className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" />
+                        : <div className="flex h-full w-full items-center justify-center"><span className="material-symbols-outlined text-4xl text-white/20">person</span></div>
+                      }
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-80" />
+                      <button
+                        type="button"
+                        onClick={() => removeFavoriteActor(actor.actor_id)}
+                        className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center text-emerald-300/90 transition-colors hover:text-[#F06A73]"
+                        aria-label={`${actor.actor_name} favorilerden çıkar`}
+                        title="Favorilerden çıkar"
+                      >
+                        <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                      </button>
+                      <div className="absolute bottom-0 left-0 w-full p-3">
+                        <h4 className="truncate text-xs font-bold text-white sm:text-sm">{actor.actor_name}</h4>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        ) : (!user || loading) ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
           </div>
@@ -923,7 +1332,7 @@ export default function ProfileContent() {
           <div className="flex flex-col items-center justify-center py-20 text-white/20">
             <span className="material-symbols-outlined text-5xl mb-3">bookmark</span>
             <p className="text-sm">Henüz liste boş</p>
-            <Link href="/search" className="mt-4 text-xs text-[#E50914] hover:text-white transition-colors">Dizi keşfet →</Link>
+            <Link href="/search" className="mt-4 text-xs text-[#C91520] hover:text-white transition-colors">Dizi keşfet →</Link>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">

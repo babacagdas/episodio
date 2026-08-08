@@ -33,7 +33,7 @@ export default function AddToListButton({ show }: Props) {
     const supabase = createClient();
     const { data } = await supabase.auth.getUser();
     if (!data.user) {
-      window.location.href = '/signin';
+      window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
       return;
     }
     setOpen(true);
@@ -44,7 +44,7 @@ export default function AddToListButton({ show }: Props) {
       <button
         type="button"
         onClick={openModal}
-        className="px-6 py-2.5 border font-semibold text-sm rounded-full transition-all flex items-center gap-2 backdrop-blur-sm bg-white/10 border-white/20 text-white hover:bg-white/20"
+        className="px-5 py-3 border font-semibold text-sm rounded-xl transition-colors flex items-center gap-2 backdrop-blur-sm bg-white/10 border-white/20 text-white hover:bg-white/[0.18]"
       >
         <span className="material-symbols-outlined text-lg">playlist_add</span>
         Listeye Ekle
@@ -53,7 +53,7 @@ export default function AddToListButton({ show }: Props) {
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="relative z-10 w-full max-w-md bg-[#141414] border border-white/10 rounded-2xl p-5 max-h-[80vh] overflow-hidden flex flex-col">
+          <div className="premium-panel relative z-10 w-full max-w-md rounded-xl p-5 max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-white font-semibold">Listeye Ekle</h3>
               <button type="button" onClick={() => setOpen(false)} className="text-white/40 hover:text-white transition-colors">
@@ -68,7 +68,7 @@ export default function AddToListButton({ show }: Props) {
             ) : lists.length === 0 ? (
               <div className="text-sm text-white/40 py-6 text-center">
                 Henüz listen yok.{' '}
-                <Link href="/profile" className="text-[#E50914] hover:text-white transition-colors" onClick={() => setOpen(false)}>
+                <Link href="/profile" className="text-[#C91520] hover:text-white transition-colors" onClick={() => setOpen(false)}>
                   Profilden liste oluştur.
                 </Link>
               </div>

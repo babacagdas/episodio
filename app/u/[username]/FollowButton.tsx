@@ -16,7 +16,7 @@ export default function FollowButton({ targetUserId, initialFollowing }: Props) 
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      window.location.href = '/signin';
+      window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
       return;
     }
 
@@ -58,7 +58,7 @@ export default function FollowButton({ targetUserId, initialFollowing }: Props) 
       onClick={toggleFollow}
       disabled={loading}
       className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
-        following ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-[#E50914] text-white hover:bg-red-700'
+        following ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-[#C91520] text-white hover:bg-[#A8121B]'
       } disabled:opacity-40`}
     >
       {loading ? 'Bekle...' : following ? 'Takibi Bırak' : 'Takip Et'}

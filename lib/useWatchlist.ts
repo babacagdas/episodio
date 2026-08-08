@@ -11,14 +11,20 @@ export interface WatchlistItem {
   first_air_date: string;
 }
 
-export function useWatchlist() {
+export function useWatchlist(enabled = true) {
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+
     const supabase = createClient();
 
     async function load() {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
@@ -49,7 +55,7 @@ export function useWatchlist() {
     }
 
     load();
-  }, []);
+  }, [enabled]);
 
   const toggle = useCallback(async (item: WatchlistItem) => {
     const supabase = createClient();

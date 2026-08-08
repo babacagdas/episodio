@@ -6,19 +6,26 @@ import { createClient } from '@/lib/supabase/client';
 
 const navItems = [
   { href: '/home', icon: 'home', label: 'Ana Sayfa' },
+  { href: '/swiper', icon: 'style', label: 'Seç' },
   { href: '/search', icon: 'search', label: 'Keşfet' },
-  { href: '/watchlist', icon: 'bookmark', label: 'Listem' },
   { href: '/chat', icon: 'chat', label: 'Mesajlar' },
   { href: '/profile', icon: 'person', label: 'Profil' },
 ];
 
 export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
   return (
-    <header className="bg-[#0A0A0A]/70 backdrop-blur-xl flex justify-between items-center w-full px-6 py-4 top-0 z-50 border-b border-white/5 sticky md:hidden">
-      <Link href="/home">
-        <img alt="Episodio Logo" className="h-16 w-auto object-contain -my-4" src="/logo.png" />
+    <header className="bg-[#0A0A0A]/85 backdrop-blur-lg grid grid-cols-[2.25rem_1fr_2.25rem] items-center w-full px-6 py-4 top-0 z-50 border-b border-white/10 sticky md:hidden">
+      <span aria-hidden />
+      <Link href="/home" className="mx-auto block w-[118px]">
+        <img alt="Episodio Logo" className="h-auto w-full object-contain" src="/logo.png" />
       </Link>
-      {rightElement ?? <span className="material-symbols-outlined text-white cursor-pointer">notifications</span>}
+      <div className="flex justify-end">
+        {rightElement ?? (
+        <span className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.03] text-white/75 flex items-center justify-center">
+          <span className="material-symbols-outlined text-[20px]">notifications</span>
+        </span>
+        )}
+      </div>
     </header>
   );
 }
@@ -30,6 +37,7 @@ export function BottomNav() {
   useEffect(() => {
     const supabase = createClient();
     let channel: any = null;
+    let userId: string | null = null;
 
     const fetchUnreadCount = async (uid: string) => {
       const { count } = await supabase
@@ -40,9 +48,14 @@ export function BottomNav() {
       setUnreadCount(count ?? 0);
     };
 
+    const refreshUnread = () => {
+      if (userId) void fetchUnreadCount(userId);
+    };
+
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        userId = user.id;
         fetchUnreadCount(user.id);
 
         channel = supabase
@@ -63,8 +76,12 @@ export function BottomNav() {
     }
 
     init();
+    window.addEventListener('focus', refreshUnread);
+    window.addEventListener('episodio:messages-read', refreshUnread);
 
     return () => {
+      window.removeEventListener('focus', refreshUnread);
+      window.removeEventListener('episodio:messages-read', refreshUnread);
       if (channel) {
         supabase.removeChannel(channel);
       }
@@ -72,24 +89,25 @@ export function BottomNav() {
   }, []);
 
   return (
-    <nav className="bg-[#1A1A1A]/70 backdrop-blur-2xl fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-3 pt-2 border-t border-white/10 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] rounded-t-lg md:hidden">
+    <nav className="bg-[#111111]/92 backdrop-blur-xl fixed bottom-0 left-0 w-full z-50 grid h-[64px] grid-cols-5 items-center px-2 pb-[env(safe-area-inset-bottom)] border-t border-white/10 shadow-[0_-8px_24px_rgba(0,0,0,0.35)] md:hidden">
       {navItems.map(({ href, icon, label }) => {
-        const active = pathname === href;
+        const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
             key={label}
             href={href}
-            className={`flex flex-col items-center justify-center transition-all ${active ? 'text-[#D4A017]' : 'text-gray-500 hover:text-gray-200'}`}
+            aria-label={label}
+            title={label}
+            className={`min-w-0 flex h-full items-center justify-center rounded-lg px-1 transition-colors ${active ? 'text-[#D4A017]' : 'text-gray-500 hover:text-gray-200'}`}
           >
             <span className="relative">
-              <span className="material-symbols-outlined mb-0.5 text-[22px]" style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}>{icon}</span>
+              <span className="material-symbols-outlined text-[23px]" style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}>{icon}</span>
               {href === '/chat' && unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1.5 bg-[#E50914] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1.5 bg-[#C91520] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                   {unreadCount}
                 </span>
               )}
             </span>
-            <span className="font-['Be_Vietnam_Pro'] text-[9px] font-medium uppercase tracking-widest">{label}</span>
           </Link>
         );
       })}

@@ -104,11 +104,11 @@ export default function NotificationsBell() {
       <button
         type="button"
         onClick={() => { setOpen((prev) => !prev); if (!open) loadNotifications(); }}
-        className="rounded-full p-3 hover:bg-white/5 transition-colors relative bg-transparent border border-transparent"
+        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-transparent bg-transparent text-white transition-colors hover:border-white/[0.1] hover:bg-transparent"
       >
-        <span className="material-symbols-outlined text-white">notifications</span>
+        <span className="material-symbols-outlined text-[19px]">notifications</span>
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-5 h-5 rounded-full bg-[#E50914] text-white text-[10px] font-bold flex items-center justify-center px-1">
+          <span className="absolute -top-1 -right-1 min-w-5 h-5 rounded-full bg-[#C91520] text-white text-[10px] font-bold flex items-center justify-center px-1">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -118,7 +118,7 @@ export default function NotificationsBell() {
         <>
           <div className="fixed inset-0 z-[119]" onClick={() => setOpen(false)} />
           <div className="fixed top-16 left-3 right-3 max-h-[calc(100dvh-6rem)] overflow-y-auto bg-black border border-white/10 rounded-2xl shadow-2xl p-3 z-[120] md:absolute md:top-auto md:left-auto md:right-0 md:mt-2 md:w-[340px] md:max-h-[420px]">
-            <div className="flex items-center justify-between px-2 py-1 mb-2 border-b border-[#E50914]/50">
+            <div className="flex items-center justify-between px-2 py-1 mb-2 border-b border-[#C91520]/50">
               <p className="text-sm font-semibold text-white">Bildirimler</p>
               {unreadCount > 0 && (
                 <button
@@ -151,7 +151,7 @@ export default function NotificationsBell() {
                       ? (actorProfilePath ?? item.link ?? '/home')
                       : (item.link ?? actorProfilePath ?? '/home');
                   const content = (
-                    <div className={`px-2 py-3 border-b border-[#E50914]/35 last:border-b-0 ${item.is_read ? 'opacity-85' : ''}`}>
+                    <div className={`px-2 py-3 border-b border-[#C91520]/35 last:border-b-0 ${item.is_read ? 'opacity-85' : ''}`}>
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-full overflow-hidden bg-[#0f0f0f] border border-white/10 flex items-center justify-center shrink-0">
                           {item.actor?.avatar_url ? (

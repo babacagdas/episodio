@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 import Sidebar from '@/components/Sidebar';
 import { BottomNav } from '@/components/Nav';
 import ProfileContent from './ProfileContent';
@@ -7,14 +8,19 @@ import NotificationsBell from '@/app/home/NotificationsBell';
 export default function Profile() {
   return (
     <div className="font-body-md text-body-md antialiased pb-24 md:pb-0 min-h-screen overflow-x-hidden">
-      <header className="bg-[#0A0A0A]/70 backdrop-blur-xl flex justify-between items-center w-full px-6 py-4 top-0 z-50 border-b border-white/5 sticky md:hidden">
-        <Link href="/home">
-          <img alt="Episodio Logo" className="h-16 w-auto object-contain -my-4" src="/logo.png" />
+      <header className="bg-[#0A0A0A]/70 backdrop-blur-xl grid grid-cols-[2.25rem_1fr_2.25rem] items-center w-full px-6 py-4 top-0 z-50 border-b border-white/5 sticky md:hidden">
+        <span aria-hidden />
+        <Link href="/home" className="mx-auto block w-[118px]">
+          <img alt="Episodio Logo" className="h-auto w-full object-contain" src="/logo.png" />
         </Link>
-        <NotificationsBell />
+        <div className="flex justify-end">
+          <NotificationsBell />
+        </div>
       </header>
       <Sidebar />
-      <ProfileContent />
+      <Suspense fallback={<main className="md:ml-[240px] p-8 text-white/40">Profil yükleniyor...</main>}>
+        <ProfileContent />
+      </Suspense>
     </div>
   );
 }

@@ -19,7 +19,7 @@ export interface ListShowItem {
   poster_path: string | null;
 }
 
-export function useLists() {
+export function useLists(enabled = true) {
   const [lists, setLists] = useState<UserList[]>([]);
   const [sharedLists, setSharedLists] = useState<UserList[]>([]);
   const [likedLists, setLikedLists] = useState<UserList[]>([]);
@@ -31,6 +31,7 @@ export function useLists() {
   const [error, setError] = useState('');
 
   const loadLists = useCallback(async () => {
+    setLoading(true);
     const supabase = createClient();
     const { data: authData } = await supabase.auth.getUser();
     const user = authData.user;
@@ -144,8 +145,12 @@ export function useLists() {
   }, []);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
     loadLists();
-  }, [loadLists]);
+  }, [enabled, loadLists]);
 
   const createList = useCallback(async (payload: {
     name: string;

@@ -155,7 +155,7 @@ export default function ListDetailClient({
     const { data: authData } = await supabase.auth.getUser();
     const user = authData.user;
     if (!user) {
-      window.location.href = '/signin';
+      window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
       return;
     }
 
@@ -188,7 +188,7 @@ export default function ListDetailClient({
   return (
     <>
       {!isOwner && !isSharedWithMe && currentUserId && !sharedWithUserId && inviteMode && (
-        <div className="mb-6 border border-[#E50914]/40 bg-[#E50914]/10 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="mb-6 border border-[#C91520]/40 bg-[#C91520]/10 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-white">Liste daveti</p>
             <p className="text-xs text-white/60 mt-1">Kabul edersen ikiniz de bu listeye dizi ekleyebilirsiniz.</p>
@@ -197,7 +197,7 @@ export default function ListDetailClient({
             type="button"
             onClick={acceptInvite}
             disabled={inviteAccepting}
-            className="px-4 py-2 rounded-full bg-[#E50914] text-white text-xs font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 rounded-full bg-[#C91520] text-white text-xs font-semibold hover:bg-[#A8121B] transition-colors disabled:opacity-50"
           >
             {inviteAccepting ? 'Kabul ediliyor…' : 'Kabul et'}
           </button>
@@ -215,14 +215,14 @@ export default function ListDetailClient({
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#E50914]/50 focus:outline-none transition-colors"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors"
                   placeholder="Liste adı"
                 />
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#E50914]/50 focus:outline-none transition-colors resize-none"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors resize-none"
                   placeholder="Açıklama (opsiyonel)"
                 />
                 <div className="flex items-center gap-2">
@@ -230,7 +230,7 @@ export default function ListDetailClient({
                     type="button"
                     onClick={saveListMeta}
                     disabled={saving}
-                    className="px-4 py-2 rounded-full bg-[#E50914] text-white text-xs font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+                    className="px-4 py-2 rounded-full bg-[#C91520] text-white text-xs font-semibold hover:bg-[#A8121B] transition-colors disabled:opacity-50"
                   >
                     {saving ? 'Kaydediliyor...' : 'Kaydet'}
                   </button>
@@ -262,7 +262,7 @@ export default function ListDetailClient({
               disabled={likeLoading}
               className={`h-8 px-2.5 rounded-full border flex items-center gap-1 transition-colors ${
                 likedByMe
-                  ? 'bg-[#E50914]/20 border-[#E50914]/60 text-[#FFB3B8]'
+                  ? 'bg-[#C91520]/20 border-[#C91520]/60 text-[#F2A8AE]'
                   : 'bg-white/10 border-white/15 text-white hover:bg-white/20'
               } disabled:opacity-50`}
             >
@@ -283,7 +283,7 @@ export default function ListDetailClient({
                   type="button"
                   onClick={deleteList}
                   disabled={deleting}
-                  className="w-8 h-8 rounded-full bg-[#E50914]/20 border border-[#E50914]/50 text-[#FFB3B8] flex items-center justify-center hover:bg-[#E50914]/30 transition-colors disabled:opacity-50"
+                  className="w-8 h-8 rounded-full bg-[#C91520]/20 border border-[#C91520]/50 text-[#F2A8AE] flex items-center justify-center hover:bg-[#C91520]/30 transition-colors disabled:opacity-50"
                   title="Sil"
                 >
                   {deleting
@@ -326,7 +326,7 @@ export default function ListDetailClient({
                   <button
                     type="button"
                     onClick={() => removeItem(item.show_id)}
-                    className="absolute top-2 right-2 z-10 bg-black/70 border border-white/20 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-[#E50914]/70 hover:border-[#E50914] transition-colors"
+                    className="absolute top-2 right-2 z-10 bg-black/70 border border-white/20 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-[#C91520]/70 hover:border-[#C91520] transition-colors"
                     title="Listeden kaldır"
                   >
                     <span className="material-symbols-outlined text-base">close</span>

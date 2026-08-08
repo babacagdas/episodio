@@ -31,6 +31,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Liste başka biriyle paylaşılıyor.' }, { status: 400 });
   }
 
+  const expectedLink = `/list/${listId}?invite=1`;
+  const { data: inviteNotification } = await admin
+    .from('notifications')
+    .select('id')
+    .eq('user_id', me.id)
+    .eq('actor_id', list.user_id)
+    .eq('type', 'list_invite')
+    .eq('link', expectedLink)
+    .maybeSingle();
+
+  if (!inviteNotification) {
+    return NextResponse.json({ error: 'Bu liste için geçerli davetin yok.' }, { status: 403 });
+  }
+
   const { error } = await admin
     .from('lists')
     .update({ shared_with_user_id: me.id })

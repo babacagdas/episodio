@@ -6,11 +6,89 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --surface-0: #070707;
+    --surface-1: #0d0d0d;
+    --surface-2: #141414;
+    --line-soft: rgba(255, 255, 255, 0.09);
+    --text-soft: rgba(255, 255, 255, 0.62);
+    --accent-red: #c91520;
+    --accent-gold: #d4a017;
+  }
+
+  html {
+    background: var(--surface-0);
+  }
+
   body {
-    background-color: #0A0A0A;
-    color: #ffdad5;
+    background:
+      radial-gradient(circle at 50% -20%, rgba(201, 21, 32, 0.13), transparent 32rem),
+      linear-gradient(180deg, #0b0b0b 0%, #070707 46%, #050505 100%);
+    color: #F4F6FA;
     min-height: 100dvh;
     font-family: 'Poppins', sans-serif;
+  }
+
+  ::selection {
+    background: rgba(201, 21, 32, 0.42);
+    color: #fff;
+  }
+
+  * {
+    scrollbar-color: rgba(255,255,255,0.22) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.16);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.26);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+  }
+}
+
+@layer components {
+  .premium-panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025));
+    border: 1px solid var(--line-soft);
+    box-shadow: 0 18px 60px rgba(0,0,0,0.34);
+  }
+
+  .premium-panel-flat {
+    background: rgba(17,17,17,0.88);
+    border: 1px solid var(--line-soft);
+  }
+
+  .premium-section-title {
+    color: #fff;
+    font-size: 1.125rem;
+    line-height: 1.35;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  @media (min-width: 768px) {
+    .premium-section-title {
+      font-size: 1.35rem;
+    }
+  }
+
+  .premium-kicker {
+    color: rgba(255,255,255,0.38);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 }
 
@@ -32,9 +110,9 @@
 }
 
 .glass-card {
-  background: rgba(20, 20, 20, 0.7);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(17, 17, 17, 0.82);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 12px;
 }
 

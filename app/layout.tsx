@@ -2,8 +2,33 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Episodio',
-  description: 'Track your favorite movies and TV shows',
+  metadataBase: new URL('https://episodio.com.tr'),
+  title: {
+    default: 'Episodio | Dizi ve Film Takip Platformu',
+    template: '%s | Episodio',
+  },
+  description: 'Favori dizi ve filmlerinizi takip edin, özel izleme listeleri oluşturun, arkadaşlarınızla etkileşime geçin ve yeni yapımlar keşfedin.',
+  keywords: ['dizi takip', 'film takip', 'episodio', 'dizi izleme listesi', 'dizi takvimi', 'film önerileri', 'dizi sosyalleşme'],
+  authors: [{ name: 'Episodio' }],
+  creator: 'Episodio',
+  publisher: 'Episodio',
+  openGraph: {
+    type: 'website',
+    locale: 'tr_TR',
+    url: 'https://episodio.com.tr',
+    title: 'Episodio | Dizi ve Film Takip Platformu',
+    description: 'Favori dizi ve filmlerinizi takip edin, izleme listeleri oluşturun ve arkadaşlarınızla paylaşın.',
+    siteName: 'Episodio',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Episodio | Dizi ve Film Takip Platformu',
+    description: 'Favori dizi ve filmlerinizi takip edin, izleme listeleri oluşturun ve arkadaşlarınızla paylaşın.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -17,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased bg-[#0A0A0A] text-[#ffdad5]" suppressHydrationWarning>{children}</body>
+      <body className="antialiased bg-[#0A0A0A] text-[#F4F6FA]" suppressHydrationWarning>{children}</body>
     </html>
   );
 }

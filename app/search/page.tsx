@@ -16,12 +16,13 @@ function ShowCard({ show }: { show: Show }) {
   const year = show.first_air_date?.slice(0, 4) ?? '';
 
   return (
-    <Link href={`/show/${show.id}`} className="relative aspect-[2/3] rounded-xl overflow-hidden bg-[#141414] border border-white/5 group cursor-pointer hover:border-white/20 hover:scale-[1.02] transition-all duration-300 block">
+    <Link href={`/show/${show.id}`} className="relative aspect-[2/3] overflow-hidden rounded-xl bg-[#111] border border-white/[0.08] group cursor-pointer hover:border-white/20 hover:-translate-y-1 transition-[transform,border-color,box-shadow] duration-300 block shadow-[0_16px_36px_rgba(0,0,0,0.26)] hover:shadow-[0_22px_52px_rgba(0,0,0,0.4)]">
       {poster
-        ? <img alt={show.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={poster} />
+        ? <img alt={show.name} className="w-full h-full object-cover group-hover:scale-[1.055] transition-transform duration-700 ease-out" src={poster} />
         : <div className="w-full h-full bg-[#1A1A1A] flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-4xl">movie</span></div>
       }
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/15 to-transparent opacity-82 group-hover:opacity-95 transition-opacity" />
+      <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/0 group-hover:ring-white/15 transition" />
       <div className="absolute bottom-0 left-0 w-full p-3">
         <div className="flex items-center gap-1 mb-1">
           <span className="material-symbols-outlined text-[12px] text-[#D4A017]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
@@ -82,7 +83,7 @@ function ProfileCard({
           type="button"
           onClick={() => onToggleFollow(profile)}
           className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-            isFollowing ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-[#E50914] text-white hover:bg-red-700'
+            isFollowing ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-[#C91520] text-white hover:bg-[#A8121B]'
           }`}
         >
           {isFollowing ? 'Takiptesin' : 'Takip Et'}
@@ -253,7 +254,7 @@ export default function Search() {
 
   const toggleFollow = useCallback(async (profile: UserSearchProfile) => {
     if (!currentUserId) {
-      window.location.href = '/signin';
+      window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
       return;
     }
 
@@ -304,17 +305,18 @@ export default function Search() {
       <main className="md:ml-[240px] md:w-[calc(100%-240px)] px-6 md:px-12 pt-8 pb-24 flex flex-col gap-10 overflow-x-hidden">
 
         {/* Title */}
-        <div>
+        <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-white tracking-tight">Keşfet</h1>
+          <p className="text-sm text-white/40">Dizileri, profilleri ve topluluk listelerini tek yerden bul.</p>
         </div>
 
         {/* Search + Filtre */}
-        <div className="w-full max-w-4xl flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-8">
-          <div className="flex-1 min-w-0 max-w-2xl">
-            <div className="flex items-center gap-3 px-1 pb-2 border-b-2 border-[#E50914]">
-              <span className="material-symbols-outlined text-white/40 text-xl shrink-0">search</span>
+        <div className="mx-auto w-full max-w-4xl flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-center sm:gap-6">
+          <div className="w-full min-w-0 max-w-2xl sm:flex-1">
+            <div className="flex h-10 items-center gap-3 border-b border-[#C91520]/75 bg-transparent px-1 transition-colors focus-within:border-[#C91520]">
+              <span className="material-symbols-outlined text-white/40 text-[18px] shrink-0">search</span>
               <input
-                className="flex-1 min-w-0 bg-transparent text-white text-sm placeholder:text-white/30 focus:outline-none"
+                className="flex-1 min-w-0 bg-transparent text-[16px] text-white placeholder:text-white/30 focus:outline-none md:text-sm"
                 placeholder="Dizi, film veya tür ara..."
                 type="text"
                 value={query}
@@ -330,14 +332,14 @@ export default function Search() {
           <button
             type="button"
             onClick={() => setFilterPanelOpen(true)}
-            className="shrink-0 self-end inline-flex flex-col items-center gap-1.5 text-left group"
+            className="h-9 shrink-0 self-center inline-flex items-center justify-center gap-2 border-b border-[#C91520]/75 bg-transparent px-1 text-sm font-semibold text-white transition-colors hover:border-[#C91520] hover:text-white/80"
           >
-            <span className="text-sm font-semibold text-white tracking-tight group-hover:text-white/90">Filtre</span>
-            <span className="h-[2px] w-full min-w-[3rem] rounded-full bg-[#E50914]" />
+            <span className="material-symbols-outlined text-[18px] text-[#D4A017]">tune</span>
+            <span>Filtre</span>
           </button>
         </div>
         {filterError && (
-          <p className="text-xs text-[#E50914] max-w-4xl -mt-4">{filterError}</p>
+          <p className="text-xs text-[#C91520] max-w-4xl -mt-4">{filterError}</p>
         )}
 
         {/* Results / Trending */}
