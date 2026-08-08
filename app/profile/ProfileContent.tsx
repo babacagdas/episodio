@@ -689,24 +689,22 @@ export default function ProfileContent() {
                   onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
                 />
               </div>
-              <div className="flex items-center justify-between bg-[#121216] border border-white/10 rounded-2xl px-3.5 py-2.5">
-                <div>
+              <div className="flex items-center justify-between gap-3 bg-[#121216] border border-white/10 rounded-2xl px-3.5 py-2.5">
+                <div className="min-w-0 flex-1">
                   <p className="text-xs text-white font-semibold flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-sm text-white/40">visibility</span>
-                    İzlediklerim Görünürlüğü
+                    <span className="material-symbols-outlined text-sm text-white/40 shrink-0">visibility</span>
+                    <span className="truncate">İzlediklerim Görünürlüğü</span>
                   </p>
-                  <p className="text-[10px] text-white/35 mt-0.5">Açıkken ziyaretçiler izlediklerini görebilir</p>
+                  <p className="text-[10px] text-white/35 mt-0.5 leading-tight">Açıkken ziyaretçiler izlediklerini görebilir</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, activity_visible: !f.activity_visible }))}
-                  className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${
-                    form.activity_visible ? 'bg-[#C91520]' : 'bg-white/15'
+                  className={`w-11 h-6 rounded-full transition-colors p-0.5 flex items-center shrink-0 ${
+                    form.activity_visible ? 'bg-[#C91520] justify-end' : 'bg-white/15 justify-start'
                   }`}
                 >
-                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-transform ${
-                    form.activity_visible ? 'translate-x-5' : 'translate-x-0.5'
-                  }`} />
+                  <span className="w-5 h-5 bg-white rounded-full shadow-md transition-all" />
                 </button>
               </div>
             </div>
