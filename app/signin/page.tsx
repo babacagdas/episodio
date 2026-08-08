@@ -11,6 +11,10 @@ function SignInContent() {
   const nextPath = searchParams.get('next') || '/home';
 
   useEffect(() => {
+    const err = searchParams.get('error');
+    if (err) {
+      setError(decodeURIComponent(err));
+    }
     const code = searchParams.get('code');
     if (code) {
       router.push(`/auth/callback?code=${code}&next=${encodeURIComponent(nextPath)}`);
@@ -134,7 +138,8 @@ function SignInContent() {
               onClick={async () => {
                 const supabase = createClient();
                 const next = nextPath.startsWith('/') ? nextPath : '/home';
-                await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}` } });
+                const cleanOrigin = location.origin.replace('//www.', '//');
+                await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${cleanOrigin}/auth/callback?next=${encodeURIComponent(next)}` } });
               }}
               className="w-full bg-white text-[#1F1F1F] border border-white/10 hover:bg-[#F5F5F5] rounded-xl py-2.5 flex items-center justify-center gap-3 transition-colors text-sm font-medium md:py-3"
             >

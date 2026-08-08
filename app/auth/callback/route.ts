@@ -11,47 +11,49 @@ export async function GET(request: NextRequest) {
       const supabase = await createClient();
       const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
-      if (!exchangeError) {
-        const { data: authData } = await supabase.auth.getUser();
-        const user = authData?.user;
+      if (exchangeError) {
+        return NextResponse.redirect(`${origin}/signin?error=${encodeURIComponent(exchangeError.message)}`);
+      }
 
-        if (user) {
-          const { data: existing } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', user.id)
-            .maybeSingle();
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
 
-          if (!existing) {
-            const rawUsername =
-              (user.user_metadata?.preferred_username as string | undefined) ||
-              (user.user_metadata?.user_name as string | undefined) ||
-              user.email?.split('@')[0] ||
-              `user_${user.id.slice(0, 6)}`;
+      if (user) {
+        const { data: existing } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
 
-            const cleanUsername = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, '');
-            const finalUsername = cleanUsername || `user_${user.id.slice(0, 6)}`;
+        if (!existing) {
+          const rawUsername =
+            (user.user_metadata?.preferred_username as string | undefined) ||
+            (user.user_metadata?.user_name as string | undefined) ||
+            user.email?.split('@')[0] ||
+            `user_${user.id.slice(0, 6)}`;
 
-            const fullName =
-              (user.user_metadata?.full_name as string | undefined) ||
-              (user.user_metadata?.name as string | undefined) ||
-              '';
-            const avatarUrl =
-              (user.user_metadata?.avatar_url as string | undefined) ||
-              (user.user_metadata?.picture as string | undefined) ||
-              '';
+          const cleanUsername = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, '');
+          const finalUsername = cleanUsername || `user_${user.id.slice(0, 6)}`;
 
-            await supabase.from('profiles').upsert(
-              {
-                id: user.id,
-                username: finalUsername,
-                full_name: fullName,
-                avatar_url: avatarUrl,
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: 'id' }
-            );
-          }
+          const fullName =
+            (user.user_metadata?.full_name as string | undefined) ||
+            (user.user_metadata?.name as string | undefined) ||
+            '';
+          const avatarUrl =
+            (user.user_metadata?.avatar_url as string | undefined) ||
+            (user.user_metadata?.picture as string | undefined) ||
+            '';
+
+          await supabase.from('profiles').upsert(
+            {
+              id: user.id,
+              username: finalUsername,
+              full_name: fullName,
+              avatar_url: avatarUrl,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'id' }
+          );
         }
       }
     } catch (err) {
