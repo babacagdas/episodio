@@ -4,11 +4,11 @@ import './globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL('https://episodio.com.tr'),
   title: {
-    default: 'Episodio | Dizi ve Film Takip Platformu',
+    default: 'Episodio | Dizi Takip ve Sosyal Ağ Platformu',
     template: '%s | Episodio',
   },
-  description: 'Favori dizi ve filmlerinizi takip edin, özel izleme listeleri oluşturun, arkadaşlarınızla etkileşime geçin ve yeni yapımlar keşfedin.',
-  keywords: ['dizi takip', 'film takip', 'episodio', 'dizi izleme listesi', 'dizi takvimi', 'film önerileri', 'dizi sosyalleşme'],
+  description: 'Favori dizilerinizi takip edin, özel izleme listeleri oluşturun, arkadaşlarınızla mesajlaşın ve dizi severlerle sosyal bir ağda etkileşime geçin.',
+  keywords: ['dizi takip', 'sosyal ağ', 'episodio', 'dizi takibi', 'dizi izleme listesi', 'dizi takvimi', 'dizi mesajlaşma', 'dizi sosyalleşme'],
   authors: [{ name: 'Episodio' }],
   creator: 'Episodio',
   publisher: 'Episodio',
@@ -16,14 +16,14 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'tr_TR',
     url: 'https://episodio.com.tr',
-    title: 'Episodio | Dizi ve Film Takip Platformu',
-    description: 'Favori dizi ve filmlerinizi takip edin, izleme listeleri oluşturun ve arkadaşlarınızla paylaşın.',
+    title: 'Episodio | Dizi Takip ve Sosyal Ağ Platformu',
+    description: 'Favori dizilerinizi takip edin, izleme listeleri oluşturun, arkadaşlarınızla sohbet edin ve dizi severlerle sosyal bir ağda buluşun.',
     siteName: 'Episodio',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Episodio | Dizi ve Film Takip Platformu',
-    description: 'Favori dizi ve filmlerinizi takip edin, izleme listeleri oluşturun ve arkadaşlarınızla paylaşın.',
+    title: 'Episodio | Dizi Takip ve Sosyal Ağ Platformu',
+    description: 'Favori dizilerinizi takip edin, izleme listeleri oluşturun, arkadaşlarınızla sohbet edin ve dizi severlerle sosyal bir ağda buluşun.',
   },
   robots: {
     index: true,
