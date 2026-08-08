@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { sendLocalNotification } from '@/lib/pushNotifications';
 
 interface NotificationItem {
   id: string;
@@ -96,7 +97,46 @@ export default function NotificationsBell() {
   }
 
   useEffect(() => {
-    loadNotifications();
+    let channel: any = null;
+    const supabase = createClient();
+
+    async function init() {
+      await loadNotifications();
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData?.user) {
+        const userId = authData.user.id;
+        channel = supabase
+          .channel(`user_notifications_${userId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'notifications',
+              filter: `user_id=eq.${userId}`,
+            },
+            (payload: any) => {
+              loadNotifications();
+              if (payload?.new?.message) {
+                sendLocalNotification(
+                  'Episodio 🔔',
+                  payload.new.message,
+                  payload.new.link || '/notifications'
+                );
+              }
+            }
+          )
+          .subscribe();
+      }
+    }
+
+    init();
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   return (
