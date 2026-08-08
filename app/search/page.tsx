@@ -67,23 +67,25 @@ function ProfileCard({
   const displayName = profile.full_name || profile.username || 'Kullanıcı';
   const profilePath = `/u/${profile.username ?? profile.id}`;
   return (
-    <div className="glass-card p-4 flex items-center gap-3 hover:border-white/20 transition-colors">
-      <Link href={profilePath} className="w-11 h-11 rounded-full bg-[#1A1A1A] border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
-        {profile.avatar_url ? <img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-white/20">person</span>}
+    <div className="group relative bg-[#0D0D11]/60 hover:bg-[#121217] border border-white/[0.06] hover:border-white/15 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 transition-all duration-300 backdrop-blur-md shadow-sm">
+      <Link href={profilePath} className="w-10 h-10 rounded-full border border-white/10 group-hover:border-white/25 overflow-hidden bg-[#141418] flex items-center justify-center shrink-0 transition-colors shadow-sm">
+        {profile.avatar_url ? <img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /> : <span className="material-symbols-outlined text-white/20 text-lg">person</span>}
       </Link>
       <div className="min-w-0 flex-1">
-        <Link href={profilePath}>
-          <p className="text-sm text-white font-semibold truncate">{displayName}</p>
-          <p className="text-xs text-white/35 truncate">@{profile.username ?? profile.id.slice(0, 8)}</p>
+        <Link href={profilePath} className="block group-hover:opacity-90 transition-opacity">
+          <p className="text-xs font-bold text-white truncate leading-snug">{displayName}</p>
+          <p className="text-[11px] text-white/35 truncate font-medium">@{profile.username ?? profile.id.slice(0, 8)}</p>
         </Link>
-        {profile.bio && <p className="text-xs text-white/40 truncate mt-1">{profile.bio}</p>}
+        {profile.bio && <p className="text-[11px] text-white/45 truncate mt-0.5 font-normal leading-tight">{profile.bio}</p>}
       </div>
       {canFollow && onToggleFollow && (
         <button
           type="button"
           onClick={() => onToggleFollow(profile)}
-          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${
-            isFollowing ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-[#C91520] text-white hover:bg-[#A8121B]'
+          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all shrink-0 active:scale-[0.98] ${
+            isFollowing
+              ? 'bg-white/[0.06] hover:bg-red-500/20 text-white/70 hover:text-red-400 border border-white/10'
+              : 'bg-gradient-to-r from-[#E50914] to-[#C91520] hover:from-[#f40d1a] hover:to-[#da1824] text-white shadow-[0_2px_10px_rgba(201,21,32,0.3)]'
           }`}
         >
           {isFollowing ? 'Takiptesin' : 'Takip Et'}
