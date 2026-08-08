@@ -583,43 +583,51 @@ export default function ProfileContent() {
       {editOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/85 backdrop-blur-md"
             onClick={() => {
               setCoverModalOpen(false);
               setEditOpen(false);
             }}
           />
-          <div className="relative z-10 w-full max-w-md bg-[#141414] border border-white/10 rounded-2xl p-6 flex flex-col gap-5 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-white">Profili Düzenle</h3>
+          <div className="relative z-10 w-full max-w-[380px] bg-[#0A0A0D] border border-white/[0.08] rounded-3xl p-5 flex flex-col gap-4 shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(201,21,32,0.08)]">
+            <div className="flex items-center justify-between pb-1 border-b border-white/[0.06]">
+              <h3 className="text-sm font-bold text-white tracking-wide">Profili Düzenle</h3>
               <button
                 onClick={() => {
                   setCoverModalOpen(false);
                   setEditOpen(false);
                 }}
-                className="text-white/30 hover:text-white transition-colors"
+                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-colors"
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined text-base">close</span>
               </button>
             </div>
 
-            {/* Avatar */}
-            <div className="flex flex-col items-center gap-3">
+            {/* Avatar & Cover Actions */}
+            <div className="flex flex-col items-center gap-2.5 pt-1">
               <div
-                className="w-24 h-24 rounded-full border-2 border-white/10 overflow-hidden bg-[#1A1A1A] flex items-center justify-center cursor-pointer relative group"
+                className="w-20 h-20 rounded-full border-2 border-white/10 overflow-hidden bg-[#141418] flex items-center justify-center cursor-pointer relative group shadow-md"
                 onClick={() => fileRef.current?.click()}
               >
                 {(avatarPreview || form.avatar_url)
                   ? <img src={avatarPreview || form.avatar_url} alt="avatar" className="w-full h-full object-cover" />
-                  : <span className="material-symbols-outlined text-white/20 text-4xl">person</span>
+                  : <span className="material-symbols-outlined text-white/20 text-3xl">person</span>
                 }
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-2xl">photo_camera</span>
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="material-symbols-outlined text-white text-xl">photo_camera</span>
                 </div>
               </div>
-              <button onClick={() => fileRef.current?.click()} className="text-xs text-[#C91520] hover:text-white transition-colors">Fotoğraf Değiştir</button>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-              <div className="flex flex-col items-center gap-1.5 w-full">
+              
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-[11px] font-semibold text-white/80 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-[13px] text-[#C91520]">photo_camera</span>
+                  Fotoğraf
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -627,17 +635,19 @@ export default function ProfileContent() {
                     setCoverSearchResults([]);
                     setCoverModalOpen(true);
                   }}
-                  className="text-xs text-[#C91520] hover:text-white transition-colors font-medium"
+                  className="px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-[11px] font-semibold text-white/80 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
                 >
-                  Kapak değiştir
+                  <span className="material-symbols-outlined text-[13px] text-[#C91520]">image</span>
+                  Kapak
                 </button>
                 {form.cover_show_id != null && (
                   <button
                     type="button"
                     onClick={() => setForm((f) => ({ ...f, cover_show_id: null }))}
-                    className="text-[11px] text-white/35 hover:text-white/60 transition-colors"
+                    className="px-2.5 py-1.5 rounded-full bg-white/[0.05] hover:bg-red-500/20 border border-white/10 text-[11px] font-medium text-white/40 hover:text-red-400 transition-all flex items-center gap-1"
+                    title="Kapağı kaldır"
                   >
-                    Kapak kaldır
+                    <span className="material-symbols-outlined text-[13px]">delete</span>
                   </button>
                 )}
               </div>
@@ -646,20 +656,23 @@ export default function ProfileContent() {
             {/* Fields */}
             <div className="flex flex-col gap-3">
               <div>
-                <label className="text-xs text-white/30 uppercase tracking-wider mb-1.5 block">Ad Soyad</label>
-                <input
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors"
-                  placeholder="Ad Soyad"
-                  value={form.full_name}
-                  onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
-                />
+                <label className="text-[10px] text-white/40 uppercase tracking-widest mb-1 font-bold block">Ad Soyad</label>
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-base pointer-events-none">person</span>
+                  <input
+                    className="w-full bg-[#121216] border border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-white text-xs placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#16161c] focus:outline-none transition-all"
+                    placeholder="Ad Soyad"
+                    value={form.full_name}
+                    onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
+                  />
+                </div>
               </div>
               <div>
-                <label className="text-xs text-white/30 uppercase tracking-wider mb-1.5 block">Kullanıcı Adı</label>
+                <label className="text-[10px] text-white/40 uppercase tracking-widest mb-1 font-bold block">Kullanıcı Adı</label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-sm">@</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-xs font-bold pointer-events-none">@</span>
                   <input
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 pl-8 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors"
+                    className="w-full bg-[#121216] border border-white/10 rounded-2xl pl-9 pr-4 py-2.5 text-white text-xs placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#16161c] focus:outline-none transition-all"
                     placeholder="kullaniciadi"
                     value={form.username}
                     onChange={e => setForm(f => ({ ...f, username: e.target.value.toLowerCase().replace(/\s/g, '') }))}
@@ -667,40 +680,43 @@ export default function ProfileContent() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-white/30 uppercase tracking-wider mb-1.5 block">Biyografi</label>
+                <label className="text-[10px] text-white/40 uppercase tracking-widest mb-1 font-bold block">Biyografi</label>
                 <textarea
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors resize-none"
+                  className="w-full bg-[#121216] border border-white/10 rounded-2xl px-4 py-2.5 text-white text-xs placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#16161c] focus:outline-none transition-all resize-none"
                   placeholder="Kendinden bahset..."
-                  rows={3}
+                  rows={2}
                   value={form.bio}
                   onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
                 />
               </div>
-              <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+              <div className="flex items-center justify-between bg-[#121216] border border-white/10 rounded-2xl px-3.5 py-2.5">
                 <div>
-                  <p className="text-sm text-white font-medium">İzlediklerim Görünürlüğü</p>
-                  <p className="text-xs text-white/35 mt-0.5">Açıkken profilini ziyaret edenler izlediklerini görebilir</p>
+                  <p className="text-xs text-white font-semibold flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-sm text-white/40">visibility</span>
+                    İzlediklerim Görünürlüğü
+                  </p>
+                  <p className="text-[10px] text-white/35 mt-0.5">Açıkken ziyaretçiler izlediklerini görebilir</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, activity_visible: !f.activity_visible }))}
-                  className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${
-                    form.activity_visible ? 'bg-[#C91520]' : 'bg-white/20'
+                  className={`w-10 h-5 rounded-full transition-colors relative shrink-0 ${
+                    form.activity_visible ? 'bg-[#C91520]' : 'bg-white/15'
                   }`}
                 >
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-md transition-transform ${
                     form.activity_visible ? 'translate-x-5' : 'translate-x-0.5'
                   }`} />
                 </button>
               </div>
             </div>
 
-            {saveError && <p className="text-xs text-[#C91520] bg-[#C91520]/10 border border-[#C91520]/20 rounded-lg px-3 py-2">{saveError}</p>}
+            {saveError && <p className="text-xs text-[#C91520] bg-[#C91520]/10 border border-[#C91520]/20 rounded-xl px-3 py-2">{saveError}</p>}
 
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full bg-[#C91520] text-white font-semibold text-sm py-3 rounded-xl hover:bg-[#A8121B] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-[#E50914] to-[#C91520] hover:from-[#f40d1a] hover:to-[#da1824] text-white font-bold text-xs py-3 rounded-2xl transition-all shadow-[0_4px_20px_rgba(201,21,32,0.35)] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
             >
               {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Kaydet'}
             </button>
@@ -710,26 +726,29 @@ export default function ProfileContent() {
 
       {editOpen && coverModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setCoverModalOpen(false)} />
-          <div className="relative z-10 w-full max-w-lg bg-[#141414] border border-white/10 rounded-2xl p-5 flex flex-col gap-4 shadow-2xl max-h-[85vh]">
-            <div className="flex items-center justify-between shrink-0">
-              <h3 className="text-base font-bold text-white">Dizi ile kapak seç</h3>
+          <div className="absolute inset-0 bg-black/85 backdrop-blur-md" onClick={() => setCoverModalOpen(false)} />
+          <div className="relative z-10 w-full max-w-[420px] bg-[#0A0A0D] border border-white/[0.08] rounded-3xl p-5 flex flex-col gap-4 shadow-[0_20px_60px_rgba(0,0,0,0.9)] max-h-[85vh]">
+            <div className="flex items-center justify-between pb-1 border-b border-white/[0.06] shrink-0">
+              <h3 className="text-sm font-bold text-white tracking-wide">Dizi ile kapak seç</h3>
               <button
                 type="button"
                 onClick={() => setCoverModalOpen(false)}
-                className="text-white/30 hover:text-white transition-colors"
+                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-colors"
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined text-base">close</span>
               </button>
             </div>
-            <input
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors shrink-0"
-              placeholder="Dizi adı ara (TMDB)…"
-              value={coverSearchQuery}
-              onChange={(e) => setCoverSearchQuery(e.target.value)}
-              autoFocus
-            />
-            <div className="min-h-0 flex-1 overflow-y-auto rounded-xl border border-white/10 bg-[#0f0f0f]">
+            <div className="relative shrink-0">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-base pointer-events-none">search</span>
+              <input
+                className="w-full bg-[#121216] border border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-white text-xs placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#16161c] focus:outline-none transition-all"
+                placeholder="Dizi adı ara (TMDB)…"
+                value={coverSearchQuery}
+                onChange={(e) => setCoverSearchQuery(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-white/10 bg-[#070709]">
               {coverSearchLoading && (
                 <p className="text-xs text-white/35 p-4 text-center">Aranıyor…</p>
               )}
