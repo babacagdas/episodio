@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -9,6 +9,14 @@ function SignInContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get('next') || '/home';
+
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (code) {
+      router.push(`/auth/callback?code=${code}&next=${encodeURIComponent(nextPath)}`);
+    }
+  }, [searchParams, router, nextPath]);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
