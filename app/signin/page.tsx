@@ -18,7 +18,14 @@ function SignInContent() {
     const code = searchParams.get('code');
     if (code) {
       router.push(`/auth/callback?code=${code}&next=${encodeURIComponent(nextPath)}`);
+      return;
     }
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        router.push(nextPath.startsWith('/') ? nextPath : '/home');
+      }
+    });
   }, [searchParams, router, nextPath]);
 
   const [email, setEmail] = useState('');

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { createClient } from '@/lib/supabase/server';
 
 export default async function Splash({
   searchParams,
@@ -12,8 +13,18 @@ export default async function Splash({
     redirect(`/auth/callback?code=${params.code}${nextPath}`);
   }
 
+  const supabase = await createClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (authData?.user) {
+    redirect('/home');
+  }
+
   return (
-    <div suppressHydrationWarning className="bg-[#0A0A0A] h-[100dvh] min-h-[100svh] text-on-background font-body-md text-body-md overflow-hidden antialiased">
+    <div suppressHydrationWarning className="bg-[#0A0A0A] h-[100dvh] min-h-[100svh] text-on-background font-body-md text-body-md overflow-hidden antialiased relative">
+      {/* Cinematic Background */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-black/10 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/30 to-transparent z-20" />
         <img
           alt=""
           className="w-full h-full object-cover opacity-90"
