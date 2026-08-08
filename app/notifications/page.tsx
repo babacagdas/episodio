@@ -23,6 +23,8 @@ interface NotificationRow {
   created_at: string;
 }
 
+import TestNotificationButton from '@/components/TestNotificationButton';
+
 export default async function NotificationsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -64,9 +66,12 @@ export default async function NotificationsPage() {
       <MobileHeader />
       <Sidebar />
       <main className="md:ml-[240px] px-6 md:px-12 py-8 max-w-4xl">
-        <div className="mb-8">
-          <p className="premium-kicker mb-2">Hesap</p>
-          <h1 className="text-3xl font-bold text-white">Bildirimler</h1>
+        <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <p className="premium-kicker mb-2">Hesap</p>
+            <h1 className="text-3xl font-bold text-white">Bildirimler</h1>
+          </div>
+          <TestNotificationButton />
         </div>
 
         {notifications.length === 0 ? (
