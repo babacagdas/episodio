@@ -6,9 +6,9 @@ import { createClient } from '@/lib/supabase/client';
 type Status = 'watching' | 'completed' | 'dropped' | null;
 
 const OPTIONS: { value: Status; label: string; icon: string; color: string }[] = [
-  { value: 'watching', label: 'İzliyorum', icon: 'play_arrow', color: 'bg-[#C91520] border-[#C91520]' },
-  { value: 'completed', label: 'Bitirdim', icon: 'check_circle', color: 'bg-green-600 border-green-600' },
-  { value: 'dropped', label: 'Bıraktım', icon: 'cancel', color: 'bg-white/20 border-white/30' },
+  { value: 'watching', label: 'İzliyorum', icon: 'play_arrow', color: 'bg-[#C91520] border-[#C91520] text-white shadow-[0_0_15px_rgba(201,21,32,0.4)]' },
+  { value: 'completed', label: 'Bitirdim', icon: 'check_circle', color: 'bg-emerald-600/90 border-emerald-500 text-white' },
+  { value: 'dropped', label: 'Bıraktım', icon: 'cancel', color: 'bg-white/10 border-white/20 text-white/80' },
 ];
 
 export default function WatchStatusButton({ showId, showName, posterPath }: {
@@ -65,36 +65,36 @@ export default function WatchStatusButton({ showId, showName, posterPath }: {
       <button
         onClick={() => setOpen(prev => !prev)}
         disabled={loading}
-        className={`px-5 py-3 font-semibold text-sm rounded-xl transition-colors flex items-center gap-2 border ${
+        className={`px-4 py-2 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 border backdrop-blur-md ${
           current
-            ? `${current.color} text-white`
-            : 'bg-[#C91520] border-[#C91520] text-white hover:bg-[#A8121B]'
+            ? `${current.color}`
+            : 'bg-white/[0.08] hover:bg-white/[0.14] border-white/10 text-white'
         } disabled:opacity-50`}
       >
-        <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>
+        <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
           {current?.icon ?? 'play_arrow'}
         </span>
-        {current?.label ?? 'İzleme Durumu'}
-        <span className="material-symbols-outlined text-base">expand_more</span>
+        <span>{current?.label ?? 'İzleme Durumu'}</span>
+        <span className="material-symbols-outlined text-sm opacity-60 ml-0.5">expand_more</span>
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full mt-2 z-50 bg-[#1A1A1A] border border-white/10 rounded-xl overflow-hidden shadow-2xl min-w-[160px]">
+          <div className="absolute left-0 top-full mt-2 z-50 bg-[#0A0A0D] border border-white/10 rounded-2xl p-1 shadow-2xl min-w-[160px] backdrop-blur-xl">
             {OPTIONS.map(opt => (
               <button
                 key={opt.value}
                 onClick={() => setWatchStatus(opt.value)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-colors hover:bg-white/5 ${
-                  status === opt.value ? 'text-white' : 'text-white/60'
+                className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-colors ${
+                  status === opt.value ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: status === opt.value ? "'FILL' 1" : "'FILL' 0" }}>
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: status === opt.value ? "'FILL' 1" : "'FILL' 0" }}>
                   {opt.icon}
                 </span>
-                {opt.label}
-                {status === opt.value && <span className="ml-auto material-symbols-outlined text-base text-[#C91520]">check</span>}
+                <span>{opt.label}</span>
+                {status === opt.value && <span className="ml-auto material-symbols-outlined text-sm text-[#C91520]">check</span>}
               </button>
             ))}
           </div>

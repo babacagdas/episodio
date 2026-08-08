@@ -62,13 +62,16 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
             <p className="premium-kicker mb-3">Dizi Detayı</p>
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-normal leading-[0.98] max-w-4xl">{show.name}</h1>
 
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              {show.genres.map((g) => (
-                <span key={g.id} className="px-2.5 py-1 rounded-md bg-white/10 text-white/70 text-xs font-semibold border border-white/10">{g.name}</span>
+            <div className="flex flex-wrap items-center gap-1.5 mb-3 text-xs font-medium text-white/60">
+              {show.genres.map((g, i) => (
+                <span key={g.id} className="flex items-center gap-1.5">
+                  {i > 0 && <span className="text-white/25">•</span>}
+                  <span>{g.name}</span>
+                </span>
               ))}
-              {year && <span className="text-white/40 text-xs">• {year}</span>}
-              {show.number_of_seasons > 0 && <span className="text-white/40 text-xs">• {show.number_of_seasons} Sezon</span>}
-              {show.number_of_episodes > 0 && <span className="text-white/40 text-xs">• {show.number_of_episodes} Bölüm</span>}
+              {year && <span className="text-white/40 flex items-center gap-1.5"><span className="text-white/25">•</span> {year}</span>}
+              {show.number_of_seasons > 0 && <span className="text-white/40 flex items-center gap-1.5"><span className="text-white/25">•</span> {show.number_of_seasons} Sezon</span>}
+              {show.number_of_episodes > 0 && <span className="text-white/40 flex items-center gap-1.5"><span className="text-white/25">•</span> {show.number_of_episodes} Bölüm</span>}
             </div>
 
             <div className="flex items-center gap-2 mb-4">

@@ -44,51 +44,55 @@ export default function AddToListButton({ show }: Props) {
       <button
         type="button"
         onClick={openModal}
-        className="px-5 py-3 border font-semibold text-sm rounded-xl transition-colors flex items-center gap-2 backdrop-blur-sm bg-white/10 border-white/20 text-white hover:bg-white/[0.18]"
+        className="px-4 py-2 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 border backdrop-blur-md bg-white/[0.08] hover:bg-white/[0.14] border-white/10 text-white/90 hover:text-white"
       >
-        <span className="material-symbols-outlined text-lg">playlist_add</span>
-        Listeye Ekle
+        <span className="material-symbols-outlined text-base">playlist_add</span>
+        <span>Listeye Ekle</span>
       </button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="premium-panel relative z-10 w-full max-w-md rounded-xl p-5 max-h-[80vh] overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-white font-semibold">Listeye Ekle</h3>
-              <button type="button" onClick={() => setOpen(false)} className="text-white/40 hover:text-white transition-colors">
-                <span className="material-symbols-outlined">close</span>
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setOpen(false)} />
+          <div className="relative z-10 w-full max-w-[380px] rounded-3xl p-5 bg-[#0A0A0D] border border-white/10 shadow-2xl flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-white">Listeye Ekle</h3>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-colors"
+              >
+                <span className="material-symbols-outlined text-base">close</span>
               </button>
             </div>
 
             {loading ? (
               <div className="flex justify-center py-8">
-                <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                <span className="w-5 h-5 border-2 border-white/20 border-t-[#C91520] rounded-full animate-spin" />
               </div>
             ) : lists.length === 0 ? (
-              <div className="text-sm text-white/40 py-6 text-center">
+              <div className="text-xs text-white/40 py-6 text-center">
                 Henüz listen yok.{' '}
-                <Link href="/profile" className="text-[#C91520] hover:text-white transition-colors" onClick={() => setOpen(false)}>
+                <Link href="/profile" className="text-[#C91520] hover:text-white font-semibold transition-colors" onClick={() => setOpen(false)}>
                   Profilden liste oluştur.
                 </Link>
               </div>
             ) : (
-              <div className="space-y-2 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
                 {lists.map((list) => (
                   <button
                     key={list.id}
                     type="button"
                     onClick={() => handleAdd(list.id)}
-                    className="w-full text-left rounded-xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] px-4 py-3 transition-colors"
+                    className="w-full text-left rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.08] px-4 py-3 transition-all"
                   >
-                    <p className="text-sm font-semibold text-white">{list.name}</p>
-                    {list.description && <p className="text-xs text-white/40 mt-1 line-clamp-1">{list.description}</p>}
+                    <p className="text-xs font-bold text-white">{list.name}</p>
+                    {list.description && <p className="text-[11px] text-white/40 mt-0.5 line-clamp-1">{list.description}</p>}
                   </button>
                 ))}
               </div>
             )}
 
-            {message && <p className="text-xs text-[#D4A017] mt-3">{message}</p>}
+            {message && <p className="text-xs font-medium text-[#D4A017] mt-3 text-center">{message}</p>}
           </div>
         </div>
       )}

@@ -9,16 +9,16 @@ export default function WatchlistButton({ show }: { show: WatchlistItem }) {
   return (
     <button
       onClick={() => toggle(show)}
-      className={`px-5 py-3 border font-semibold text-sm rounded-xl transition-colors flex items-center gap-2 backdrop-blur-sm ${
+      className={`px-4 py-2 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 border backdrop-blur-md ${
         inList
-          ? 'bg-[#C91520]/[0.18] border-[#C91520]/55 text-[#F2A8AE]'
-          : 'bg-white/10 border-white/20 text-white hover:bg-white/[0.18]'
+          ? 'bg-[#C91520]/20 border-[#C91520]/40 text-[#EF4444]'
+          : 'bg-white/[0.08] hover:bg-white/[0.14] border-white/10 text-white/90 hover:text-white'
       }`}
     >
-      <span className="material-symbols-outlined text-lg" style={inList ? { fontVariationSettings: "'FILL' 1" } : undefined}>
+      <span className="material-symbols-outlined text-base" style={inList ? { fontVariationSettings: "'FILL' 1" } : undefined}>
         bookmark
       </span>
-      {inList ? 'Listede' : 'Listeye Ekle'}
+      <span>{inList ? 'Listede' : 'İzleneceklere Ekle'}</span>
     </button>
   );
 }
