@@ -1,39 +1,16 @@
 'use client';
 
+'use client';
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { MobileHeader, BottomNav } from '@/components/Nav';
 import type { Show } from '@/lib/tmdb';
 import { createClient } from '@/lib/supabase/client';
+import ShowCard from '@/components/ShowCard';
 import ListPreviewCard from '@/components/ListPreviewCard';
 import DiscoverFilterPanel, { type AppliedFilters } from './DiscoverFilterPanel';
-
-const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
-
-function ShowCard({ show }: { show: Show }) {
-  const poster = show.poster_path ? `${POSTER_BASE}${show.poster_path}` : null;
-  const year = show.first_air_date?.slice(0, 4) ?? '';
-
-  return (
-    <Link href={`/show/${show.id}`} className="relative aspect-[2/3] overflow-hidden rounded-xl bg-[#111] border border-white/[0.08] group cursor-pointer hover:border-white/20 hover:-translate-y-1 transition-[transform,border-color,box-shadow] duration-300 block shadow-[0_16px_36px_rgba(0,0,0,0.26)] hover:shadow-[0_22px_52px_rgba(0,0,0,0.4)]">
-      {poster
-        ? <img alt={show.name} className="w-full h-full object-cover group-hover:scale-[1.055] transition-transform duration-700 ease-out" src={poster} />
-        : <div className="w-full h-full bg-[#1A1A1A] flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-4xl">movie</span></div>
-      }
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/15 to-transparent opacity-82 group-hover:opacity-95 transition-opacity" />
-      <div className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/0 group-hover:ring-white/15 transition" />
-      <div className="absolute bottom-0 left-0 w-full p-3">
-        <div className="flex items-center gap-1 mb-1">
-          <span className="material-symbols-outlined text-[12px] text-[#D4A017]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-          <span className="text-[11px] font-semibold text-white">{show.vote_average.toFixed(1)}</span>
-        </div>
-        <h3 className="text-sm font-semibold text-white truncate">{show.name}</h3>
-        {year && <p className="text-[11px] text-white/40">{year}</p>}
-      </div>
-    </Link>
-  );
-}
 
 interface UserSearchProfile {
   id: string;
