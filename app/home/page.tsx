@@ -6,6 +6,7 @@ import { BottomNav, MobileHeader } from '@/components/Nav';
 import ShowCard from '@/components/ShowCard';
 import { CardGridSkeleton } from '@/components/Skeletons';
 import { getTrendingShows, getLatestTvTrailers } from '@/lib/tmdb';
+import { getTvNews } from '@/lib/news';
 import FriendsActivitySection from './FriendsActivitySection';
 import NotificationsBell from './NotificationsBell';
 import CurrentlyWatchingCard from './CurrentlyWatchingCard';
@@ -15,6 +16,7 @@ import HomeHero from './HomeHero';
 import HomeListRail from './HomeListRail';
 import HomeRightRail from './HomeRightRail';
 import HomeTrailersSection from './HomeTrailersSection';
+import HomeNewsSection from './HomeNewsSection';
 import WelcomeOnboardingModal from './WelcomeOnboardingModal';
 import DeferredClientSection from './DeferredClientSection';
 
@@ -77,6 +79,11 @@ async function TrailersContainer() {
   return <HomeTrailersSection trailers={trailers} />;
 }
 
+async function NewsContainer() {
+  const news = await getTvNews();
+  return <HomeNewsSection news={news} />;
+}
+
 export default function Home() {
   return (
     <div className="font-body-md text-body-md antialiased pb-32 md:pb-0 pt-[60px] md:pt-0">
@@ -107,6 +114,10 @@ export default function Home() {
 
             <Suspense fallback={<SectionFallback tall />}>
               <TrailersContainer />
+            </Suspense>
+
+            <Suspense fallback={<SectionFallback tall />}>
+              <NewsContainer />
             </Suspense>
 
             <section className="mb-8">
