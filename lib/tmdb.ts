@@ -274,3 +274,26 @@ export async function getTvWatchProviders(showId: string): Promise<WatchProvider
     return null;
   }
 }
+
+export interface CastMember {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string | null;
+}
+
+export async function getShowCredits(showId: string): Promise<CastMember[]> {
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) return [];
+  try {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/tv/${showId}/credits?api_key=${apiKey}&language=tr-TR`,
+      { next: { revalidate: 86400 } }
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.cast ?? []).slice(0, 15) as CastMember[];
+  } catch {
+    return [];
+  }
+}

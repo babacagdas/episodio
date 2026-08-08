@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { BottomNav } from '@/components/Nav';
-import { getShowDetail, getSeasonEpisodes, getSimilarShows, getTvWatchProviders, type Episode } from '@/lib/tmdb';
+import { getShowDetail, getSeasonEpisodes, getSimilarShows, getTvWatchProviders, getShowCredits, type Episode } from '@/lib/tmdb';
 import WatchlistButton from './WatchlistButton';
 import WatchStatusButton from './WatchStatusButton';
 import ShowTabs from './ShowTabs';
@@ -9,12 +9,13 @@ import AddToListButton from './AddToListButton';
 
 const BACKDROP_BASE = 'https://image.tmdb.org/t/p/original';
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
+const PERSON_BASE = 'https://image.tmdb.org/t/p/w185';
 
 export default async function ShowDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const show = await getShowDetail(id);
   const seasons = (show.seasons ?? []).filter((season) => season.episode_count > 0);
-  const [allSeasonEpisodes, similar, watchProviders] = await Promise.all([
+  const [allSeasonEpisodes, similar, watchProviders, credits] = await Promise.all([
     Promise.all(
       seasons.map(async (season) => ({
         seasonNumber: season.season_number,
@@ -23,6 +24,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
     ),
     getSimilarShows(id),
     getTvWatchProviders(id),
+    getShowCredits(id),
   ]);
 
   const providers = watchProviders?.flatrate || watchProviders?.buy || watchProviders?.rent || [];
@@ -126,6 +128,35 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
         <section className="px-margin-mobile md:px-12 max-w-[900px] mt-8 w-full overflow-x-hidden">
           {show.overview && (
             <p className="text-white/50 text-sm leading-relaxed mb-8 max-w-3xl">{show.overview}</p>
+          )}
+
+          {/* Oyuncular & Kadro */}
+          {credits.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-sm text-[#C91520]">groups</span>
+                Oyuncular & Kadro
+              </h3>
+              <div className="flex items-center gap-4 overflow-x-auto pb-2 hide-scrollbar">
+                {credits.map((actor) => (
+                  <div key={actor.id} className="flex flex-col items-center shrink-0 w-20 text-center select-none">
+                    <div className="w-14 h-14 rounded-full border border-white/10 overflow-hidden bg-[#141418] shadow-md flex items-center justify-center mb-1.5">
+                      {actor.profile_path ? (
+                        <img
+                          src={`https://image.tmdb.org/t/p/w185${actor.profile_path}`}
+                          alt={actor.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="material-symbols-outlined text-white/20 text-xl">person</span>
+                      )}
+                    </div>
+                    <p className="text-[11px] font-bold text-white truncate w-full">{actor.name}</p>
+                    <p className="text-[10px] text-white/40 truncate w-full mt-0.5">{actor.character}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
           <ShowTabs
