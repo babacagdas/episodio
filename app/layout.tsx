@@ -1,8 +1,16 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
+
+export const viewport: Viewport = {
+  themeColor: '#0A0A0A',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://episodio.com.tr'),
+  manifest: '/manifest.webmanifest',
   title: {
     default: 'Episodio | Dizi Takip ve Sosyal Ağ Platformu',
     template: '%s | Episodio',
@@ -12,6 +20,11 @@ export const metadata: Metadata = {
   authors: [{ name: 'Episodio' }],
   creator: 'Episodio',
   publisher: 'Episodio',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Episodio',
+  },
   openGraph: {
     type: 'website',
     locale: 'tr_TR',
