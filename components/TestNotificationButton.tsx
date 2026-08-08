@@ -11,21 +11,32 @@ export default function TestNotificationButton() {
     setLoading(true);
     setStatus(null);
     try {
+      if (typeof window === 'undefined' || !('Notification' in window)) {
+        setStatus('unsupported');
+        setLoading(false);
+        return;
+      }
+
       const permission = await requestNotificationPermission();
+      
       if (permission === 'granted') {
-        await sendLocalNotification(
+        const sent = await sendLocalNotification(
           'Episodio Bildirim Testi 🔔',
-          'Tebrikler! Kilit ekranı bildirimleri cihazınızda kusursuz çalışıyor.',
+          'Tebrikler! Bildirimler cihazınızda kusursuz çalışıyor.',
           '/notifications'
         );
-        setStatus('success');
+        if (sent) {
+          setStatus('success');
+        } else {
+          setStatus('sent_check_system');
+        }
       } else if (permission === 'denied') {
         setStatus('denied');
       } else {
-        setStatus('unsupported');
+        setStatus('default');
       }
     } catch (e) {
-      console.error(e);
+      console.error('Test notification error:', e);
       setStatus('error');
     } finally {
       setLoading(false);
@@ -50,14 +61,35 @@ export default function TestNotificationButton() {
       </button>
 
       {status === 'success' && (
-        <p className="text-xs text-green-400 font-medium">
-          ✅ Bildirim gönderildi! Kilit ekranına ve üst panele bakın.
-        </p>
+        <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 text-xs text-green-400">
+          ✅ <strong>Bildirim Gönderildi!</strong> Kilit ekranınıza veya ekranın sağ/üst bildirim alanına bakın.
+        </div>
       )}
+
+      {status === 'sent_check_system' && (
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 text-xs text-blue-300">
+          ℹ️ <strong>İzin Alındı!</strong> Bildirim tetiklendi. Eğer ekranda görmüyorsanız telefon/bilgisayarınızın Rahatsız Etmeyin (Do Not Disturb) modunun kapalı olduğundan emin olun.
+        </div>
+      )}
+
       {status === 'denied' && (
-        <p className="text-xs text-yellow-400 font-medium">
-          ⚠️ Tarayıcı bildirim izni engellenmiş. Tarayıcı site ayarlarından izin verin.
-        </p>
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-xs text-red-300 leading-relaxed">
+          ⚠️ <strong>Tarayıcı İzni Engellenmiş!</strong><br />
+          Adres çubuğundaki kilit 🔒 simgesine tıklayıp <i>"Bildirimler"</i> iznini <b>Aç / İzin Ver</b> yapın.
+        </div>
+      )}
+
+      {status === 'unsupported' && (
+        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-3 text-xs text-yellow-300 leading-relaxed">
+          📱 <strong>iPhone / iOS Safari Kullanıyorsanız:</strong><br />
+          iOS kuralları gereği bildirim almak için önce Safari menüsünden <b>Paylaş &gt; Ana Ekrana Ekle</b> yaparak Episodio uygulamasını telefonunuza yükleyin.
+        </div>
+      )}
+
+      {status === 'error' && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-xs text-red-300">
+          ❌ Bildirim gönderilirken bir hata oluştu. Sayfayı yenileyip tekrar deneyin.
+        </div>
       )}
     </div>
   );

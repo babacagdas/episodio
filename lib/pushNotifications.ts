@@ -15,41 +15,53 @@ export async function requestNotificationPermission() {
     return 'unsupported';
   }
 
-  const permission = await Notification.requestPermission();
-  if (permission === 'granted') {
-    await registerServiceWorker();
-    sendLocalNotification(
-      'Episodio Bildirimleri Aktif! 🎉',
-      'Artık takipçiler, mesajlar ve aktiviteler için kilit ekranına bildirim alacaksın.',
-      '/notifications'
-    );
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      await registerServiceWorker();
+    }
+    return permission;
+  } catch (e) {
+    console.error('Error requesting notification permission:', e);
+    return 'error';
   }
-  return permission;
 }
 
 export async function sendLocalNotification(title: string, body: string, url = '/notifications') {
-  if (typeof window === 'undefined' || !('Notification' in window)) return;
-  if (Notification.permission !== 'granted') return;
+  if (typeof window === 'undefined' || !('Notification' in window)) return false;
+  if (Notification.permission !== 'granted') return false;
 
-  try {
-    if ('serviceWorker' in navigator) {
-      const registration = await navigator.serviceWorker.ready;
-      const options: any = {
-        body,
-        icon: '/icon.png',
-        badge: '/icon.png',
-        data: { url },
-        vibrate: [100, 50, 100],
-      };
-      await registration.showNotification(title, options);
-      return;
+  const options: any = {
+    body,
+    icon: '/icon.png',
+    badge: '/icon.png',
+    data: { url },
+    vibrate: [100, 50, 100],
+  };
+
+  // Try ServiceWorker showNotification first (with 1.5s timeout fallback)
+  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+    try {
+      const swReadyPromise = navigator.serviceWorker.ready;
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500));
+      const registration = await Promise.race([swReadyPromise, timeoutPromise]);
+
+      if (registration && registration.showNotification) {
+        await registration.showNotification(title, options);
+        return true;
+      }
+    } catch (err) {
+      console.error('SW showNotification error:', err);
     }
-
-    new Notification(title, {
-      body,
-      icon: '/icon.png',
-    });
-  } catch (e) {
-    console.error('Failed to trigger notification:', e);
   }
+
+  // Fallback to standard Browser Notification
+  try {
+    new Notification(title, options);
+    return true;
+  } catch (e) {
+    console.error('Standard Notification error:', e);
+  }
+
+  return false;
 }
