@@ -14,7 +14,7 @@ const navItems = [
 
 export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
   return (
-    <header className="bg-[#0A0A0A]/90 backdrop-blur-xl grid grid-cols-[2.25rem_1fr_2.25rem] items-center w-full px-6 py-3.5 fixed top-0 left-0 right-0 z-50 border-b border-white/10 md:hidden">
+    <header className="bg-[#0A0A0A]/90 backdrop-blur-xl grid grid-cols-[2.25rem_1fr_2.25rem] items-center w-full px-6 py-3.5 pt-[calc(0.875rem+env(safe-area-inset-top))] fixed top-0 left-0 right-0 z-50 border-b border-white/10 md:hidden">
       <span aria-hidden />
       <Link href="/home" className="mx-auto block w-[118px]">
         <img alt="Episodio Logo" className="h-auto w-full object-contain" src="/logo.png" />

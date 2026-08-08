@@ -187,7 +187,7 @@ export default function SwiperPage() {
       <Sidebar />
 
       {/* Üst Bar (Mobil) */}
-      <header className="bg-[#0A0A0A]/70 backdrop-blur-xl flex justify-between items-center w-full px-6 py-4 top-0 z-50 border-b border-white/5 sticky md:hidden">
+      <header className="bg-[#0A0A0A]/90 backdrop-blur-xl flex justify-between items-center w-full px-6 py-4 pt-[calc(1rem+env(safe-area-inset-top))] fixed top-0 left-0 right-0 z-50 border-b border-white/5 md:hidden">
         <Link href="/home" className="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-white hover:bg-white/10 transition-all">
           <span className="material-symbols-outlined text-lg">arrow_back</span>
         </Link>
