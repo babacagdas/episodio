@@ -22,7 +22,7 @@ export default function HomeTrailersSection({ trailers }: { trailers: TrailerIte
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {trailers.map((trailer) => {
           const backdrop = trailer.backdropPath
             ? `${BACKDROP_BASE}${trailer.backdropPath}`
@@ -55,24 +55,24 @@ export default function HomeTrailersSection({ trailers }: { trailers: TrailerIte
 
                 {/* Play Button Overlay */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#C91520] text-white shadow-[0_0_20px_rgba(201,21,32,0.6)] group-hover:scale-110 group-hover:bg-[#E50914] transition-all duration-300">
-                    <span className="material-symbols-outlined text-2xl ml-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
+                  <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-[#C91520] text-white shadow-[0_0_20px_rgba(201,21,32,0.6)] group-hover:scale-110 group-hover:bg-[#E50914] transition-all duration-300">
+                    <span className="material-symbols-outlined text-xl sm:text-2xl ml-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
                   </div>
                 </div>
 
                 {/* Top Badge */}
-                <div className="absolute left-2.5 top-2.5 flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur-md border border-white/10">
-                  <span className="material-symbols-outlined text-[12px] text-[#D4A017]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                <div className="absolute left-2 top-2 sm:left-2.5 sm:top-2.5 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold text-white backdrop-blur-md border border-white/10">
+                  <span className="material-symbols-outlined text-[10px] sm:text-[12px] text-[#D4A017]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                   {trailer.voteAverage.toFixed(1)}
                 </div>
               </div>
 
               {/* Text Info */}
-              <div className="p-3">
-                <h3 className="text-xs font-bold text-white truncate group-hover:text-[#C91520] transition-colors">
+              <div className="p-2.5 sm:p-3">
+                <h3 className="text-[11px] sm:text-xs font-bold text-white truncate group-hover:text-[#C91520] transition-colors">
                   {trailer.showName}
                 </h3>
-                <p className="text-[11px] text-white/40 truncate mt-0.5">
+                <p className="text-[10px] sm:text-[11px] text-white/40 truncate mt-0.5">
                   {trailer.videoTitle}
                 </p>
               </div>
