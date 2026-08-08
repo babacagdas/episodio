@@ -185,7 +185,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   });
 
   return (
-    <div className="font-body-md text-body-md antialiased pb-24 md:pb-0">
+    <div className="font-body-md text-body-md antialiased pb-24 md:pb-0 pt-[60px] md:pt-0">
       <MobileHeader />
       <Sidebar />
 

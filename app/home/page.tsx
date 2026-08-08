@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Sidebar from '@/components/Sidebar';
-import { BottomNav } from '@/components/Nav';
+import { BottomNav, MobileHeader } from '@/components/Nav';
 import ShowCard from '@/components/ShowCard';
 import { CardGridSkeleton } from '@/components/Skeletons';
 import { getTrendingShows } from '@/lib/tmdb';
@@ -73,26 +73,10 @@ async function TrendingGrid() {
 
 export default function Home() {
   return (
-    <div className="font-body-md text-body-md antialiased pb-32 md:pb-0">
+    <div className="font-body-md text-body-md antialiased pb-32 md:pb-0 pt-[60px] md:pt-0">
       <WelcomeOnboardingModal />
 
-      <header className="sticky top-0 z-50 grid w-full grid-cols-[2.25rem_1fr_2.25rem] items-center border-b border-white/10 bg-[#0A0A0A]/85 px-6 py-4 backdrop-blur-lg md:hidden">
-        <span aria-hidden />
-        <Link href="/home" className="mx-auto block w-[118px]">
-          <Image
-            alt="Episodio Logo"
-            className="h-auto w-full object-contain"
-            src="/logo.png"
-            width={236}
-            height={68}
-            priority
-            sizes="118px"
-          />
-        </Link>
-        <div className="flex justify-end">
-          <NotificationsBell />
-        </div>
-      </header>
+      <MobileHeader rightElement={<NotificationsBell />} />
 
       <Sidebar />
 

@@ -12,7 +12,7 @@ export default function WatchlistPage() {
   const { watchlist, loading } = useWatchlist();
 
   return (
-    <div className="font-body-md min-h-screen antialiased pb-24 md:pb-0 overflow-x-hidden">
+    <div className="font-body-md min-h-screen antialiased pb-24 md:pb-0 pt-[60px] md:pt-0 overflow-x-hidden">
       <MobileHeader />
       <Sidebar />
 

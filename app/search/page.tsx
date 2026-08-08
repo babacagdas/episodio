@@ -245,7 +245,6 @@ export default function Search() {
       setFilterApplying(false);
     }
   }, []);
-
   const clearDiscoverFilter = useCallback(() => {
     setActiveFilters(null);
     setFilteredShows([]);
@@ -260,37 +259,40 @@ export default function Search() {
 
     const supabase = createClient();
     const isFollowing = !!followingMap[profile.id];
+
     if (isFollowing) {
       const { error } = await supabase
         .from('follows')
         .delete()
         .eq('follower_id', currentUserId)
         .eq('following_id', profile.id);
+      
       if (!error) {
         setFollowingMap((prev) => ({ ...prev, [profile.id]: false }));
       }
-      return;
-    }
-
-    const { error } = await supabase.from('follows').insert({
-      follower_id: currentUserId,
-      following_id: profile.id,
-    });
-    if (!error) {
-      setFollowingMap((prev) => ({ ...prev, [profile.id]: true }));
-      const { data: actorProfile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', currentUserId)
-        .single();
-      const actorUsername = actorProfile?.username ?? null;
-      await supabase.from('notifications').insert({
-        user_id: profile.id,
-        actor_id: currentUserId,
-        type: 'follow',
-        message: actorUsername ? `@${actorUsername} seni takip etmeye başladı.` : 'Seni takip etmeye başladı.',
-        link: actorUsername ? `/u/${actorUsername}` : `/u/${currentUserId}`,
+    } else {
+      const { error } = await supabase.from('follows').insert({
+        follower_id: currentUserId,
+        following_id: profile.id,
       });
+
+      if (!error) {
+        setFollowingMap((prev) => ({ ...prev, [profile.id]: true }));
+        const { data: actorProfile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', currentUserId)
+          .single();
+        
+        const actorUsername = actorProfile?.username ?? null;
+        await supabase.from('notifications').insert({
+          user_id: profile.id,
+          actor_id: currentUserId,
+          type: 'follow',
+          message: actorUsername ? `@${actorUsername} seni takip etmeye başladı.` : 'Seni takip etmeye başladı.',
+          link: actorUsername ? `/u/${actorUsername}` : `/u/${currentUserId}`,
+        });
+      }
     }
   }, [currentUserId, followingMap]);
 
@@ -298,7 +300,7 @@ export default function Search() {
   const discoverShowsLabel = query.trim() ? 'Diziler' : activeFilters ? 'Filtreye uygun diziler' : 'Trend Diziler';
 
   return (
-    <div className="font-body-md min-h-screen antialiased flex flex-col pb-24 md:pb-0 overflow-x-hidden">
+    <div className="font-body-md min-h-screen antialiased flex flex-col pb-24 md:pb-0 pt-[60px] md:pt-0 overflow-x-hidden">
       <MobileHeader />
       <Sidebar />
 

@@ -60,7 +60,7 @@ export default async function NotificationsPage() {
     .eq('is_read', false);
 
   return (
-    <div className="min-h-screen pb-24 md:pb-0">
+    <div className="min-h-screen pb-24 md:pb-0 pt-[60px] md:pt-0">
       <MobileHeader />
       <Sidebar />
       <main className="md:ml-[240px] px-6 md:px-12 py-8 max-w-4xl">

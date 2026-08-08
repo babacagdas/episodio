@@ -14,16 +14,16 @@ const navItems = [
 
 export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
   return (
-    <header className="bg-[#0A0A0A]/85 backdrop-blur-lg grid grid-cols-[2.25rem_1fr_2.25rem] items-center w-full px-6 py-4 top-0 z-50 border-b border-white/10 sticky md:hidden">
+    <header className="bg-[#0A0A0A]/90 backdrop-blur-xl grid grid-cols-[2.25rem_1fr_2.25rem] items-center w-full px-6 py-3.5 fixed top-0 left-0 right-0 z-50 border-b border-white/10 md:hidden">
       <span aria-hidden />
       <Link href="/home" className="mx-auto block w-[118px]">
         <img alt="Episodio Logo" className="h-auto w-full object-contain" src="/logo.png" />
       </Link>
       <div className="flex justify-end">
         {rightElement ?? (
-        <span className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.03] text-white/75 flex items-center justify-center">
-          <span className="material-symbols-outlined text-[20px]">notifications</span>
-        </span>
+          <Link href="/notifications" aria-label="Bildirimler" className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.03] text-white/75 flex items-center justify-center">
+            <span className="material-symbols-outlined text-[20px]">notifications</span>
+          </Link>
         )}
       </div>
     </header>
@@ -89,7 +89,7 @@ export function BottomNav() {
   }, []);
 
   return (
-    <nav className="bg-[#111111]/92 backdrop-blur-xl fixed bottom-0 left-0 w-full z-50 grid h-[64px] grid-cols-5 items-center px-2 pb-[env(safe-area-inset-bottom)] border-t border-white/10 shadow-[0_-8px_24px_rgba(0,0,0,0.35)] md:hidden">
+    <nav className="bg-[#141414]/94 backdrop-blur-2xl fixed bottom-4 left-4 right-4 z-50 grid h-[58px] grid-cols-5 items-center px-2 border border-white/15 rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.6)] md:hidden">
       {navItems.map(({ href, icon, label }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         return (
