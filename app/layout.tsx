@@ -49,6 +49,8 @@ export const metadata: Metadata = {
   },
 };
 
+import PushNotificationPrompt from '@/components/PushNotificationPrompt';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr" className="dark">
@@ -60,7 +62,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased bg-[#0A0A0A] text-[#F4F6FA]" suppressHydrationWarning>{children}</body>
+      <body className="antialiased bg-[#0A0A0A] text-[#F4F6FA]" suppressHydrationWarning>
+        {children}
+        <PushNotificationPrompt />
+      </body>
     </html>
   );
 }
