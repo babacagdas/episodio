@@ -14,13 +14,12 @@ export default function HomeTrailersSection({ trailers }: { trailers: TrailerIte
   return (
     <section className="mb-8">
       <div className="mb-4 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#C91520]/20 text-[#C91520]">
-            <span className="material-symbols-outlined text-[16px]">play_circle</span>
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C91520]/20 text-[#C91520] shrink-0">
+            <span className="material-symbols-outlined text-[20px]">play_circle</span>
           </div>
-          <h2 className="text-lg font-bold text-white">Yeni Dizi Fragmanları</h2>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Yeni Dizi Fragmanları</h2>
         </div>
-        <span className="text-xs text-white/40 font-medium hidden sm:inline-block">⚡ TMDB Güncel</span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

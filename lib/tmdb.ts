@@ -183,7 +183,7 @@ export async function getLatestTvTrailers(): Promise<TrailerItem[]> {
 
   try {
     const res = await fetch(
-      `https://api.themoviedb.org/3/trending/tv/week?api_key=${apiKey}&language=tr-TR`,
+      `https://api.themoviedb.org/3/trending/tv/day?api_key=${apiKey}&language=tr-TR`,
       { next: { revalidate: 3600 } }
     );
     if (!res.ok) return [];
@@ -199,7 +199,7 @@ export async function getLatestTvTrailers(): Promise<TrailerItem[]> {
             { next: { revalidate: 3600 } }
           );
           let videoData = videoRes.ok ? await videoRes.json() : { results: [] };
-          let results = (videoData.results ?? []) as { key: string; site: string; type: string; name: string }[];
+          let results = (videoData.results ?? []) as { key: string; site: string; type: string; name: string; published_at?: string }[];
 
           if (results.length === 0) {
             videoRes = await fetch(
@@ -207,18 +207,25 @@ export async function getLatestTvTrailers(): Promise<TrailerItem[]> {
               { next: { revalidate: 3600 } }
             );
             videoData = videoRes.ok ? await videoRes.json() : { results: [] };
-            results = (videoData.results ?? []) as { key: string; site: string; type: string; name: string }[];
+            results = (videoData.results ?? []) as { key: string; site: string; type: string; name: string; published_at?: string }[];
           }
 
-          const youtubeVideos = results.filter((v) => v.site === 'YouTube');
-          const trailer = youtubeVideos.find((v) => v.type === 'Trailer') || youtubeVideos[0];
+          const youtubeVideos = results
+            .filter((v) => v.site === 'YouTube')
+            .sort((a, b) => {
+              const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+              const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
+              return dateB - dateA;
+            });
+
+          const trailer = youtubeVideos.find((v) => v.type === 'Trailer' || v.type === 'Teaser' || v.type === 'Promo') || youtubeVideos[0];
 
           if (trailer) {
             trailers.push({
               id: trailer.key,
               showId: show.id,
               showName: show.name,
-              videoTitle: trailer.name || `${show.name} Fragmanı`,
+              videoTitle: trailer.name || `${show.name} Son Bölüm Fragmanı`,
               youtubeKey: trailer.key,
               backdropPath: show.backdrop_path ?? null,
               posterPath: show.poster_path ?? null,
