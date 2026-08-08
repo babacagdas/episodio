@@ -53,54 +53,66 @@ export function BottomNav() {
       if (userId) void fetchUnreadCount(userId);
     };
 
+    async function setupChannel(uid: string) {
+      if (channel) return;
+      userId = uid;
+      fetchUnreadCount(uid);
+
+      channel = supabase
+        .channel(`bottom_nav_unread_messages_${uid}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'direct_messages',
+            filter: `receiver_id=eq.${uid}`,
+          },
+          async (payload: any) => {
+            fetchUnreadCount(uid);
+            const msg = payload.new;
+            if (msg && msg.sender_id !== uid) {
+              const { data: senderProfile } = await supabase
+                .from('profiles')
+                .select('username, full_name')
+                .eq('id', msg.sender_id)
+                .maybeSingle();
+
+              const senderName = senderProfile?.full_name || (senderProfile?.username ? `@${senderProfile.username}` : 'Bir arkadaşın');
+              const snippet = msg.content ? (msg.content.length > 50 ? `${msg.content.slice(0, 50)}...` : msg.content) : 'Sana bir mesaj gönderdi.';
+
+              sendLocalNotification(
+                `Episodio 💬 (${senderName})`,
+                snippet,
+                '/chat'
+              );
+            }
+          }
+        )
+        .subscribe();
+    }
+
     async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        userId = user.id;
-        fetchUnreadCount(user.id);
-
-        channel = supabase
-          .channel(`bottom_nav_unread_messages_${user.id}`)
-          .on(
-            'postgres_changes',
-            {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'direct_messages',
-              filter: `receiver_id=eq.${user.id}`,
-            },
-            async (payload: any) => {
-              fetchUnreadCount(user.id);
-              const msg = payload.new;
-              if (msg && msg.sender_id !== user.id) {
-                const { data: senderProfile } = await supabase
-                  .from('profiles')
-                  .select('username, full_name')
-                  .eq('id', msg.sender_id)
-                  .maybeSingle();
-
-                const senderName = senderProfile?.full_name || (senderProfile?.username ? `@${senderProfile.username}` : 'Bir arkadaşın');
-                const snippet = msg.content ? (msg.content.length > 50 ? `${msg.content.slice(0, 50)}...` : msg.content) : 'Sana bir mesaj gönderdi.';
-
-                sendLocalNotification(
-                  `Episodio 💬 (${senderName})`,
-                  snippet,
-                  '/chat'
-                );
-              }
-            }
-          )
-          .subscribe();
+        setupChannel(user.id);
       }
     }
 
     init();
+
+    const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setupChannel(session.user.id);
+      }
+    });
     window.addEventListener('focus', refreshUnread);
     window.addEventListener('episodio:messages-read', refreshUnread);
 
     return () => {
       window.removeEventListener('focus', refreshUnread);
       window.removeEventListener('episodio:messages-read', refreshUnread);
+      if (authSub) authSub.unsubscribe();
       if (channel) {
         supabase.removeChannel(channel);
       }
