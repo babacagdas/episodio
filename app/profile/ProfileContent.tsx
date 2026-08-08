@@ -381,6 +381,29 @@ export default function ProfileContent() {
     setSaving(true);
     setSaveError('');
     const supabase = createClient();
+
+    const cleanUsername = form.username.toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
+    if (!cleanUsername || cleanUsername.length < 3) {
+      setSaveError('Kullanıcı adı en az 3 karakter olmalı (sadece harf, rakam ve alt çizgi).');
+      setSaving(false);
+      return;
+    }
+
+    if (cleanUsername !== profile.username) {
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', cleanUsername)
+        .neq('id', user.id)
+        .maybeSingle();
+
+      if (existingUser) {
+        setSaveError(`❌ @${cleanUsername} kullanıcı adı başka biri tarafından kullanılıyor!`);
+        setSaving(false);
+        return;
+      }
+    }
+
     let avatar_url = form.avatar_url;
 
     if (avatarFile) {
@@ -404,7 +427,7 @@ export default function ProfileContent() {
     }
 
     const updated: Profile = {
-      username: form.username,
+      username: cleanUsername,
       full_name: form.full_name,
       bio: form.bio,
       avatar_url,

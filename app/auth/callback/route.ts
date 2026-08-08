@@ -33,7 +33,22 @@ export async function GET(request: NextRequest) {
             `user_${user.id.slice(0, 6)}`;
 
           const cleanUsername = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, '');
-          const finalUsername = cleanUsername || `user_${user.id.slice(0, 6)}`;
+          const baseUsername = cleanUsername || `user_${user.id.slice(0, 6)}`;
+          let finalUsername = baseUsername;
+          let counter = 1;
+
+          while (true) {
+            const { data: taken } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('username', finalUsername)
+              .neq('id', user.id)
+              .maybeSingle();
+
+            if (!taken) break;
+            finalUsername = `${baseUsername}_${counter}`;
+            counter++;
+          }
 
           const fullName =
             (user.user_metadata?.full_name as string | undefined) ||
