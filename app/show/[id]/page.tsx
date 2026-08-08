@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { BottomNav } from '@/components/Nav';
-import { getShowDetail, getSeasonEpisodes, getSimilarShows, type Episode } from '@/lib/tmdb';
+import { getShowDetail, getSeasonEpisodes, getSimilarShows, getTvWatchProviders, type Episode } from '@/lib/tmdb';
 import WatchlistButton from './WatchlistButton';
 import WatchStatusButton from './WatchStatusButton';
 import ShowTabs from './ShowTabs';
@@ -9,11 +9,12 @@ import AddToListButton from './AddToListButton';
 
 const BACKDROP_BASE = 'https://image.tmdb.org/t/p/original';
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
+
 export default async function ShowDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const show = await getShowDetail(id);
   const seasons = (show.seasons ?? []).filter((season) => season.episode_count > 0);
-  const [allSeasonEpisodes, similar] = await Promise.all([
+  const [allSeasonEpisodes, similar, watchProviders] = await Promise.all([
     Promise.all(
       seasons.map(async (season) => ({
         seasonNumber: season.season_number,
@@ -21,7 +22,10 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
       }))
     ),
     getSimilarShows(id),
+    getTvWatchProviders(id),
   ]);
+
+  const providers = watchProviders?.flatrate || watchProviders?.buy || watchProviders?.rent || [];
 
   const backdrop = show.backdrop_path ? `${BACKDROP_BASE}${show.backdrop_path}` : null;
   const poster = show.poster_path ? `${POSTER_BASE}${show.poster_path}` : null;
@@ -65,11 +69,34 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
               {show.number_of_episodes > 0 && <span className="text-white/40 text-xs">• {show.number_of_episodes} Bölüm</span>}
             </div>
 
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-4">
               <span className="material-symbols-outlined text-[#D4A017] text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
               <span className="font-bold text-white">{show.vote_average.toFixed(1)}</span>
               <span className="text-white/40 text-sm">{show.vote_count.toLocaleString()} oy</span>
             </div>
+
+            {providers.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2.5 mb-5 bg-black/40 border border-white/10 rounded-2xl px-3.5 py-2 backdrop-blur-md">
+                <span className="text-[11px] font-bold text-white/50 uppercase tracking-wider flex items-center gap-1 shrink-0">
+                  <span className="material-symbols-outlined text-sm text-[#C91520]">tv</span>
+                  Nerede İzlenir:
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {providers.map((p) => (
+                    <div key={p.provider_id} title={p.provider_name} className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-2.5 py-1 transition-colors shrink-0">
+                      {p.logo_path ? (
+                        <img
+                          src={`https://image.tmdb.org/t/p/w92${p.logo_path}`}
+                          alt={p.provider_name}
+                          className="w-4 h-4 rounded object-cover"
+                        />
+                      ) : null}
+                      <span className="text-xs font-semibold text-white/90">{p.provider_name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-3">
               <WatchStatusButton showId={show.id} showName={show.name} posterPath={show.poster_path} />

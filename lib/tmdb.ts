@@ -244,3 +244,33 @@ export async function getLatestTvTrailers(): Promise<TrailerItem[]> {
     return [];
   }
 }
+
+export interface WatchProvider {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string;
+}
+
+export interface WatchProvidersResult {
+  link?: string;
+  flatrate?: WatchProvider[];
+  rent?: WatchProvider[];
+  buy?: WatchProvider[];
+}
+
+export async function getTvWatchProviders(showId: string): Promise<WatchProvidersResult | null> {
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) return null;
+  try {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/tv/${showId}/watch/providers?api_key=${apiKey}`,
+      { next: { revalidate: 86400 } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    const results = data.results ?? {};
+    return results.TR || results.US || null;
+  } catch {
+    return null;
+  }
+}
