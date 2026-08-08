@@ -66,12 +66,11 @@ export function BottomNav() {
             event: 'INSERT',
             schema: 'public',
             table: 'direct_messages',
-            filter: `receiver_id=eq.${uid}`,
           },
           async (payload: any) => {
-            fetchUnreadCount(uid);
             const msg = payload.new;
-            if (msg && msg.sender_id !== uid) {
+            if (msg && msg.receiver_id === uid && msg.sender_id !== uid) {
+              fetchUnreadCount(uid);
               const { data: senderProfile } = await supabase
                 .from('profiles')
                 .select('username, full_name')

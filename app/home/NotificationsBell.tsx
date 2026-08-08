@@ -113,16 +113,17 @@ export default function NotificationsBell() {
               event: 'INSERT',
               schema: 'public',
               table: 'notifications',
-              filter: `user_id=eq.${userId}`,
             },
             (payload: any) => {
-              loadNotifications();
-              if (payload?.new?.message) {
-                sendLocalNotification(
-                  'Episodio 🔔',
-                  payload.new.message,
-                  payload.new.link || '/notifications'
-                );
+              if (payload?.new?.user_id === userId) {
+                loadNotifications();
+                if (payload?.new?.message) {
+                  sendLocalNotification(
+                    'Episodio 🔔',
+                    payload.new.message,
+                    payload.new.link || '/notifications'
+                  );
+                }
               }
             }
           )
