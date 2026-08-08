@@ -795,26 +795,32 @@ export default function ProfileContent() {
       {/* Create List Modal */}
       {listModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setListModalOpen(false)} />
-          <div className="relative z-10 w-full max-w-md bg-[#141414] border border-white/10 rounded-2xl p-6 flex flex-col gap-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-white">Liste Oluştur</h3>
-              <button onClick={() => setListModalOpen(false)} className="text-white/30 hover:text-white transition-colors">
-                <span className="material-symbols-outlined">close</span>
+          <div className="absolute inset-0 bg-black/85 backdrop-blur-md" onClick={() => setListModalOpen(false)} />
+          <div className="relative z-10 w-full max-w-[380px] bg-[#0A0A0D] border border-white/[0.08] rounded-3xl p-5 flex flex-col gap-4 shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(201,21,32,0.08)]">
+            <div className="flex items-center justify-between pb-1 border-b border-white/[0.06]">
+              <h3 className="text-sm font-bold text-white tracking-wide">Liste Oluştur</h3>
+              <button
+                onClick={() => setListModalOpen(false)}
+                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-colors"
+              >
+                <span className="material-symbols-outlined text-base">close</span>
               </button>
             </div>
 
-            <input
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors"
-              placeholder="Liste adı (örn: En İyi Bilim Kurgu)"
-              value={listName}
-              onChange={(e) => setListName(e.target.value)}
-            />
+            <div className="relative">
+              <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-base pointer-events-none">format_list_bulleted</span>
+              <input
+                className="w-full bg-[#121216] border border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-white text-xs placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#16161c] focus:outline-none transition-all"
+                placeholder="Liste adı (örn: En İyi Bilim Kurgu)"
+                value={listName}
+                onChange={(e) => setListName(e.target.value)}
+              />
+            </div>
 
             <textarea
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors resize-none"
+              className="w-full bg-[#121216] border border-white/10 rounded-2xl px-4 py-2.5 text-white text-xs placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#16161c] focus:outline-none transition-all resize-none"
               placeholder="Kısa açıklama (opsiyonel)"
-              rows={3}
+              rows={2}
               value={listDescription}
               onChange={(e) => setListDescription(e.target.value)}
             />
@@ -823,44 +829,64 @@ export default function ProfileContent() {
               <button
                 type="button"
                 onClick={() => setListVisibility('public')}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${listVisibility === 'public' ? 'bg-[#C91520] text-white' : 'bg-white/5 text-white/60'}`}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  listVisibility === 'public'
+                    ? 'bg-[#C91520] text-white shadow-[0_2px_10px_rgba(201,21,32,0.4)]'
+                    : 'bg-white/[0.05] text-white/50 hover:bg-white/10 hover:text-white'
+                }`}
               >
+                <span className="material-symbols-outlined text-[14px]">public</span>
                 Herkese Açık
               </button>
               <button
                 type="button"
                 onClick={() => setListVisibility('private')}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${listVisibility === 'private' ? 'bg-[#C91520] text-white' : 'bg-white/5 text-white/60'}`}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  listVisibility === 'private'
+                    ? 'bg-[#C91520] text-white shadow-[0_2px_10px_rgba(201,21,32,0.4)]'
+                    : 'bg-white/[0.05] text-white/50 hover:bg-white/10 hover:text-white'
+                }`}
               >
+                <span className="material-symbols-outlined text-[14px]">lock</span>
                 Gizli
               </button>
             </div>
 
             {/* Arkadaş davet et (opsiyonel) */}
-            <div className="pt-1">
-              <label className="text-xs text-white/30 uppercase tracking-wider mb-2 block">Arkadaş davet et (opsiyonel)</label>
+            <div>
+              <label className="text-[10px] text-white/40 uppercase tracking-widest mb-1 font-bold block flex items-center gap-1">
+                <span className="material-symbols-outlined text-xs text-white/40">person_add</span>
+                Arkadaş Davet Et (opsiyonel)
+              </label>
               {invitedUser ? (
-                <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                <div className="flex items-center justify-between bg-[#121216] border border-white/10 rounded-2xl px-3.5 py-2.5">
                   <div className="min-w-0">
-                    <p className="text-sm text-white font-semibold truncate">
+                    <p className="text-xs text-white font-semibold truncate">
                       {invitedUser.full_name || invitedUser.username || 'Kullanıcı'}
                     </p>
-                    <p className="text-xs text-white/35 truncate">@{invitedUser.username ?? invitedUser.id.slice(0, 8)}</p>
+                    <p className="text-[10px] text-white/35 truncate">@{invitedUser.username ?? invitedUser.id.slice(0, 8)}</p>
                   </div>
-                  <button type="button" onClick={() => setInvitedUser(null)} className="text-white/30 hover:text-white transition-colors">
-                    <span className="material-symbols-outlined">close</span>
+                  <button
+                    type="button"
+                    onClick={() => setInvitedUser(null)}
+                    className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-sm">close</span>
                   </button>
                 </div>
               ) : (
                 <>
-                  <input
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder:text-white/20 focus:border-[#C91520]/50 focus:outline-none transition-colors"
-                    placeholder="Kullanıcı ara…"
-                    value={inviteQuery}
-                    onChange={(e) => searchInvite(e.target.value)}
-                  />
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-base pointer-events-none">search</span>
+                    <input
+                      className="w-full bg-[#121216] border border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-white text-xs placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#16161c] focus:outline-none transition-all"
+                      placeholder="Kullanıcı ara…"
+                      value={inviteQuery}
+                      onChange={(e) => searchInvite(e.target.value)}
+                    />
+                  </div>
                   {inviteResults.length > 0 && (
-                    <div className="mt-2 max-h-44 overflow-y-auto rounded-xl border border-white/10 bg-[#0f0f0f]">
+                    <div className="mt-2 max-h-44 overflow-y-auto rounded-2xl border border-white/10 bg-[#070709]">
                       {inviteResults
                         .filter((p) => p.id !== user?.id)
                         .slice(0, 8)
@@ -871,14 +897,14 @@ export default function ProfileContent() {
                               key={p.id}
                               type="button"
                               onClick={() => { setInvitedUser({ id: p.id, username: p.username, full_name: p.full_name }); setInviteResults([]); setInviteQuery(''); }}
-                              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/[0.04] border-b border-white/5 last:border-b-0"
+                              className="w-full flex items-center gap-3 px-3.5 py-2.5 text-left hover:bg-white/[0.05] border-b border-white/5 last:border-b-0 transition-colors"
                             >
-                              <div className="w-8 h-8 rounded-full bg-[#1A1A1A] border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
-                                {p.avatar_url ? <img src={p.avatar_url} alt={label} className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-white/20 text-sm">person</span>}
+                              <div className="w-7 h-7 rounded-full bg-[#141418] border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
+                                {p.avatar_url ? <img src={p.avatar_url} alt={label} className="w-full h-full object-cover" /> : <span className="material-symbols-outlined text-white/20 text-xs">person</span>}
                               </div>
                               <div className="min-w-0">
-                                <p className="text-sm text-white font-semibold truncate">{label}</p>
-                                <p className="text-xs text-white/35 truncate">@{p.username ?? p.id.slice(0, 8)}</p>
+                                <p className="text-xs text-white font-semibold truncate">{label}</p>
+                                <p className="text-[10px] text-white/35 truncate">@{p.username ?? p.id.slice(0, 8)}</p>
                               </div>
                             </button>
                           );
@@ -887,15 +913,15 @@ export default function ProfileContent() {
                   )}
                 </>
               )}
-              <p className="text-[11px] text-white/25 mt-2">Davet gönderilir; kabul edince liste ortak olur.</p>
+              <p className="text-[10px] text-white/30 mt-1.5 leading-tight">Davet gönderilir; kabul edince liste ortak olur.</p>
             </div>
 
-            {listMessage && <p className="text-xs text-[#C91520]">{listMessage}</p>}
+            {listMessage && <p className="text-xs text-[#C91520] bg-[#C91520]/10 border border-[#C91520]/20 rounded-xl px-3 py-2">{listMessage}</p>}
 
             <button
               onClick={handleCreateList}
               disabled={listSaving || !listName.trim()}
-              className="w-full bg-[#C91520] text-white font-semibold text-sm py-3 rounded-xl hover:bg-[#A8121B] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-[#E50914] to-[#C91520] hover:from-[#f40d1a] hover:to-[#da1824] text-white font-bold text-xs py-3 rounded-2xl transition-all shadow-[0_4px_20px_rgba(201,21,32,0.35)] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
             >
               {listSaving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Listeyi Oluştur'}
             </button>
