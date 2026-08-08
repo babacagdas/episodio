@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, type ReactNode } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { sendLocalNotification } from '@/lib/pushNotifications';
 
 const navItems = [
   { href: '/home', icon: 'home', label: 'Ana Sayfa' },
@@ -59,16 +60,34 @@ export function BottomNav() {
         fetchUnreadCount(user.id);
 
         channel = supabase
-          .channel('bottom_nav_unread_messages')
+          .channel(`bottom_nav_unread_messages_${user.id}`)
           .on(
             'postgres_changes',
             {
-              event: '*',
+              event: 'INSERT',
               schema: 'public',
               table: 'direct_messages',
+              filter: `receiver_id=eq.${user.id}`,
             },
-            () => {
+            async (payload: any) => {
               fetchUnreadCount(user.id);
+              const msg = payload.new;
+              if (msg && msg.sender_id !== user.id) {
+                const { data: senderProfile } = await supabase
+                  .from('profiles')
+                  .select('username, full_name')
+                  .eq('id', msg.sender_id)
+                  .maybeSingle();
+
+                const senderName = senderProfile?.full_name || (senderProfile?.username ? `@${senderProfile.username}` : 'Bir arkadaşın');
+                const snippet = msg.content ? (msg.content.length > 50 ? `${msg.content.slice(0, 50)}...` : msg.content) : 'Sana bir mesaj gönderdi.';
+
+                sendLocalNotification(
+                  `Episodio 💬 (${senderName})`,
+                  snippet,
+                  '/chat'
+                );
+              }
             }
           )
           .subscribe();
