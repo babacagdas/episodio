@@ -17,6 +17,7 @@ import HomeListRail from './HomeListRail';
 import HomeRightRail from './HomeRightRail';
 import HomeTrailersSection from './HomeTrailersSection';
 
+import HomeFeatureBanners from './HomeFeatureBanners';
 import WelcomeOnboardingModal from './WelcomeOnboardingModal';
 import DeferredClientSection from './DeferredClientSection';
 
@@ -102,6 +103,8 @@ export default function Home() {
             <Suspense fallback={<SectionFallback />}>
               <CurrentlyWatchingCard />
             </Suspense>
+
+            <HomeFeatureBanners />
 
             <Suspense fallback={<SectionFallback tall />}>
               <PersonalizedRecommendation />
