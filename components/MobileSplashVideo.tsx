@@ -68,6 +68,19 @@ export default function MobileSplashVideo() {
       }}
       className="md:hidden"
     >
+      {/* Pitch-black shield blocking WebKit GPU Metal clear color */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundColor: '#000000',
+          zIndex: 10,
+          opacity: isPlaying ? 0 : 1,
+          transition: 'opacity 0.2s ease-out',
+          pointerEvents: 'none',
+        }}
+      />
+
       <video
         ref={videoRef}
         src="/splash_video.mp4"
@@ -93,8 +106,6 @@ export default function MobileSplashVideo() {
           objectFit: 'cover',
           backgroundColor: '#000000',
           transform: 'translateZ(0)',
-          opacity: isPlaying ? 1 : 0,
-          transition: 'opacity 0.15s ease-in',
           pointerEvents: 'none',
         }}
       />
