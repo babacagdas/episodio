@@ -1,22 +1,49 @@
-const CACHE_NAME = 'episodio-media-v2';
-const MEDIA_TO_CACHE = ['/splash_video.mp4'];
+const CACHE_NAME = 'episodio-pwa-v3';
+const PRECACHE_ASSETS = ['/home', '/', '/splash_video.mp4', '/apple-splash.png', '/icon.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(MEDIA_TO_CACHE).catch(() => {});
+      return cache.addAll(PRECACHE_ASSETS).catch(() => {});
     })
   );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
 self.addEventListener('fetch', (event) => {
+  // Handle HTML navigation requests (PWA launch) with instant 0ms Cache-First + Stale-While-Revalidate
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        const fetchPromise = fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
+          return networkResponse;
+        }).catch(() => null);
+
+        return cachedResponse || fetchPromise || fetch(event.request);
+      })
+    );
+    return;
+  }
+
   if (event.request.url.includes('/splash_video.mp4')) {
-    // If request contains Range header (iOS WebKit range streaming), pass directly to network for instant HTTP 206 streaming
     if (event.request.headers.get('range')) {
       event.respondWith(fetch(event.request));
       return;
