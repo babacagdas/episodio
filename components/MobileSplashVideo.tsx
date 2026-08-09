@@ -18,8 +18,23 @@ export default function MobileSplashVideo() {
     const video = videoRef.current;
     if (video) {
       video.muted = true;
-      video.play().catch(() => {});
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Low Power Mode or iOS policy blocked autoplay -> finish immediately so app opens
+          handleFinish();
+        });
+      }
     }
+
+    // Low Power Mode safety check: If video remains paused after 800ms, dismiss overlay
+    const checkTimer = setTimeout(() => {
+      if (videoRef.current && videoRef.current.paused) {
+        handleFinish();
+      }
+    }, 800);
+
+    return () => clearTimeout(checkTimer);
   }, []);
 
   function handleFinish() {
