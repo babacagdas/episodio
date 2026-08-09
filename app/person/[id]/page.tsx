@@ -4,6 +4,8 @@ import Sidebar from '@/components/Sidebar';
 import { BottomNav, MobileHeader } from '@/components/Nav';
 import { getPersonDetail, getPersonCredits } from '@/lib/tmdb';
 
+import { ActorBackButton, ActorFavoriteButton } from './ActorHeaderActions';
+
 const PROFILE_BASE = 'https://image.tmdb.org/t/p/w500';
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 
@@ -36,15 +38,9 @@ export default async function PersonDetailPage({
 
       <main className="overflow-x-hidden px-margin-mobile py-7 md:ml-[240px] md:px-10">
         <div className="mx-auto max-w-[1200px]">
-          {/* Back Button */}
+          {/* Smart Back Button */}
           <div className="mb-6">
-            <Link
-              href="/search"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/50 transition-colors hover:text-white"
-            >
-              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-              <span>Geri Dön</span>
-            </Link>
+            <ActorBackButton />
           </div>
 
           {/* Actor Profile Hero Header */}
@@ -95,11 +91,17 @@ export default async function PersonDetailPage({
                   )}
                 </div>
 
-                {/* Quick Action Button */}
-                <div className="mt-6 flex justify-center md:justify-start">
+                {/* Quick Action Buttons */}
+                <div className="mt-6 flex flex-wrap items-center justify-center gap-3 md:justify-start">
+                  <ActorFavoriteButton
+                    actorId={person.id}
+                    actorName={person.name}
+                    actorProfilePath={person.profile_path}
+                  />
+
                   <Link
                     href={`/actor-match`}
-                    className="inline-flex items-center gap-2 rounded-full bg-[#C91520] px-5 py-2.5 text-xs font-bold text-white shadow-lg transition-all hover:bg-[#A8121B] active:scale-[0.98]"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-xs font-bold text-white transition-all hover:bg-white/10 active:scale-[0.98]"
                   >
                     <span className="material-symbols-outlined text-[16px]">extension</span>
                     <span>Oyuncu Eşleştiricide Ara</span>
