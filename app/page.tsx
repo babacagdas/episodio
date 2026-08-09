@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import MobileSplashVideo from '@/components/MobileSplashVideo';
 
 export default async function Splash({
   searchParams,
@@ -22,8 +21,7 @@ export default async function Splash({
 
   return (
     <div suppressHydrationWarning className="bg-[#0A0A0A] h-[100dvh] min-h-[100svh] text-on-background font-body-md text-body-md overflow-hidden antialiased relative">
-      {/* Mobile Fullscreen Splash Video */}
-      <MobileSplashVideo />
+
 
       {/* Cinematic Background */}
       <div className="fixed inset-0 z-0">

@@ -50,6 +50,7 @@ export const metadata: Metadata = {
 };
 
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
+import MobileSplashVideo from '@/components/MobileSplashVideo';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -63,9 +64,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="antialiased bg-[#0A0A0A] text-[#F4F6FA]" suppressHydrationWarning>
+        <MobileSplashVideo />
         {children}
         <PushNotificationPrompt />
       </body>
     </html>
   );
 }
+

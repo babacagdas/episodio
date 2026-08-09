@@ -9,7 +9,7 @@ export default function MobileSplashVideo() {
 
   useEffect(() => {
     // Check if mobile viewport or standalone PWA
-    const isMobile = window.innerWidth < 768;
+    const isMobile = typeof window !== 'undefined' && (window.innerWidth < 768 || window.matchMedia('(max-width: 767px)').matches);
 
     if (isMobile) {
       setIsVisible(true);
@@ -19,16 +19,24 @@ export default function MobileSplashVideo() {
   useEffect(() => {
     if (isVisible && videoRef.current) {
       const video = videoRef.current;
-      video.muted = false;
-      
-      // Attempt unmuted autoplay
+      video.muted = true; // Required for iOS Safari Autoplay
+
       const playPromise = video.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // If browser policy blocks unmuted autoplay, fallback to muted autoplay
-          video.muted = true;
-          video.play().catch(() => handleFinish());
-        });
+        playPromise
+          .then(() => {
+            // Attempt to unmute after playback begins
+            try {
+              video.muted = false;
+            } catch {
+              // Ignore if browser restricts unmuting
+            }
+          })
+          .catch(() => {
+            // Fallback for iOS
+            video.muted = true;
+            video.play().catch(() => handleFinish());
+          });
       }
     }
   }, [isVisible]);
@@ -37,14 +45,14 @@ export default function MobileSplashVideo() {
     setIsFadingOut(true);
     setTimeout(() => {
       setIsVisible(false);
-    }, 500);
+    }, 450);
   }
 
   if (!isVisible) return null;
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-black transition-opacity duration-500 md:hidden ${
+      className={`fixed inset-0 z-[99999] flex items-center justify-center bg-black transition-opacity duration-500 md:hidden ${
         isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
@@ -52,6 +60,7 @@ export default function MobileSplashVideo() {
         ref={videoRef}
         src="/splash_video.mp4"
         autoPlay
+        muted
         playsInline
         preload="auto"
         onEnded={handleFinish}
@@ -61,4 +70,5 @@ export default function MobileSplashVideo() {
     </div>
   );
 }
+
 
