@@ -8,10 +8,8 @@ export default function MobileSplashVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    // Check if mobile viewport or standalone PWA
-    const isMobile = typeof window !== 'undefined' && (window.innerWidth < 768 || window.matchMedia('(max-width: 767px)').matches);
-
-    if (isMobile) {
+    // Show on mobile and tablet screens
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       setIsVisible(true);
     }
   }, []);
@@ -19,25 +17,11 @@ export default function MobileSplashVideo() {
   useEffect(() => {
     if (isVisible && videoRef.current) {
       const video = videoRef.current;
-      video.muted = true; // Required for iOS Safari Autoplay
-
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            // Attempt to unmute after playback begins
-            try {
-              video.muted = false;
-            } catch {
-              // Ignore if browser restricts unmuting
-            }
-          })
-          .catch(() => {
-            // Fallback for iOS
-            video.muted = true;
-            video.play().catch(() => handleFinish());
-          });
-      }
+      video.play().catch(() => {
+        // Fallback retry
+        video.muted = true;
+        video.play().catch(() => {});
+      });
     }
   }, [isVisible]);
 
@@ -45,14 +29,15 @@ export default function MobileSplashVideo() {
     setIsFadingOut(true);
     setTimeout(() => {
       setIsVisible(false);
-    }, 450);
+    }, 400);
   }
 
   if (!isVisible) return null;
 
   return (
     <div
-      className={`fixed inset-0 z-[99999] flex items-center justify-center bg-black transition-opacity duration-500 md:hidden ${
+      onClick={handleFinish}
+      className={`fixed inset-0 z-[999999] flex items-center justify-center bg-black transition-opacity duration-500 md:hidden ${
         isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
@@ -64,11 +49,11 @@ export default function MobileSplashVideo() {
         playsInline
         preload="auto"
         onEnded={handleFinish}
-        onError={handleFinish}
         className="h-full w-full object-cover"
       />
     </div>
   );
 }
+
 
 
