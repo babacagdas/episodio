@@ -793,18 +793,30 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                       className="flex-1 bg-transparent border-0 px-2 py-1 text-[16px] md:text-xs text-white placeholder-white/20 focus:outline-none focus:ring-0"
                     />
 
-                    {/* Gönder Butonu - Instagram Style */}
+                    {/* Gönder Butonu - Instagram Paperplane Icon Style */}
                     <button
                       type="submit"
                       disabled={!inputMessage.trim()}
-                      className={`px-3 py-1 text-xs font-bold transition-all duration-200 shrink-0 ${
+                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
                         inputMessage.trim()
-                          ? 'text-[#C91520] hover:text-[#E50914] cursor-pointer active:scale-95 opacity-100'
-                          : 'text-white/20 cursor-not-allowed opacity-30'
+                          ? 'bg-[#C91520] text-white hover:bg-[#E50914] shadow-[0_2px_10px_rgba(201,21,32,0.4)] cursor-pointer active:scale-90 opacity-100'
+                          : 'bg-white/[0.04] text-white/20 cursor-not-allowed opacity-30'
                       }`}
                       aria-label="Mesaj gönder"
+                      title="Mesaj gönder"
                     >
-                      Gönder
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-4 h-4 -rotate-45 -translate-y-[1px]"
+                      >
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                      </svg>
                     </button>
                   </form>
                 </div>
