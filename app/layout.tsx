@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const viewport: Viewport = {
-  themeColor: '#0A0A0A',
+  themeColor: '#000000',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -54,8 +54,9 @@ import MobileSplashVideo from '@/components/MobileSplashVideo';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" className="dark">
+    <html lang="tr" className="dark" style={{ backgroundColor: '#000000' }}>
       <head>
+        <style dangerouslySetInnerHTML={{ __html: `html,body{background-color:#000000 !important;color-scheme:dark;}` }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
@@ -63,7 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased bg-[#0A0A0A] text-[#F4F6FA]" suppressHydrationWarning>
+      <body className="antialiased bg-[#000000] text-[#F4F6FA]" style={{ backgroundColor: '#000000' }} suppressHydrationWarning>
         <MobileSplashVideo />
         {children}
         <PushNotificationPrompt />
@@ -71,4 +72,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
 

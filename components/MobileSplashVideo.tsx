@@ -41,6 +41,7 @@ export default function MobileSplashVideo() {
 
   return (
     <div
+      style={{ backgroundColor: '#000000' }}
       className={`fixed inset-0 z-[999999] flex items-center justify-center bg-black transition-opacity duration-500 md:hidden ${
         isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
@@ -54,6 +55,7 @@ export default function MobileSplashVideo() {
         controls={false}
         disablePictureInPicture
         onEnded={handleFinish}
+        style={{ backgroundColor: '#000000' }}
         className="h-full w-full object-cover pointer-events-none"
       />
     </div>
