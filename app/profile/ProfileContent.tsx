@@ -91,7 +91,7 @@ export default function ProfileContent() {
   const [activeTab, setActiveTab] = useState<'watchlist' | 'watched' | 'lists' | 'actors'>(initialTab);
   const [listCount, setListCount] = useState(0);
   const { watchlist, loading } = useWatchlist(!!user && activeTab === 'watchlist');
-  const { lists, sharedLists, likedLists, countsByListId, postersByListId, likesByListId, createList, loading: listsLoading, error: listsError } = useLists(!!user && activeTab === 'lists');
+  const { lists, sharedLists, likedLists, countsByListId, postersByListId, likesByListId, creatorsByListId, createList, loading: listsLoading, error: listsError } = useLists(!!user && activeTab === 'lists');
   const [listsSubTab, setListsSubTab] = useState<'mine' | 'shared'>('mine');
   const [editOpen, setEditOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -1182,6 +1182,8 @@ export default function ProfileContent() {
                       posters={postersByListId[list.id] ?? []}
                       itemCount={countsByListId[list.id] ?? 0}
                       likeCount={likesByListId[list.id] ?? 0}
+                      creatorName={creatorsByListId[list.id]?.name}
+                      creatorAvatar={creatorsByListId[list.id]?.avatar}
                     />
                   ))}
                 </div>
@@ -1219,6 +1221,8 @@ export default function ProfileContent() {
                           posters={postersByListId[list.id] ?? []}
                           itemCount={countsByListId[list.id] ?? 0}
                           likeCount={likesByListId[list.id] ?? 0}
+                          creatorName={profile.full_name || (profile.username ? `@${profile.username}` : 'Kullanıcı')}
+                          creatorAvatar={profile.avatar_url || null}
                         />
                       ))}
                     </div>
@@ -1244,6 +1248,8 @@ export default function ProfileContent() {
                           posters={postersByListId[list.id] ?? []}
                           itemCount={countsByListId[list.id] ?? 0}
                           likeCount={likesByListId[list.id] ?? 0}
+                          creatorName={creatorsByListId[list.id]?.name}
+                          creatorAvatar={creatorsByListId[list.id]?.avatar}
                         />
                       ))}
                     </div>

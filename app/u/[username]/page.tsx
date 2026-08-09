@@ -168,8 +168,17 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     if (row.poster_path && postersByListId[row.list_id].length < 4) postersByListId[row.list_id].push(row.poster_path);
   });
   const publicNotes = (notesRes.data ?? []) as { show_id: number; show_name: string; poster_path: string | null; content: string }[];
+  const adminClient = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createAdminClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+        { auth: { persistSession: false } }
+      )
+    : null;
+  const actorClient = adminClient ?? supabase;
+
   const favoriteActorsRes = canViewFavoriteActors
-    ? await supabase
+    ? await actorClient
       .from('actor_swipes')
       .select('actor_id, actor_name, actor_profile_path')
       .eq('user_id', profile.id)
@@ -340,6 +349,8 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                   posters={postersByListId[list.id] ?? []}
                   itemCount={itemCounts[list.id] ?? 0}
                   likeCount={likesByListId[list.id] ?? 0}
+                  creatorName={displayName}
+                  creatorAvatar={profile.avatar_url}
                 />
               ))}
             </div>

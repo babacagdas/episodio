@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
@@ -28,6 +26,8 @@ interface PopularList {
   posters: string[];
   itemCount: number;
   likeCount: number;
+  creatorName: string;
+  creatorAvatar: string | null;
 }
 
 function ProfileCard({
@@ -121,7 +121,7 @@ export default function Search() {
       const [listsRes, itemsRes, likesRes] = await Promise.all([
         supabase
           .from('lists')
-          .select('id, name, description, visibility')
+          .select('id, user_id, name, description, visibility')
           .eq('visibility', 'public')
           .order('created_at', { ascending: false })
           .limit(20),
@@ -132,8 +132,15 @@ export default function Search() {
           .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
       ]);
 
-      const listRows = (listsRes.data ?? []) as { id: string; name: string; description: string | null; visibility: 'public' | 'private' }[];
+      const listRows = (listsRes.data ?? []) as { id: string; user_id: string; name: string; description: string | null; visibility: 'public' | 'private' }[];
       const listIdSet = new Set(listRows.map((list) => list.id));
+      const userIds = Array.from(new Set(listRows.map((list) => list.user_id)));
+
+      const { data: creatorProfiles } = userIds.length > 0
+        ? await supabase.from('profiles').select('id, username, full_name, avatar_url').in('id', userIds)
+        : { data: [] };
+
+      const creatorMap = new Map((creatorProfiles ?? []).map((p: any) => [p.id, p]));
 
       const postersByListId: Record<string, string[]> = {};
       const itemCounts: Record<string, number> = {};
@@ -151,15 +158,21 @@ export default function Search() {
       });
 
       const popular = listRows
-        .map((list) => ({
-          id: list.id,
-          name: list.name,
-          description: list.description,
-          visibility: list.visibility,
-          posters: postersByListId[list.id] ?? [],
-          itemCount: itemCounts[list.id] ?? 0,
-          likeCount: likesByListId[list.id] ?? 0,
-        }))
+        .map((list) => {
+          const creator = creatorMap.get(list.user_id);
+          const creatorName = creator?.full_name || (creator?.username ? `@${creator.username}` : 'Kullanıcı');
+          return {
+            id: list.id,
+            name: list.name,
+            description: list.description,
+            visibility: list.visibility,
+            posters: postersByListId[list.id] ?? [],
+            itemCount: itemCounts[list.id] ?? 0,
+            likeCount: likesByListId[list.id] ?? 0,
+            creatorName,
+            creatorAvatar: creator?.avatar_url ?? null,
+          };
+        })
         .sort((a, b) => b.likeCount - a.likeCount)
         .slice(0, 8);
 
@@ -224,6 +237,7 @@ export default function Search() {
       setFilterApplying(false);
     }
   }, []);
+
   const clearDiscoverFilter = useCallback(() => {
     setActiveFilters(null);
     setFilteredShows([]);
@@ -395,6 +409,8 @@ export default function Search() {
                           posters={list.posters}
                           itemCount={list.itemCount}
                           likeCount={list.likeCount}
+                          creatorName={list.creatorName}
+                          creatorAvatar={list.creatorAvatar}
                         />
                       ))}
                     </div>

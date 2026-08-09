@@ -30,6 +30,8 @@ export function useLists(enabled = true) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const [creatorsByListId, setCreatorsByListId] = useState<Record<string, { name: string; avatar: string | null }>>({});
+
   const loadLists = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
@@ -43,6 +45,7 @@ export function useLists(enabled = true) {
       setCountsByListId({});
       setPostersByListId({});
       setLikesByListId({});
+      setCreatorsByListId({});
       setLikedByMeMap({});
       setLoading(false);
       return;
@@ -68,6 +71,7 @@ export function useLists(enabled = true) {
       setCountsByListId({});
       setPostersByListId({});
       setLikesByListId({});
+      setCreatorsByListId({});
       setLikedByMeMap({});
       setLoading(false);
       return;
@@ -110,11 +114,18 @@ export function useLists(enabled = true) {
       setCountsByListId({});
       setPostersByListId({});
       setLikesByListId({});
+      setCreatorsByListId({});
       setLoading(false);
       return;
     }
 
-    const [{ data: itemsData }, { data: likesData }] = await Promise.all([
+    const creatorUserIds = Array.from(new Set([
+      ...parsedLists.map((l) => l.user_id),
+      ...parsedSharedLists.map((l) => l.user_id),
+      ...parsedLikedLists.map((l) => l.user_id),
+    ]));
+
+    const [{ data: itemsData }, { data: likesData }, { data: creatorProfiles }] = await Promise.all([
       supabase
         .from('list_items')
         .select('list_id, poster_path')
@@ -123,6 +134,12 @@ export function useLists(enabled = true) {
         .from('list_likes')
         .select('list_id')
         .in('list_id', relevantIds),
+      creatorUserIds.length > 0
+        ? supabase
+            .from('profiles')
+            .select('id, username, full_name, avatar_url')
+            .in('id', creatorUserIds)
+        : Promise.resolve({ data: [] }),
     ]);
 
     const counts: Record<string, number> = {};
@@ -138,9 +155,20 @@ export function useLists(enabled = true) {
       likesCount[row.list_id] = (likesCount[row.list_id] ?? 0) + 1;
     });
 
+    const profileMap = new Map((creatorProfiles ?? []).map((p: any) => [p.id, p]));
+    const creators: Record<string, { name: string; avatar: string | null }> = {};
+    [...parsedLists, ...parsedSharedLists, ...parsedLikedLists].forEach((l) => {
+      const p = profileMap.get(l.user_id);
+      creators[l.id] = {
+        name: p?.full_name || (p?.username ? `@${p.username}` : 'Kullanıcı'),
+        avatar: p?.avatar_url || null,
+      };
+    });
+
     setCountsByListId(counts);
     setPostersByListId(posters);
     setLikesByListId(likesCount);
+    setCreatorsByListId(creators);
     setLoading(false);
   }, []);
 
@@ -211,6 +239,13 @@ export function useLists(enabled = true) {
     });
 
     if (insertError) {
+      if (
+        insertError.code === '23505' ||
+        insertError.message?.includes('unique constraint') ||
+        insertError.message?.includes('list_items_list_id_show_id_key')
+      ) {
+        return { ok: false, message: 'Bu dizi zaten bu listede ekli.' };
+      }
       return { ok: false, message: insertError.message };
     }
 
@@ -232,6 +267,7 @@ export function useLists(enabled = true) {
     countsByListId,
     postersByListId,
     likesByListId,
+    creatorsByListId,
     likedByMeMap,
     loading,
     error,
