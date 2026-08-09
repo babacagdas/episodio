@@ -16,17 +16,8 @@ export default function MobileSplashVideo() {
 
     const video = videoRef.current;
     if (video) {
-      video.muted = false;
-      video.volume = 1.0;
-
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // If browser restricts unmuted autoplay, play muted
-          video.muted = true;
-          video.play().catch(() => {});
-        });
-      }
+      video.muted = true;
+      video.play().catch(() => {});
     }
   }, []);
 
