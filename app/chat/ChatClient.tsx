@@ -665,17 +665,11 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                     </div>
                   </div>
 
-                  <Link
-                    href={`/u/${activeChat.otherUser.username}`}
-                    className="hidden md:flex px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.05] hover:bg-white/10 hover:border-[#D4A017]/30 hover:text-[#D4A017] text-[10px] font-semibold text-white/80 transition-all duration-300 items-center gap-0.5"
-                  >
-                    <span>Profili Gör</span>
-                    <span className="material-symbols-outlined text-[8px]">chevron_right</span>
-                  </Link>
+                  {/* Desktop Profili Gör butonu kaldırıldı */}
                 </div>
 
-                {/* Mesaj Alanı */}
-                <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                {/* Mesaj Alanı - Hafif Kırmızı-Siyah Gradyan Arka Tema */}
+                <div className="relative flex-1 overflow-y-auto p-5 space-y-4 bg-[radial-gradient(ellipse_at_top_right,rgba(201,21,32,0.12),transparent_55%),radial-gradient(ellipse_at_bottom_left,rgba(201,21,32,0.08),transparent_50%),linear-gradient(180deg,#09090D_0%,#050508_100%)]">
                   {loadingMessages ? (
                     <div className="flex items-center justify-center h-full">
                       <span className="w-6 h-6 border-2 border-white/10 border-t-[#C91520] rounded-full animate-spin" />
@@ -720,7 +714,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                             className={`flex max-w-[76%] flex-col rounded-[1.15rem] px-4 py-2.5 ${
                               isMe
                                 ? 'bg-[#C91520]/90 text-white self-end rounded-br-md shadow-[0_8px_22px_rgba(201,21,32,0.16)]'
-                                : 'bg-white/[0.035] text-white/90 self-start rounded-bl-md ring-1 ring-white/[0.045]'
+                                : 'bg-white/[0.04] text-white/90 self-start rounded-bl-md ring-1 ring-white/[0.05]'
                             }`}
                           >
                             <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
@@ -791,14 +785,18 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                       className="flex-1 bg-transparent border-0 px-2 py-1 text-[16px] md:text-xs text-white placeholder-white/20 focus:outline-none focus:ring-0"
                     />
 
-                    {/* Gönder Butonu */}
+                    {/* Gönder Butonu - Instagram Style */}
                     <button
                       type="submit"
                       disabled={!inputMessage.trim()}
-                      className="flex h-7 w-7 shrink-0 items-center justify-center text-[#C91520] transition-colors hover:text-[#F06A73] disabled:pointer-events-none disabled:opacity-30 active:scale-95"
+                      className={`px-3 py-1 text-xs font-bold transition-all duration-200 shrink-0 ${
+                        inputMessage.trim()
+                          ? 'text-[#C91520] hover:text-[#E50914] cursor-pointer active:scale-95 opacity-100'
+                          : 'text-white/20 cursor-not-allowed opacity-30'
+                      }`}
                       aria-label="Mesaj gönder"
                     >
-                      <span className="material-symbols-outlined translate-x-1 -translate-y-1 -rotate-12 text-[20px]">send</span>
+                      Gönder
                     </button>
                   </form>
                 </div>
