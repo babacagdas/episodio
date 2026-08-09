@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useWatchlist } from '@/lib/useWatchlist';
 import { useLists } from '@/lib/useLists';
 import ListPreviewCard from '@/components/ListPreviewCard';
+import ShowCard from '@/components/ShowCard';
 import { CardSkeleton } from '@/components/Skeletons';
 import FollowListsModal from '@/app/u/[username]/FollowListsModal';
 import type { User } from '@supabase/supabase-js';
@@ -1362,13 +1363,13 @@ export default function ProfileContent() {
                 <Link href="/actor-match" className="mt-4 text-xs text-[#C91520] hover:text-white transition-colors">Oyuncu keşfet →</Link>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+              <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
                 {favoriteActors.map((actor) => {
                   const profileImage = actor.actor_profile_path ? `${ACTOR_PROFILE_BASE}${actor.actor_profile_path}` : null;
                   return (
-                    <div key={actor.actor_id} className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/5 bg-[#141414] shadow-md transition-all duration-300 hover:border-white/20 hover:scale-[1.02]">
+                    <div key={actor.actor_id} className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/5 bg-[#141414] shadow-md transition-colors duration-200 hover:border-white/20">
                       {profileImage
-                        ? <img src={profileImage} alt={actor.actor_name} className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" />
+                        ? <img src={profileImage} alt={actor.actor_name} className="h-full w-full object-cover" loading="lazy" />
                         : <div className="flex h-full w-full items-center justify-center"><span className="material-symbols-outlined text-4xl text-white/20">person</span></div>
                       }
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-80" />
@@ -1381,7 +1382,7 @@ export default function ProfileContent() {
                       >
                         <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
                       </button>
-                      <div className="absolute bottom-0 left-0 w-full p-3">
+                      <div className="absolute bottom-0 left-0 w-full p-2.5 sm:p-3">
                         <h4 className="truncate text-xs font-bold text-white sm:text-sm">{actor.actor_name}</h4>
                       </div>
                     </div>
@@ -1391,7 +1392,7 @@ export default function ProfileContent() {
             )}
           </>
         ) : (!user || loading) ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
           </div>
         ) : watchlist.length === 0 ? (
@@ -1401,22 +1402,10 @@ export default function ProfileContent() {
             <Link href="/search" className="mt-4 text-xs text-[#C91520] hover:text-white transition-colors">Dizi keşfet →</Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {watchlist.map((show) => {
-              const poster = show.poster_path ? `${POSTER_BASE}${show.poster_path}` : null;
-              return (
-                <Link key={show.id} href={`/show/${show.id}`} className="relative aspect-[2/3] rounded-xl overflow-hidden bg-[#141414] border border-white/5 group hover:border-white/20 hover:scale-[1.02] transition-all duration-300 block">
-                  {poster
-                    ? <img alt={show.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={poster} />
-                    : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-4xl">movie</span></div>
-                  }
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity" />
-                  <div className="absolute bottom-0 left-0 w-full p-3">
-                    <h4 className="text-xs font-semibold text-white truncate">{show.name}</h4>
-                  </div>
-                </Link>
-              );
-            })}
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
+            {watchlist.map((show) => (
+              <ShowCard key={show.id} show={show} />
+            ))}
           </div>
         )}
       </section>

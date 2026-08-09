@@ -297,7 +297,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
               Bu kullanıcının izleme listesi şu an boş.
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
               {watchlist.map((item) => {
                 const poster = item.poster_path ? `${POSTER_BASE}${item.poster_path}` : null;
                 return (
@@ -311,7 +311,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                       : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-4xl">movie</span></div>
                     }
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity" />
-                    <div className="absolute bottom-0 left-0 w-full p-3">
+                    <div className="absolute bottom-0 left-0 w-full p-2.5 sm:p-3">
                       <h4 className="text-xs font-semibold text-white truncate">{item.show_name}</h4>
                     </div>
                   </Link>
@@ -348,7 +348,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
         {canViewFavoriteActors && favoriteActors.length > 0 && (
           <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-2 mb-16">
             <h2 className="text-white font-semibold mb-4">Favori Oyuncular</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+            <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
               {favoriteActors.map((actor) => {
                 const profileImage = actor.actor_profile_path ? `${ACTOR_PROFILE_BASE}${actor.actor_profile_path}` : null;
                 return (
