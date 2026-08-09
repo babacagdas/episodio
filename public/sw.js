@@ -16,16 +16,14 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('/splash_video.mp4')) {
+    // If request contains Range header (iOS WebKit range streaming), pass directly to network for instant HTTP 206 streaming
+    if (event.request.headers.get('range')) {
+      event.respondWith(fetch(event.request));
+      return;
+    }
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
-        if (cachedResponse) return cachedResponse;
-        return fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
-          }
-          return networkResponse;
-        });
+        return cachedResponse || fetch(event.request);
       })
     );
   }

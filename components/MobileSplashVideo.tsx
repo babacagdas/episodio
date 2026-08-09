@@ -50,6 +50,7 @@ export default function MobileSplashVideo() {
         ref={videoRef}
         src="/splash_video.mp4"
         autoPlay
+        muted
         playsInline
         preload="auto"
         controls={false}
