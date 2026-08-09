@@ -450,22 +450,22 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
       <Sidebar />
 
       {/* Ana Sohbet Konteyneri */}
-      <main className="md:ml-[240px] flex-1 flex h-full w-full md:w-[calc(100%-240px)] relative bg-[#090909] overflow-hidden">
+      <main className="md:ml-[240px] flex-1 flex h-[100dvh] min-h-[100dvh] fixed inset-0 md:relative md:inset-auto md:h-full md:min-h-0 w-full md:w-[calc(100%-240px)] bg-[#090909] overflow-hidden">
         
         {/* Sinematik Arka Plan Işık Huzmeleri */}
         <div className="absolute inset-0 pointer-events-none z-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent_26%)]" />
 
         {/* İçerik Katmanı */}
-        <div className="flex-1 flex h-full w-full relative z-10">
+        <div className="flex-1 flex h-full w-full relative z-10 overflow-hidden">
           
           {/* SOL PANEL: Sohbet Listesi */}
           <div
             className={`${
               selectedUserId ? 'hidden md:flex' : 'flex'
-            } w-full md:w-[350px] border-r border-white/[0.04] flex-col h-full bg-[#0A0A0A]/40 backdrop-blur-2xl shrink-0`}
+            } w-full md:w-[350px] border-r border-white/[0.04] flex-col h-full bg-[#0A0A0A]/40 backdrop-blur-2xl shrink-0 overflow-hidden`}
           >
             {/* Header */}
-            <div className="px-5 py-5 border-b border-white/[0.05] grid grid-cols-[2.25rem_1fr_2.25rem] items-center bg-black/10">
+            <div className="px-5 py-4 pt-[calc(1rem+env(safe-area-inset-top,0px))] md:py-5 border-b border-white/[0.05] grid grid-cols-[2.25rem_1fr_2.25rem] items-center bg-black/10 shrink-0">
               <div />
               <h1 className="text-center text-xl font-bold tracking-tight bg-gradient-to-r from-white via-white to-white/70 bg-clip-text text-transparent">Mesajlarım</h1>
               <button
@@ -604,12 +604,12 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
           <div
             className={`${
               !selectedUserId ? 'hidden md:flex' : 'flex'
-            } flex-1 flex-col h-full bg-black/10 backdrop-blur-3xl`}
+            } flex-1 flex-col h-full bg-black/10 backdrop-blur-3xl overflow-hidden`}
           >
             {activeChat ? (
               <>
                 {/* Üst Bar */}
-                <div className="h-16 border-b border-white/[0.05] flex items-center justify-between px-5 shrink-0 bg-[#0A0A0A]/40 backdrop-blur-md">
+                <div className="h-16 pt-[env(safe-area-inset-top,0px)] border-b border-white/[0.05] flex items-center justify-between px-5 shrink-0 bg-[#0A0A0A]/40 backdrop-blur-md">
                   <div className="flex items-center gap-1.5 min-w-0">
                     {/* Mobilde Geri Butonu */}
                     <button
@@ -739,7 +739,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                 </div>
 
                 {/* Mesaj Yazma Girişi */}
-                <div className="p-4 bg-[#0A0A0A]/40 backdrop-blur-md border-t border-white/[0.05]">
+                <div className="p-3 pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] md:p-4 bg-[#0A0A0A]/80 backdrop-blur-md border-t border-white/[0.05] shrink-0">
                   <form
                     onSubmit={handleSendMessage}
                     className="bg-white/[0.02] border border-white/[0.06] rounded-full py-1.5 px-3 flex items-center gap-2 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.2)]"
