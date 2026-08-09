@@ -134,7 +134,7 @@ export default function SignUp() {
   }
 
   return (
-    <div className="bg-[#0A0A0A] h-[100dvh] min-h-[100svh] flex items-center justify-center relative overflow-hidden">
+    <div className="bg-[#000000] h-[100dvh] min-h-[100svh] flex items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 z-0 opacity-60">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(201,21,32,0.12),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.03),transparent_28%)]" />
       </div>
