@@ -9,10 +9,19 @@ export default function MobileSplashVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    // Hide on desktop (>= 1024px)
-    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-      setIsVisible(false);
-      return;
+    if (typeof window !== 'undefined') {
+      // Hide on desktop (>= 1024px)
+      if (window.innerWidth >= 1024) {
+        setIsVisible(false);
+        return;
+      }
+      // Check if splash video was already shown in this session
+      if (sessionStorage.getItem('episodio_splash_shown') === 'true') {
+        setIsVisible(false);
+        return;
+      }
+      // Mark as shown for this session
+      sessionStorage.setItem('episodio_splash_shown', 'true');
     }
 
     const video = videoRef.current;
