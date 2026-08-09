@@ -34,7 +34,7 @@ export default function HomeTrailersSection({ trailers }: { trailers: TrailerIte
             <div
               key={trailer.id}
               onClick={() => setActiveTrailer(trailer)}
-              className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[#121216] border border-white/[0.08] hover:border-white/20 transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-1"
+              className="group relative cursor-pointer overflow-hidden rounded-2xl bg-[#121216] border border-white/[0.08] hover:border-white/20 transition-colors duration-200 shadow-md"
             >
               {/* Image Container */}
               <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#18181c]">
@@ -42,27 +42,27 @@ export default function HomeTrailersSection({ trailers }: { trailers: TrailerIte
                   <img
                     src={backdrop}
                     alt={trailer.showName}
-                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    className="h-full w-full object-cover"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-[#18181c]">
-                    <span className="material-symbols-outlined text-4xl text-white/20">movie</span>
+                    <span className="material-symbols-outlined text-3xl text-white/20">movie</span>
                   </div>
                 )}
 
                 {/* Dark Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                {/* Play Button Overlay */}
+                {/* Play Button Overlay (Compact) */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-[#C91520] text-white shadow-[0_0_20px_rgba(201,21,32,0.6)] group-hover:scale-110 group-hover:bg-[#E50914] transition-all duration-300">
-                    <span className="material-symbols-outlined text-xl sm:text-2xl ml-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
+                  <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-[#C91520] text-white shadow-md transition-colors group-hover:bg-[#E50914]">
+                    <span className="material-symbols-outlined text-sm sm:text-base ml-0.5" style={{ fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
                   </div>
                 </div>
 
-                {/* Top Badge */}
-                <div className="absolute left-2 top-2 sm:left-2.5 sm:top-2.5 flex items-center gap-1 rounded-full bg-black/60 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-[10px] font-bold text-white backdrop-blur-md border border-white/10">
-                  <span className="material-symbols-outlined text-[10px] sm:text-[12px] text-[#D4A017]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                {/* Top Badge (Compact) */}
+                <div className="absolute left-2 top-2 flex items-center gap-0.5 rounded-full bg-black/60 px-1.5 py-0.5 text-[8.5px] sm:text-[9.5px] font-bold text-white backdrop-blur-md border border-white/10">
+                  <span className="material-symbols-outlined text-[9px] sm:text-[10px] text-[#D4A017]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                   {trailer.voteAverage.toFixed(1)}
                 </div>
               </div>

@@ -17,7 +17,7 @@ export default function HomeFeatureBanners() {
         <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-between pr-3">
           <div>
             <h3 className="font-['Poppins',sans-serif] text-base font-extrabold text-white sm:text-lg">
-              Mutlaka İzlenmesi Gerekenler
+              Dizi Eşleştirici
             </h3>
             <p className="mt-1.5 text-xs font-medium leading-relaxed text-white/50">
               Sevdiğini sağa, sevmediğini sola yolla, hemen listeni hazırla.
@@ -87,7 +87,7 @@ export default function HomeFeatureBanners() {
             </p>
           </div>
 
-          <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-[#FF525D] transition-colors group-hover:text-white">
+          <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-[#C91520] transition-colors group-hover:text-white">
             <span>Oyuncu Eşleştir</span>
             <span className="material-symbols-outlined text-[15px] transition-transform duration-200 group-hover:translate-x-1">
               arrow_forward
