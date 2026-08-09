@@ -793,14 +793,14 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                       className="flex-1 bg-transparent border-0 px-2 py-1 text-[16px] md:text-xs text-white placeholder-white/20 focus:outline-none focus:ring-0"
                     />
 
-                    {/* Gönder Butonu - Instagram Paperplane Icon Style */}
+                    {/* Gönder Butonu - Standalone Instagram Paperplane Icon */}
                     <button
                       type="submit"
                       disabled={!inputMessage.trim()}
-                      className={`w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
+                      className={`p-1.5 mr-1 shrink-0 transition-all duration-200 active:scale-90 ${
                         inputMessage.trim()
-                          ? 'bg-[#C91520] text-white hover:bg-[#E50914] shadow-[0_2px_10px_rgba(201,21,32,0.4)] cursor-pointer active:scale-90 opacity-100'
-                          : 'bg-white/[0.04] text-white/20 cursor-not-allowed opacity-30'
+                          ? 'text-[#C91520] hover:text-[#E50914] cursor-pointer opacity-100'
+                          : 'text-white/20 cursor-not-allowed opacity-30'
                       }`}
                       aria-label="Mesaj gönder"
                       title="Mesaj gönder"
@@ -812,7 +812,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                         strokeWidth="2.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="w-4 h-4 sm:w-[18px] sm:h-[18px] -translate-x-[1px] translate-y-[1px]"
+                        className="w-5 h-5"
                       >
                         <line x1="22" y1="2" x2="11" y2="13" />
                         <polygon points="22 2 15 22 11 13 2 9 22 2" />
