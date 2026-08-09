@@ -74,21 +74,22 @@ export default async function PersonDetailPage({
                   {person.name}
                 </h1>
 
-                <div className="mt-4 flex flex-wrap items-center justify-center gap-3 md:justify-start">
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-medium text-white/65 md:justify-start">
                   {age !== null && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">
-                      <span className="material-symbols-outlined text-[14px] text-[#C91520]">cake</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[15px] text-[#C91520]">cake</span>
                       <span>{age} Yaşında</span>
                     </span>
                   )}
                   {person.place_of_birth && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">
-                      <span className="material-symbols-outlined text-[14px] text-[#D4A017]">location_on</span>
-                      <span className="truncate max-w-[200px]">{person.place_of_birth}</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[15px] text-[#D4A017]">location_on</span>
+                      <span>{person.place_of_birth}</span>
                     </span>
                   )}
                   {person.known_for_department && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-[#C91520]/30 bg-[#C91520]/15 px-3 py-1 text-xs font-bold text-[#FF525D]">
+                    <span className="inline-flex items-center gap-1.5 text-white/40">
+                      <span>•</span>
                       <span>{person.known_for_department === 'Acting' ? 'Oyuncu' : person.known_for_department}</span>
                     </span>
                   )}
