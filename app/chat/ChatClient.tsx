@@ -797,7 +797,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                     <button
                       type="submit"
                       disabled={!inputMessage.trim()}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
+                      className={`w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
                         inputMessage.trim()
                           ? 'bg-[#C91520] text-white hover:bg-[#E50914] shadow-[0_2px_10px_rgba(201,21,32,0.4)] cursor-pointer active:scale-90 opacity-100'
                           : 'bg-white/[0.04] text-white/20 cursor-not-allowed opacity-30'
@@ -812,7 +812,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                         strokeWidth="2.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        className="w-4 h-4 -rotate-45 -translate-y-[1px]"
+                        className="w-4 h-4 sm:w-[18px] sm:h-[18px] -translate-x-[1px] translate-y-[1px]"
                       >
                         <line x1="22" y1="2" x2="11" y2="13" />
                         <polygon points="22 2 15 22 11 13 2 9 22 2" />
