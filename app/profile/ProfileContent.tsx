@@ -582,7 +582,7 @@ export default function ProfileContent() {
     <main className="md:ml-[240px] md:w-[calc(100%-240px)] w-full md:pt-4 overflow-x-hidden">
       {/* Edit Modal */}
       {editOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/85 backdrop-blur-md"
             onClick={() => {
