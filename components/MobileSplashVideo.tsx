@@ -48,10 +48,25 @@ export default function MobileSplashVideo() {
 
   return (
     <div
-      style={{ backgroundColor: '#000000', transform: 'translateZ(0)' }}
-      className={`fixed inset-0 z-[999999] flex items-center justify-center bg-black transition-opacity duration-300 ease-out md:hidden ${
-        isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
-      }`}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 99999999,
+        backgroundColor: '#000000',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transform: 'translateZ(0)',
+        opacity: isFadingOut ? 0 : 1,
+        transition: 'opacity 0.3s ease-out',
+        pointerEvents: isFadingOut ? 'none' : 'auto',
+      }}
+      className="md:hidden"
     >
       <video
         ref={videoRef}
@@ -70,12 +85,18 @@ export default function MobileSplashVideo() {
         }}
         onEnded={handleFinish}
         style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
           backgroundColor: '#000000',
           transform: 'translateZ(0)',
           opacity: isPlaying ? 1 : 0,
-          transition: 'opacity 0.2s ease-in',
+          transition: 'opacity 0.15s ease-in',
+          pointerEvents: 'none',
         }}
-        className="h-full w-full object-cover pointer-events-none"
       />
     </div>
   );
