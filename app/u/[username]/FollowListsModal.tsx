@@ -133,23 +133,25 @@ export default function FollowListsModal({
       )}
 
       {open && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-5">
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setOpen(false)} />
+          <div className="absolute inset-0 bg-black/85 backdrop-blur-md transition-opacity" onClick={() => setOpen(false)} />
 
-          {/* Modal Container */}
-          <div className="relative z-10 w-full max-w-[440px] max-h-[85dvh] bg-[#0A0A0D] border border-white/10 rounded-3xl p-4 sm:p-5 shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_40px_rgba(201,21,32,0.08)] flex flex-col overflow-hidden">
-            
+          {/* Modal Container: Mobile compact, Tablet & Desktop wider (md:max-w-[560px]) */}
+          <div className="relative z-10 w-full max-w-[420px] md:max-w-[560px] max-h-[85dvh] bg-[#0D0D12] border border-white/10 rounded-3xl p-4 sm:p-6 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(201,21,32,0.12)] flex flex-col overflow-hidden">
+            {/* Red Ambient Glow Background */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-24 bg-[#C91520]/15 blur-3xl pointer-events-none rounded-full" />
+
             {/* Header & Tabs */}
-            <div className="flex items-center justify-between gap-3 pb-3.5 mb-2 border-b border-white/[0.08] shrink-0">
-              <div className="flex items-center gap-1.5 p-1 bg-white/[0.04] border border-white/[0.06] rounded-full">
+            <div className="relative z-10 flex items-center justify-between gap-3 pb-4 mb-3 border-b border-white/[0.08] shrink-0">
+              <div className="flex items-center gap-1.5 p-1 bg-[#14141A] border border-white/10 rounded-full shadow-inner">
                 <button
                   type="button"
                   onClick={() => loadList('followers')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-bold transition-all ${
                     tab === 'followers'
-                      ? 'bg-gradient-to-r from-[#E50914] to-[#C91520] text-white shadow-[0_2px_12px_rgba(201,21,32,0.35)]'
-                      : 'text-white/50 hover:text-white/80 hover:bg-white/[0.04]'
+                      ? 'bg-gradient-to-r from-[#E50914] to-[#C91520] text-white shadow-[0_4px_16px_rgba(201,21,32,0.4)]'
+                      : 'text-white/40 hover:text-white/80 hover:bg-white/[0.04]'
                   }`}
                 >
                   Takipçiler ({followersCount})
@@ -157,10 +159,10 @@ export default function FollowListsModal({
                 <button
                   type="button"
                   onClick={() => loadList('following')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+                  className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-bold transition-all ${
                     tab === 'following'
-                      ? 'bg-gradient-to-r from-[#E50914] to-[#C91520] text-white shadow-[0_2px_12px_rgba(201,21,32,0.35)]'
-                      : 'text-white/50 hover:text-white/80 hover:bg-white/[0.04]'
+                      ? 'bg-gradient-to-r from-[#E50914] to-[#C91520] text-white shadow-[0_4px_16px_rgba(201,21,32,0.4)]'
+                      : 'text-white/40 hover:text-white/80 hover:bg-white/[0.04]'
                   }`}
                 >
                   Takip Edilen ({followingCount})
@@ -170,72 +172,74 @@ export default function FollowListsModal({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-colors shrink-0"
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-all shrink-0"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
               </button>
             </div>
 
             {/* List Body */}
-            <div className="overflow-y-auto max-h-[55vh] pr-1 space-y-1.5 flex-1 select-none">
+            <div className="relative z-10 overflow-y-auto max-h-[58vh] pr-1 flex-1 select-none custom-scrollbar">
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-12 text-white/30 gap-2">
+                <div className="flex flex-col items-center justify-center py-14 text-white/30 gap-2.5">
                   <span className="w-6 h-6 border-2 border-white/20 border-t-[#C91520] rounded-full animate-spin" />
-                  <span className="text-xs">Yükleniyor...</span>
+                  <span className="text-xs font-medium">Yükleniyor...</span>
                 </div>
               ) : items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-white/30 gap-2">
-                  <span className="material-symbols-outlined text-4xl text-white/20">group_off</span>
+                <div className="flex flex-col items-center justify-center py-14 text-white/30 gap-2.5">
+                  <span className="material-symbols-outlined text-5xl text-white/15">group_off</span>
                   <p className="text-xs font-medium">
                     {tab === 'followers' ? 'Henüz takipçi bulunmuyor.' : 'Henüz kimse takip edilmiyor.'}
                   </p>
                 </div>
               ) : (
-                items.map((item) => {
-                  const displayName = item.full_name || item.username || 'Kullanıcı';
-                  const profilePath = `/u/${item.username ?? item.id}`;
-                  const isSelf = item.id === currentUserId;
-                  const isFollowing = !!followingMap[item.id];
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                  {items.map((item) => {
+                    const displayName = item.full_name || item.username || 'Kullanıcı';
+                    const profilePath = `/u/${item.username ?? item.id}`;
+                    const isSelf = item.id === currentUserId;
+                    const isFollowing = !!followingMap[item.id];
 
-                  return (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between gap-3 p-2.5 rounded-2xl border border-transparent hover:border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.06] transition-all duration-200 group"
-                    >
-                      <Link href={profilePath} onClick={() => setOpen(false)} className="flex items-center gap-3 min-w-0 flex-1">
-                        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#141418] border border-white/10 group-hover:border-white/25 overflow-hidden flex items-center justify-center shrink-0 transition-colors shadow-sm">
-                          {item.avatar_url ? (
-                            <img src={item.avatar_url} alt={displayName} className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="material-symbols-outlined text-white/20 text-lg">person</span>
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs sm:text-sm font-bold text-white truncate leading-snug group-hover:text-white/90">
-                            {displayName}
-                          </p>
-                          <p className="text-[11px] sm:text-xs text-white/40 truncate font-medium mt-0.5">
-                            @{item.username ?? item.id.slice(0, 8)}
-                          </p>
-                        </div>
-                      </Link>
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between gap-3 p-2.5 sm:p-3 rounded-2xl border border-white/[0.06] hover:border-[#C91520]/40 bg-[#131318]/70 hover:bg-[#181820] transition-all duration-200 group shadow-sm"
+                      >
+                        <Link href={profilePath} onClick={() => setOpen(false)} className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#1A1A22] border border-white/10 group-hover:border-white/30 overflow-hidden flex items-center justify-center shrink-0 transition-colors shadow-sm">
+                            {item.avatar_url ? (
+                              <img src={item.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="material-symbols-outlined text-white/20 text-lg">person</span>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs sm:text-sm font-bold text-white truncate leading-snug group-hover:text-white">
+                              {displayName}
+                            </p>
+                            <p className="text-[11px] sm:text-xs text-white/40 truncate font-medium mt-0.5">
+                              @{item.username ?? item.id.slice(0, 8)}
+                            </p>
+                          </div>
+                        </Link>
 
-                      {!isSelf && (
-                        <button
-                          type="button"
-                          onClick={() => toggleFollow(item.id)}
-                          className={`px-3.5 py-1.5 rounded-full text-[11px] font-semibold transition-all shrink-0 active:scale-95 ${
-                            isFollowing
-                              ? 'bg-white/[0.06] hover:bg-red-500/20 text-white/70 hover:text-red-400 border border-white/10'
-                              : 'bg-gradient-to-r from-[#E50914] to-[#C91520] hover:from-[#f40d1a] hover:to-[#da1824] text-white shadow-[0_2px_10px_rgba(201,21,32,0.3)]'
-                          }`}
-                        >
-                          {isFollowing ? 'Takiptesin' : 'Takip Et'}
-                        </button>
-                      )}
-                    </div>
-                  );
-                })
+                        {!isSelf && (
+                          <button
+                            type="button"
+                            onClick={() => toggleFollow(item.id)}
+                            className={`px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all shrink-0 active:scale-95 ${
+                              isFollowing
+                                ? 'bg-white/[0.06] hover:bg-red-500/20 text-white/70 hover:text-red-400 border border-white/10'
+                                : 'bg-gradient-to-r from-[#E50914] to-[#C91520] hover:from-[#f40d1a] hover:to-[#da1824] text-white shadow-[0_2px_10px_rgba(201,21,32,0.3)]'
+                            }`}
+                          >
+                            {isFollowing ? 'Takiptesin' : 'Takip Et'}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
 

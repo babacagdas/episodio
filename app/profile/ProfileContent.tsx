@@ -590,29 +590,33 @@ export default function ProfileContent() {
               setEditOpen(false);
             }}
           />
-          <div className="relative z-10 w-full max-w-[380px] bg-[#0A0A0D] border border-white/[0.08] rounded-3xl p-5 flex flex-col gap-4 shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(201,21,32,0.08)]">
-            <div className="flex items-center justify-between pb-1 border-b border-white/[0.06]">
-              <h3 className="text-sm font-bold text-white tracking-wide">Profili Düzenle</h3>
+          <div className="relative z-10 w-full max-w-[390px] md:max-w-[500px] bg-[#0D0D12] border border-white/10 rounded-3xl p-5 md:p-6 flex flex-col gap-4 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(201,21,32,0.12)] overflow-hidden">
+            {/* Red Ambient Glow Background */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-24 bg-[#C91520]/15 blur-3xl pointer-events-none rounded-full" />
+
+            <div className="relative z-10 flex items-center justify-between pb-2 border-b border-white/[0.08]">
+              <h3 className="text-sm sm:text-base font-bold text-white tracking-wide">Profili Düzenle</h3>
               <button
+                type="button"
                 onClick={() => {
                   setCoverModalOpen(false);
                   setEditOpen(false);
                 }}
-                className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/40 hover:text-white transition-colors"
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-white/40 hover:text-white transition-colors"
               >
                 <span className="material-symbols-outlined text-base">close</span>
               </button>
             </div>
 
             {/* Avatar & Cover Actions */}
-            <div className="flex flex-col items-center gap-2.5 pt-1">
+            <div className="relative z-10 flex flex-col items-center gap-3 pt-1">
               <div
-                className="w-20 h-20 rounded-full border-2 border-white/10 overflow-hidden bg-[#141418] flex items-center justify-center cursor-pointer relative group shadow-md"
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-white/15 overflow-hidden bg-[#141418] flex items-center justify-center cursor-pointer relative group shadow-lg"
                 onClick={() => fileRef.current?.click()}
               >
                 {(avatarPreview || form.avatar_url)
                   ? <img src={avatarPreview || form.avatar_url} alt="avatar" className="w-full h-full object-cover" />
-                  : <span className="material-symbols-outlined text-white/20 text-3xl">person</span>
+                  : <span className="material-symbols-outlined text-white/20 text-3xl sm:text-4xl">person</span>
                 }
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <span className="material-symbols-outlined text-white text-xl">photo_camera</span>
@@ -624,9 +628,9 @@ export default function ProfileContent() {
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-[11px] font-semibold text-white/80 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-[11px] sm:text-xs font-semibold text-white/80 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
                 >
-                  <span className="material-symbols-outlined text-[13px] text-[#C91520]">photo_camera</span>
+                  <span className="material-symbols-outlined text-[14px] text-[#C91520]">photo_camera</span>
                   Fotoğraf
                 </button>
                 <button
@@ -636,9 +640,9 @@ export default function ProfileContent() {
                     setCoverSearchResults([]);
                     setCoverModalOpen(true);
                   }}
-                  className="px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-[11px] font-semibold text-white/80 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-[11px] sm:text-xs font-semibold text-white/80 hover:text-white transition-all flex items-center gap-1.5 shadow-sm"
                 >
-                  <span className="material-symbols-outlined text-[13px] text-[#C91520]">image</span>
+                  <span className="material-symbols-outlined text-[14px] text-[#C91520]">image</span>
                   Kapak
                 </button>
                 {form.cover_show_id != null && (
@@ -648,20 +652,20 @@ export default function ProfileContent() {
                     className="px-2.5 py-1.5 rounded-full bg-white/[0.05] hover:bg-red-500/20 border border-white/10 text-[11px] font-medium text-white/40 hover:text-red-400 transition-all flex items-center gap-1"
                     title="Kapağı kaldır"
                   >
-                    <span className="material-symbols-outlined text-[13px]">delete</span>
+                    <span className="material-symbols-outlined text-[14px]">delete</span>
                   </button>
                 )}
               </div>
             </div>
 
             {/* Fields */}
-            <div className="flex flex-col gap-3">
+            <div className="relative z-10 flex flex-col gap-3.5">
               <div>
-                <label className="text-[10px] text-white/40 uppercase tracking-widest mb-1 font-bold block">Ad Soyad</label>
+                <label className="text-[10px] sm:text-[11px] text-white/40 uppercase tracking-widest mb-1 font-bold block">Ad Soyad</label>
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30 text-base pointer-events-none">person</span>
                   <input
-                    className="w-full bg-[#121216] border border-white/10 rounded-2xl pl-10 pr-4 py-2.5 text-white text-xs placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#16161c] focus:outline-none transition-all"
+                    className="w-full bg-[#131318] border border-white/10 rounded-2xl pl-10 pr-4 py-2.5 sm:py-3 text-white text-xs sm:text-sm placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#181820] focus:outline-none transition-all"
                     placeholder="Ad Soyad"
                     value={form.full_name}
                     onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))}
@@ -669,11 +673,11 @@ export default function ProfileContent() {
                 </div>
               </div>
               <div>
-                <label className="text-[10px] text-white/40 uppercase tracking-widest mb-1 font-bold block">Kullanıcı Adı</label>
+                <label className="text-[10px] sm:text-[11px] text-white/40 uppercase tracking-widest mb-1 font-bold block">Kullanıcı Adı</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-xs font-bold pointer-events-none">@</span>
                   <input
-                    className="w-full bg-[#121216] border border-white/10 rounded-2xl pl-9 pr-4 py-2.5 text-white text-xs placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#16161c] focus:outline-none transition-all"
+                    className="w-full bg-[#131318] border border-white/10 rounded-2xl pl-9 pr-4 py-2.5 sm:py-3 text-white text-xs sm:text-sm placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#181820] focus:outline-none transition-all"
                     placeholder="kullaniciadi"
                     value={form.username}
                     onChange={e => setForm(f => ({ ...f, username: e.target.value.toLowerCase().replace(/\s/g, '') }))}
@@ -681,22 +685,22 @@ export default function ProfileContent() {
                 </div>
               </div>
               <div>
-                <label className="text-[10px] text-white/40 uppercase tracking-widest mb-1 font-bold block">Biyografi</label>
+                <label className="text-[10px] sm:text-[11px] text-white/40 uppercase tracking-widest mb-1 font-bold block">Biyografi</label>
                 <textarea
-                  className="w-full bg-[#121216] border border-white/10 rounded-2xl px-4 py-2.5 text-white text-xs placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#16161c] focus:outline-none transition-all resize-none"
+                  className="w-full bg-[#131318] border border-white/10 rounded-2xl px-4 py-2.5 text-white text-xs sm:text-sm placeholder:text-white/20 focus:border-[#C91520] focus:ring-1 focus:ring-[#C91520]/50 focus:bg-[#181820] focus:outline-none transition-all resize-none"
                   placeholder="Kendinden bahset..."
                   rows={2}
                   value={form.bio}
                   onChange={e => setForm(f => ({ ...f, bio: e.target.value }))}
                 />
               </div>
-              <div className="flex items-center justify-between gap-3 bg-[#121216] border border-white/10 rounded-2xl px-3.5 py-2.5">
+              <div className="flex items-center justify-between gap-3 bg-[#131318] border border-white/10 rounded-2xl px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs text-white font-semibold flex items-center gap-1.5">
+                  <p className="text-xs sm:text-sm text-white font-semibold flex items-center gap-1.5">
                     <span className="material-symbols-outlined text-sm text-white/40 shrink-0">visibility</span>
                     <span className="truncate">İzlediklerim Görünürlüğü</span>
                   </p>
-                  <p className="text-[10px] text-white/35 mt-0.5 leading-tight">Açıkken ziyaretçiler izlediklerini görebilir</p>
+                  <p className="text-[10px] sm:text-[11px] text-white/35 mt-0.5 leading-tight">Açıkken ziyaretçiler izlediklerini görebilir</p>
                 </div>
                 <button
                   type="button"
@@ -710,12 +714,12 @@ export default function ProfileContent() {
               </div>
             </div>
 
-            {saveError && <p className="text-xs text-[#C91520] bg-[#C91520]/10 border border-[#C91520]/20 rounded-xl px-3 py-2">{saveError}</p>}
+            {saveError && <p className="relative z-10 text-xs text-[#C91520] bg-[#C91520]/10 border border-[#C91520]/20 rounded-xl px-3 py-2">{saveError}</p>}
 
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full bg-gradient-to-r from-[#E50914] to-[#C91520] hover:from-[#f40d1a] hover:to-[#da1824] text-white font-bold text-xs py-3 rounded-2xl transition-all shadow-[0_4px_20px_rgba(201,21,32,0.35)] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
+              className="relative z-10 w-full bg-gradient-to-r from-[#E50914] to-[#C91520] hover:from-[#f40d1a] hover:to-[#da1824] text-white font-bold text-xs sm:text-sm py-3 rounded-2xl transition-all shadow-[0_4px_20px_rgba(201,21,32,0.35)] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 mt-1"
             >
               {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Kaydet'}
             </button>
@@ -724,9 +728,11 @@ export default function ProfileContent() {
       )}
 
       {editOpen && coverModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/85 backdrop-blur-md" onClick={() => setCoverModalOpen(false)} />
-          <div className="relative z-10 w-full max-w-[420px] bg-[#0A0A0D] border border-white/[0.08] rounded-3xl p-5 flex flex-col gap-4 shadow-[0_20px_60px_rgba(0,0,0,0.9)] max-h-[85vh]">
+          <div className="relative z-10 w-full max-w-[440px] md:max-w-[520px] bg-[#0D0D12] border border-white/10 rounded-3xl p-5 md:p-6 flex flex-col gap-4 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_50px_rgba(201,21,32,0.12)] max-h-[85vh] overflow-hidden">
+            {/* Red Ambient Glow Background */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-24 bg-[#C91520]/15 blur-3xl pointer-events-none rounded-full" />
             <div className="flex items-center justify-between pb-1 border-b border-white/[0.06] shrink-0">
               <h3 className="text-sm font-bold text-white tracking-wide">Dizi ile kapak seç</h3>
               <button
@@ -959,16 +965,18 @@ export default function ProfileContent() {
         </div>
         {settingsOpen && (
           <div
-            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/45 px-5 backdrop-blur-sm"
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 px-5 backdrop-blur-md"
             role="dialog"
             aria-modal="true"
             aria-label="Profil ayarları"
             onClick={() => setSettingsOpen(false)}
           >
             <div
-              className="w-full max-w-[320px] overflow-hidden rounded-2xl border border-white/10 bg-[#101010]/95 p-2 shadow-[0_24px_80px_rgba(0,0,0,0.5)]"
+              className="relative w-full max-w-[320px] overflow-hidden rounded-3xl border border-white/10 bg-[#0D0D12] p-3 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_40px_rgba(201,21,32,0.12)]"
               onClick={(event) => event.stopPropagation()}
             >
+              {/* Red Ambient Glow Background */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-20 bg-[#C91520]/15 blur-2xl pointer-events-none rounded-full" />
               <div className="flex items-center justify-between px-3 py-2">
                 <h3 className="text-sm font-bold text-white">Ayarlar</h3>
                 <button
