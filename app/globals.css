@@ -17,11 +17,13 @@
   }
 
   html {
-    background: var(--surface-0);
+    background-color: #000000 !important;
+    color-scheme: dark;
   }
 
   body {
-    background:
+    background-color: #000000 !important;
+    background-image:
       radial-gradient(circle at 50% -20%, rgba(201, 21, 32, 0.13), transparent 32rem),
       linear-gradient(180deg, #0b0b0b 0%, #070707 46%, #050505 100%);
     color: #F4F6FA;

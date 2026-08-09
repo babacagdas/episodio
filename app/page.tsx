@@ -20,7 +20,7 @@ export default async function Splash({
   }
 
   return (
-    <div suppressHydrationWarning className="bg-[#0A0A0A] h-[100dvh] min-h-[100svh] text-on-background font-body-md text-body-md overflow-hidden antialiased relative">
+    <div suppressHydrationWarning className="bg-[#000000] h-[100dvh] min-h-[100svh] text-on-background font-body-md text-body-md overflow-hidden antialiased relative">
 
 
       {/* Cinematic Background */}
