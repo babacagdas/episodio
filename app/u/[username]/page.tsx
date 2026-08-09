@@ -224,10 +224,11 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                   <FollowButton targetUserId={profile.id} initialFollowing={isFollowing} />
                   <Link
                     href={`/chat?user=${profile.id}`}
-                    className="flex items-center gap-1 rounded-full border border-white/10 bg-white/10 px-3.5 py-2 text-xs font-semibold text-white transition-all hover:bg-white/15 md:gap-1.5 md:px-6 md:py-2.5 md:text-sm"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/90 transition-all hover:bg-white/20 hover:text-white md:px-4 md:py-1.5 md:text-xs"
+                    title="Mesaj Gönder"
                   >
-                    <span className="material-symbols-outlined text-[15px] md:text-base">chat</span>
-                    <span>Mesaj Gönder</span>
+                    <span className="material-symbols-outlined text-[15px]">chat</span>
+                    <span>Mesaj</span>
                   </Link>
                 </div>
               )}

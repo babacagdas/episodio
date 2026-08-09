@@ -57,7 +57,7 @@ export default function FollowButton({ targetUserId, initialFollowing }: Props) 
       type="button"
       onClick={toggleFollow}
       disabled={loading}
-      className={`px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
+      className={`px-3.5 py-1.5 md:px-4 md:py-1.5 text-xs font-semibold rounded-full transition-colors ${
         following ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-[#C91520] text-white hover:bg-[#A8121B]'
       } disabled:opacity-40`}
     >
