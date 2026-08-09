@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Favori dizilerinizi takip edin, özel izleme listeleri oluşturun, arkadaşlarınızla mesajlaşın ve dizi severlerle sosyal bir ağda etkileşime geçin.',
     start_url: '/home',
     display: 'standalone',
-    background_color: '#0A0A0A',
-    theme_color: '#0A0A0A',
+    background_color: '#000000',
+    theme_color: '#000000',
     orientation: 'portrait',
     icons: [
       {

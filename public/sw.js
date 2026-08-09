@@ -1,10 +1,36 @@
+const CACHE_NAME = 'episodio-media-v2';
+const MEDIA_TO_CACHE = ['/splash_video.mp4'];
+
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(MEDIA_TO_CACHE).catch(() => {});
+    })
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
+
+self.addEventListener('fetch', (event) => {
+  if (event.request.url.includes('/splash_video.mp4')) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) return cachedResponse;
+        return fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+          }
+          return networkResponse;
+        });
+      })
+    );
+  }
+});
+
 
 self.addEventListener('push', (event) => {
   let data = { title: 'Episodio', body: 'Yeni bir bildirimin var!', url: '/notifications' };
