@@ -4,7 +4,7 @@ import Image from 'next/image';
 export default function HomeHero() {
   return (
     <section className="mb-8 grid w-full grid-cols-1 items-stretch gap-5 md:grid-cols-12">
-      <div className="relative flex min-h-[300px] overflow-hidden rounded-2xl border border-white/[0.06] bg-transparent p-6 shadow-[0_22px_60px_rgba(0,0,0,0.32)] sm:p-8 md:col-span-12">
+      <div className="relative flex min-h-[300px] overflow-hidden rounded-2xl border border-white/[0.06] bg-[#070707] p-6 shadow-[0_22px_60px_rgba(0,0,0,0.32)] sm:p-8 md:col-span-12">
         <div className="absolute inset-0">
           <Image
             src="/splash_bg.jpg"
