@@ -12,6 +12,7 @@ export default function SignUp() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -76,6 +77,10 @@ export default function SignUp() {
     }
     if (password.length < 6) {
       setError('Şifre en az 6 karakter olmalı.');
+      return;
+    }
+    if (!acceptedTerms) {
+      setError('Devam etmek için KVKK ve Gizlilik Politikası\'nı onaylamalısın.');
       return;
     }
 
@@ -227,12 +232,34 @@ export default function SignUp() {
               />
             </div>
 
+            {/* KVKK & Gizlilik Politikası Onayı */}
+            <div className="flex items-start gap-2.5 px-1 py-1">
+              <input
+                id="kvkk-consent"
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-white/20 bg-[#1A1A1E] text-[#C91520] focus:ring-[#C91520] focus:ring-offset-0 cursor-pointer accent-[#C91520] shrink-0"
+                required
+              />
+              <label htmlFor="kvkk-consent" className="text-xs text-white/60 leading-normal cursor-pointer select-none">
+                <Link href="/kvkk" target="_blank" className="text-[#C91520] hover:underline font-semibold">
+                  KVKK Aydınlatma Metni
+                </Link>
+                {' '}ve{' '}
+                <Link href="/privacy" target="_blank" className="text-[#C91520] hover:underline font-semibold">
+                  Gizlilik Politikası
+                </Link>
+                &apos;nı okudum ve kabul ediyorum.
+              </label>
+            </div>
+
             {error && <p className="text-xs text-[#C91520] text-center bg-[#C91520]/10 border border-[#C91520]/20 rounded-lg py-2">{error}</p>}
             {success && <p className="text-xs text-green-400 text-center bg-green-400/10 border border-green-400/20 rounded-lg py-2">{success}</p>}
 
             <button
               type="submit"
-              disabled={loading || usernameAvailable === false || usernameChecking}
+              disabled={loading || usernameAvailable === false || usernameChecking || !acceptedTerms}
               className="mx-auto w-full max-w-[230px] bg-[#C91520] text-white font-semibold text-sm py-2.5 rounded-full hover:bg-[#A8121B] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 md:py-2.5"
             >
               {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Hesap Oluştur'}
@@ -266,6 +293,10 @@ export default function SignUp() {
           <p className="text-center text-xs text-white/30">
             Zaten hesabın var mı?{' '}
             <Link href="/signin" className="text-[#C91520] hover:text-white transition-colors font-medium">Giriş yap</Link>
+          </p>
+
+          <p className="text-center text-[11px] text-white/25 pt-1">
+            İletişim: <a href="mailto:hello@episodio.com.tr" className="text-white/40 hover:text-white underline">hello@episodio.com.tr</a>
           </p>
         </div>
       </main>
