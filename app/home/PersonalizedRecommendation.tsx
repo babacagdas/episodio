@@ -66,7 +66,7 @@ export default async function PersonalizedRecommendation() {
 
       <Link
         href={`/show/${pick.id}`}
-        className="group relative flex min-h-[18rem] overflow-hidden rounded-xl border border-white/[0.06] bg-transparent shadow-[0_18px_60px_rgba(0,0,0,0.34)] transition-[transform,border-color] duration-300 hover:-translate-y-0.5 hover:border-white/[0.18]"
+        className="group relative flex min-h-[18rem] overflow-hidden rounded-xl border border-white/[0.06] bg-transparent shadow-[0_18px_60px_rgba(0,0,0,0.34)] transition-colors duration-300 hover:border-white/[0.12]"
       >
         {backdrop ? (
           <Image
@@ -74,7 +74,7 @@ export default async function PersonalizedRecommendation() {
             alt=""
             fill
             sizes="(max-width: 768px) 100vw, 900px"
-            className="object-cover opacity-38 transition-transform duration-700 group-hover:scale-[1.025]"
+            className="object-cover opacity-38 transition-opacity duration-300 group-hover:opacity-45"
           />
         ) : null}
         <div className="absolute inset-0 bg-[linear-gradient(90deg,#090909_0%,rgba(9,9,9,0.92)_34%,rgba(9,9,9,0.46)_100%)]" />
@@ -105,7 +105,7 @@ export default async function PersonalizedRecommendation() {
                 {overview}
               </p>
             ) : null}
-            <div className="mt-5 inline-flex w-[112px] items-center justify-center rounded-full bg-white px-3 py-2 text-center text-xs font-bold text-black transition-colors group-hover:bg-white/88">
+            <div className="mt-5 inline-flex w-[112px] items-center justify-center rounded-full bg-white px-3 py-2 text-center text-xs font-bold text-black transition-opacity group-hover:opacity-90">
               Detayları Gör
             </div>
           </div>
