@@ -69,6 +69,14 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
   // Aktif sohbet ID'sini ref'te saklayalım (realtime callback'leri için)
   useEffect(() => {
     activeChatIdRef.current = selectedUserId;
+    if (selectedUserId) {
+      document.body.classList.add('in-active-chat');
+    } else {
+      document.body.classList.remove('in-active-chat');
+    }
+    return () => {
+      document.body.classList.remove('in-active-chat');
+    };
   }, [selectedUserId]);
 
   // Sohbet geçmişini (son mesajları) yükle
@@ -739,7 +747,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                 </div>
 
                 {/* Mesaj Yazma Girişi */}
-                <div className="p-3 pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] md:p-4 bg-[#0A0A0A]/80 backdrop-blur-md border-t border-white/[0.05] shrink-0">
+                <div className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:p-4 bg-[#0A0A0A]/90 backdrop-blur-md border-t border-white/[0.05] shrink-0">
                   <form
                     onSubmit={handleSendMessage}
                     className="bg-white/[0.02] border border-white/[0.06] rounded-full py-1.5 px-3 flex items-center gap-2 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.2)]"

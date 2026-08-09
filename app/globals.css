@@ -108,6 +108,10 @@
   -webkit-font-smoothing: antialiased;
 }
 
+body.in-active-chat nav.fixed.bottom-4 {
+  display: none !important;
+}
+
 .glass-card {
   background: rgba(17, 17, 17, 0.82);
   backdrop-filter: blur(14px);
