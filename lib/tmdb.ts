@@ -297,3 +297,73 @@ export async function getShowCredits(showId: string): Promise<CastMember[]> {
     return [];
   }
 }
+
+export interface PersonDetail {
+  id: number;
+  name: string;
+  biography: string;
+  birthday: string | null;
+  deathday: string | null;
+  place_of_birth: string | null;
+  profile_path: string | null;
+  known_for_department: string;
+  popularity: number;
+}
+
+export interface PersonCreditItem {
+  id: number;
+  media_type: 'tv' | 'movie';
+  name?: string;
+  title?: string;
+  character?: string;
+  poster_path: string | null;
+  vote_average?: number;
+  first_air_date?: string;
+  release_date?: string;
+}
+
+export async function getPersonDetail(personId: string | number): Promise<PersonDetail | null> {
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) return null;
+  try {
+    let res = await fetch(
+      `https://api.themoviedb.org/3/person/${personId}?api_key=${apiKey}&language=tr-TR`,
+      { next: { revalidate: 86400 } }
+    );
+    if (!res.ok) return null;
+    let data = (await res.json()) as PersonDetail;
+
+    if (!data.biography) {
+      const enRes = await fetch(
+        `https://api.themoviedb.org/3/person/${personId}?api_key=${apiKey}&language=en-US`,
+        { next: { revalidate: 86400 } }
+      );
+      if (enRes.ok) {
+        const enData = await enRes.json();
+        data.biography = enData.biography || '';
+      }
+    }
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+export async function getPersonCredits(personId: string | number): Promise<PersonCreditItem[]> {
+  const apiKey = getTmdbApiKey();
+  if (!apiKey) return [];
+  try {
+    const res = await fetch(
+      `https://api.themoviedb.org/3/person/${personId}/combined_credits?api_key=${apiKey}&language=tr-TR`,
+      { next: { revalidate: 86400 } }
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    const cast = (data.cast ?? []) as PersonCreditItem[];
+    return cast
+      .filter((item) => !!item.poster_path)
+      .slice(0, 30);
+  } catch {
+    return [];
+  }
+}

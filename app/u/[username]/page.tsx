@@ -353,9 +353,9 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
               {favoriteActors.map((actor) => {
                 const profileImage = actor.actor_profile_path ? `${ACTOR_PROFILE_BASE}${actor.actor_profile_path}` : null;
                 return (
-                  <div key={actor.actor_id} className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/5 bg-[#141414] shadow-md transition-all duration-300 hover:border-white/20 hover:scale-[1.02]">
+                  <Link key={actor.actor_id} href={`/person/${actor.actor_id}`} className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/5 bg-[#141414] shadow-md transition-all duration-300 hover:border-white/20 block">
                     {profileImage
-                      ? <img src={profileImage} alt={actor.actor_name} className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" loading="lazy" />
+                      ? <img src={profileImage} alt={actor.actor_name} className="h-full w-full object-cover" loading="lazy" />
                       : <div className="flex h-full w-full items-center justify-center"><span className="material-symbols-outlined text-4xl text-white/20">person</span></div>
                     }
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-80" />
@@ -365,7 +365,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                     <div className="absolute bottom-0 left-0 w-full p-3">
                       <h4 className="truncate text-xs font-bold text-white sm:text-sm">{actor.actor_name}</h4>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>

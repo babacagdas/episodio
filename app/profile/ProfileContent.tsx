@@ -1368,23 +1368,29 @@ export default function ProfileContent() {
                   const profileImage = actor.actor_profile_path ? `${ACTOR_PROFILE_BASE}${actor.actor_profile_path}` : null;
                   return (
                     <div key={actor.actor_id} className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/5 bg-[#141414] shadow-md transition-colors duration-200 hover:border-white/20">
-                      {profileImage
-                        ? <img src={profileImage} alt={actor.actor_name} className="h-full w-full object-cover" loading="lazy" />
-                        : <div className="flex h-full w-full items-center justify-center"><span className="material-symbols-outlined text-4xl text-white/20">person</span></div>
-                      }
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-80" />
+                      <Link href={`/person/${actor.actor_id}`} className="block w-full h-full">
+                        {profileImage
+                          ? <img src={profileImage} alt={actor.actor_name} className="h-full w-full object-cover" loading="lazy" />
+                          : <div className="flex h-full w-full items-center justify-center"><span className="material-symbols-outlined text-4xl text-white/20">person</span></div>
+                        }
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-80" />
+                        <div className="absolute bottom-0 left-0 w-full p-2.5 sm:p-3">
+                          <h4 className="truncate text-xs font-bold text-white sm:text-sm">{actor.actor_name}</h4>
+                        </div>
+                      </Link>
                       <button
                         type="button"
-                        onClick={() => removeFavoriteActor(actor.actor_id)}
-                        className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center text-emerald-300/90 transition-colors hover:text-[#F06A73]"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          removeFavoriteActor(actor.actor_id);
+                        }}
+                        className="absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black/40 text-emerald-300/90 transition-colors hover:bg-black/80 hover:text-[#F06A73]"
                         aria-label={`${actor.actor_name} favorilerden çıkar`}
                         title="Favorilerden çıkar"
                       >
                         <span className="material-symbols-outlined text-[13px]" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
                       </button>
-                      <div className="absolute bottom-0 left-0 w-full p-2.5 sm:p-3">
-                        <h4 className="truncate text-xs font-bold text-white sm:text-sm">{actor.actor_name}</h4>
-                      </div>
                     </div>
                   );
                 })}

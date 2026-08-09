@@ -142,8 +142,8 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
               </h3>
               <div className="flex items-center gap-4 overflow-x-auto pb-2 hide-scrollbar">
                 {credits.map((actor) => (
-                  <div key={actor.id} className="flex flex-col items-center shrink-0 w-20 text-center select-none">
-                    <div className="w-14 h-14 rounded-full border border-white/10 overflow-hidden bg-[#141418] shadow-md flex items-center justify-center mb-1.5">
+                  <Link key={actor.id} href={`/person/${actor.id}`} className="flex flex-col items-center shrink-0 w-20 text-center select-none group">
+                    <div className="w-14 h-14 rounded-full border border-white/10 overflow-hidden bg-[#141418] shadow-md flex items-center justify-center mb-1.5 transition-all group-hover:border-[#C91520] group-hover:scale-105">
                       {actor.profile_path ? (
                         <img
                           src={`https://image.tmdb.org/t/p/w185${actor.profile_path}`}
@@ -154,9 +154,9 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
                         <span className="material-symbols-outlined text-white/20 text-xl">person</span>
                       )}
                     </div>
-                    <p className="text-[11px] font-bold text-white truncate w-full">{actor.name}</p>
+                    <p className="text-[11px] font-bold text-white truncate w-full group-hover:text-[#FF525D] transition-colors">{actor.name}</p>
                     <p className="text-[10px] text-white/40 truncate w-full mt-0.5">{actor.character}</p>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
