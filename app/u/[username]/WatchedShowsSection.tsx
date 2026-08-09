@@ -74,10 +74,10 @@ export default function WatchedShowsSection({
                 <Link
                   key={item.show_id}
                   href={`/show/${item.show_id}`}
-                  className="relative aspect-[2/3] rounded-xl overflow-hidden bg-[#141414] border border-white/5 group hover:border-white/20 hover:scale-[1.02] transition-all duration-300 block"
+                  className="relative aspect-[2/3] rounded-xl overflow-hidden bg-[#141414] border border-white/5 group hover:border-white/20 transition-all duration-300 block"
                 >
                   {poster
-                    ? <img alt={item.show_name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src={poster} />
+                    ? <img alt={item.show_name} className="w-full h-full object-cover" src={poster} />
                     : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-4xl">movie</span></div>
                   }
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity" />
