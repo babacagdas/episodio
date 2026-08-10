@@ -138,7 +138,7 @@ export default function HomeHeroClient({ shows = [] }: HomeHeroClientProps) {
             )}
 
             {/* Show Title */}
-            <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl drop-shadow-lg leading-none">
+            <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl md:text-6xl drop-shadow-xl leading-none">
               {currentShow.name}
             </h1>
 

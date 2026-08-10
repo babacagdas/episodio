@@ -62,6 +62,23 @@ export default function UpcomingReleasesHeroClient({ shows = [] }: UpcomingRelea
     .filter(Boolean)
     .slice(0, 2);
 
+  const releaseDateObj = currentShow.first_air_date ? new Date(currentShow.first_air_date) : null;
+  const formattedReleaseDate = releaseDateObj
+    ? releaseDateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+
+  let daysRemainingText: string | null = null;
+  if (releaseDateObj) {
+    const now = new Date();
+    const diffTime = releaseDateObj.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays > 0) {
+      daysRemainingText = `${diffDays} Gün Kaldı`;
+    } else if (diffDays === 0) {
+      daysRemainingText = `Bugün Yayında!`;
+    }
+  }
+
   return (
     <section 
       className="relative mb-8 w-full select-none overflow-hidden rounded-3xl bg-[#000000]"
@@ -109,21 +126,34 @@ export default function UpcomingReleasesHeroClient({ shows = [] }: UpcomingRelea
           
           {/* Top Tag */}
           <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px] font-extrabold tracking-widest text-emerald-400/90 uppercase">
+            <span className="text-[11px] font-extrabold tracking-widest text-white/80 uppercase">
               YAKINDA EKRANLARDA &bull; YENİ SEZONLAR
             </span>
           </div>
 
           {/* Center Details */}
           <div className="mt-auto max-w-2xl">
+            {/* Release Date & Countdown Indicator (Backgroundless) */}
+            {formattedReleaseDate && (
+              <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-bold text-white/80">
+                <span className="material-symbols-outlined text-[15px] text-[#C91520]">event</span>
+                <span>Yayın Tarihi: {formattedReleaseDate}</span>
+                {daysRemainingText && (
+                  <>
+                    <span className="text-white/30">&bull;</span>
+                    <span className="text-emerald-400 font-extrabold tracking-wide">{daysRemainingText}</span>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Genre tags */}
             {genres && genres.length > 0 && (
               <div className="mb-2 flex items-center gap-2">
                 {genres.map((genre) => (
                   <span
                     key={genre}
-                    className="text-[11.5px] font-bold text-white/60 uppercase tracking-widest"
+                    className="text-[11.5px] font-bold text-white/50 uppercase tracking-widest"
                   >
                     {genre} &bull;
                   </span>
@@ -132,7 +162,7 @@ export default function UpcomingReleasesHeroClient({ shows = [] }: UpcomingRelea
             )}
 
             {/* Show Title */}
-            <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl md:text-4xl drop-shadow-lg leading-none">
+            <h2 className="text-4xl font-black tracking-tight text-white sm:text-5xl md:text-6xl drop-shadow-xl leading-none">
               {currentShow.name}
             </h2>
 
