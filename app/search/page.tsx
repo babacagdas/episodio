@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import ShowCard from '@/components/ShowCard';
 import ListPreviewCard from '@/components/ListPreviewCard';
 import DiscoverFilterPanel, { type AppliedFilters } from './DiscoverFilterPanel';
+import RandomShowModal from './RandomShowModal';
 
 interface UserSearchProfile {
   id: string;
@@ -84,6 +85,7 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
 
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
+  const [randomModalOpen, setRandomModalOpen] = useState(false);
   const [filterApplying, setFilterApplying] = useState(false);
   const [activeFilters, setActiveFilters] = useState<AppliedFilters | null>(null);
   const [filteredShows, setFilteredShows] = useState<Show[]>([]);
@@ -324,14 +326,25 @@ export default function Search() {
               )}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setFilterPanelOpen(true)}
-            className="h-9 shrink-0 self-center inline-flex items-center justify-center gap-2 border-b border-[#C91520]/75 bg-transparent px-1 text-sm font-semibold text-white transition-colors hover:border-[#C91520] hover:text-white/80"
-          >
-            <span className="material-symbols-outlined text-[18px] text-[#D4A017]">tune</span>
-            <span>Filtre</span>
-          </button>
+          <div className="flex items-center gap-4 self-center shrink-0">
+            <button
+              type="button"
+              onClick={() => setFilterPanelOpen(true)}
+              className="h-9 inline-flex items-center justify-center gap-2 border-b border-[#C91520]/75 bg-transparent px-1 text-sm font-semibold text-white transition-colors hover:border-[#C91520] hover:text-white/80"
+            >
+              <span className="material-symbols-outlined text-[18px] text-[#D4A017]">tune</span>
+              <span>Filtre</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setRandomModalOpen(true)}
+              className="h-9 inline-flex items-center justify-center gap-1.5 border-b border-emerald-500/75 bg-transparent px-1 text-sm font-bold text-emerald-400 transition-colors hover:border-emerald-400 hover:text-white active:scale-95"
+            >
+              <span className="text-base">🎲</span>
+              <span>Ne İzlesem?</span>
+            </button>
+          </div>
         </div>
         {filterError && (
           <p className="text-xs text-[#C91520] max-w-4xl -mt-4">{filterError}</p>
@@ -444,6 +457,12 @@ export default function Search() {
         onApply={applyDiscoverFilters}
         initial={activeFilters}
         busy={filterApplying}
+      />
+
+      <RandomShowModal
+        open={randomModalOpen}
+        onClose={() => setRandomModalOpen(false)}
+        shows={displayed.length > 0 ? displayed : trending}
       />
 
       <BottomNav />
