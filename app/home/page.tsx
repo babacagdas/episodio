@@ -11,6 +11,7 @@ import FriendsActivitySection from './FriendsActivitySection';
 import NotificationsBell from './NotificationsBell';
 import CurrentlyWatchingCard from './CurrentlyWatchingCard';
 import PersonalizedRecommendation from './PersonalizedRecommendation';
+import UpcomingReleasesHero from './UpcomingReleasesHero';
 import HomeTopBar from './HomeTopBar';
 import HomeHero from './HomeHero';
 import HomeListRail from './HomeListRail';
@@ -108,6 +109,10 @@ export default function Home() {
 
             <Suspense fallback={<SectionFallback tall />}>
               <PersonalizedRecommendation />
+            </Suspense>
+
+            <Suspense fallback={<HomeHeroFallback />}>
+              <UpcomingReleasesHero />
             </Suspense>
 
             <Suspense fallback={<SectionFallback tall />}>

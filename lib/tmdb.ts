@@ -198,6 +198,61 @@ export async function getHeroShows(): Promise<Show[]> {
   ];
 }
 
+export async function getUpcomingShows(): Promise<Show[]> {
+  const apiKey = getTmdbApiKey();
+  if (apiKey) {
+    try {
+      const res = await fetch(
+        `https://api.themoviedb.org/3/tv/on_the_air?api_key=${apiKey}&language=tr-TR`,
+        { next: { revalidate: 3600 } }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const results = (data.results ?? []) as Show[];
+        const filtered = results.filter((s) => s.backdrop_path && s.overview && s.overview.trim().length > 10);
+        if (filtered.length >= 3) {
+          return filtered.slice(0, 5);
+        }
+      }
+    } catch {
+      // Fallback below
+    }
+  }
+
+  return [
+    {
+      id: 100088,
+      name: 'The Last of Us',
+      poster_path: '/uKvVjHNqB5VmjuAwePScWPhMKZ5.jpg',
+      backdrop_path: '/uDgy6hyPd82sOHhfgIUtjM9dGE.jpg',
+      vote_average: 8.6,
+      first_air_date: '2025-04-12',
+      overview: 'Joel ve Ellie, ölümcül mantar salgınının ardından Amerika’nın tehlikeli kalıntılarında hayatta kalma mücadelesine devam ediyor.',
+      genre_ids: [10765, 18, 10759],
+    },
+    {
+      id: 94997,
+      name: 'House of the Dragon',
+      poster_path: '/1X4h40fcB4y4w42pQ5Y3Cg9yB9a.jpg',
+      backdrop_path: '/etj8E2o0VisualBackdrop.jpg',
+      vote_average: 8.4,
+      first_air_date: '2024-06-16',
+      overview: 'Targaryen Hanedanlığı’nın altın çağında başlayan iç savaş, ejderhaların dansı ile Westeros’un kaderini tamamen değiştiriyor.',
+      genre_ids: [10765, 18, 10759],
+    },
+    {
+      id: 76479,
+      name: 'The Boys',
+      poster_path: '/stTEycfG9928HYGEodYFiW1MUtm.jpg',
+      backdrop_path: '/mAh94Y7wRk5p50w8734hG78.jpg',
+      vote_average: 8.5,
+      first_air_date: '2024-06-13',
+      overview: 'Yozlaşmış süper kahramanlar ve onları durdurmaya yemin etmiş bir grup sıradan adamın nefes kesen savaşı.',
+      genre_ids: [10759, 10765, 18],
+    },
+  ];
+}
+
 /** Profil kapağı için backdrop path (URL üretmek sayfada) */
 export async function getTvBackdropPath(showId: string): Promise<string | null> {
   const apiKey = getTmdbApiKey();
