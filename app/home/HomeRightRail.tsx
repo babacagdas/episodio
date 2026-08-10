@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import FriendsActivitySection from './FriendsActivitySection';
 import DeferredClientSection from './DeferredClientSection';
 
+import WhatsAppInviteCard from './WhatsAppInviteCard';
+
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w92';
 
 export default async function HomeRightRail() {
@@ -160,6 +162,9 @@ export default async function HomeRightRail() {
           <span className="material-symbols-outlined text-base">chevron_right</span>
         </Link>
       </section>
+
+      {/* WhatsApp Davet Kartı */}
+      <WhatsAppInviteCard />
     </aside>
   );
 }
