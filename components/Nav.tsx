@@ -5,6 +5,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { sendLocalNotification } from '@/lib/pushNotifications';
 import FriendsActivityHeaderModal from '@/app/home/FriendsActivityHeaderModal';
+import CreateListModal from '@/components/CreateListModal';
 
 const navItems = [
   { href: '/home', icon: 'home', label: 'Ana Sayfa' },
@@ -15,26 +16,45 @@ const navItems = [
 ];
 
 export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
+  const [createListOpen, setCreateListOpen] = useState(false);
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex h-14 w-full items-center justify-between px-4 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-white/10 pt-[env(safe-area-inset-top)] md:hidden">
-      {/* Sol Dengeleyici */}
-      <div className="w-16 shrink-0" aria-hidden />
+    <>
+      <header className="fixed top-0 left-0 right-0 z-50 flex h-14 w-full items-center justify-between px-4 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-white/10 pt-[env(safe-area-inset-top)] md:hidden">
+        {/* Sol Tarafta Artı Butonu (Liste Oluştur) */}
+        <div className="flex items-center justify-start w-16 shrink-0">
+          <button
+            type="button"
+            onClick={() => setCreateListOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-transparent bg-transparent text-white/80 transition-colors hover:text-white active:scale-95"
+            title="Yeni Liste Oluştur"
+            aria-label="Yeni Liste Oluştur"
+          >
+            <span className="material-symbols-outlined text-[22px] text-white/80 hover:text-white transition-colors">
+              add
+            </span>
+          </button>
+        </div>
 
-      {/* Tam Ortalı Logo (Hafif Büyütüldü) */}
-      <Link href="/home" className="flex items-center justify-center">
-        <img alt="Episodio Logo" className="h-7 w-auto object-contain" src="/logo.png" />
-      </Link>
+        {/* Tam Ortalı Logo */}
+        <Link href="/home" className="flex items-center justify-center">
+          <img alt="Episodio Logo" className="h-7 w-auto object-contain" src="/logo.png" />
+        </Link>
 
-      {/* Sağ İkonlar (Kalp & Zil) */}
-      <div className="flex items-center gap-1.5 justify-end w-16 shrink-0">
-        <FriendsActivityHeaderModal />
-        {rightElement ?? (
-          <Link href="/notifications" aria-label="Bildirimler" className="flex h-9 w-9 items-center justify-center text-white/80 hover:text-white transition-colors">
-            <span className="material-symbols-outlined text-[22px]">notifications</span>
-          </Link>
-        )}
-      </div>
-    </header>
+        {/* Sağ İkonlar (Kalp & Zil) */}
+        <div className="flex items-center gap-1.5 justify-end w-16 shrink-0">
+          <FriendsActivityHeaderModal />
+          {rightElement ?? (
+            <Link href="/notifications" aria-label="Bildirimler" className="flex h-9 w-9 items-center justify-center text-white/80 hover:text-white transition-colors">
+              <span className="material-symbols-outlined text-[22px]">notifications</span>
+            </Link>
+          )}
+        </div>
+      </header>
+
+      {/* Global Liste Oluştur Modalı */}
+      <CreateListModal open={createListOpen} onClose={() => setCreateListOpen(false)} />
+    </>
   );
 }
 
