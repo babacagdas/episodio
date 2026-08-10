@@ -9,7 +9,7 @@ import FriendsActivityHeaderModal from '@/app/home/FriendsActivityHeaderModal';
 const navItems = [
   { href: '/home', icon: 'home', label: 'Ana Sayfa' },
   { href: '/swiper', icon: 'style', label: 'Seç' },
-  { href: '/chat', icon: 'chat_bubble', label: 'Mesajlar' },
+  { href: '/chat', icon: 'send', label: 'Mesajlar' },
   { href: '/search', icon: 'search', label: 'Keşfet' },
   { href: '/profile', icon: 'person', label: 'Profil' },
 ];
@@ -20,12 +20,12 @@ export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
       {/* Sol Dengeleyici */}
       <div className="w-16 shrink-0" aria-hidden />
 
-      {/* Tam Ortalı Logo */}
+      {/* Tam Ortalı Logo (Hafif Büyütüldü) */}
       <Link href="/home" className="flex items-center justify-center">
-        <img alt="Episodio Logo" className="h-6 w-auto object-contain" src="/logo.png" />
+        <img alt="Episodio Logo" className="h-7 w-auto object-contain" src="/logo.png" />
       </Link>
 
-      {/* Sağ İkonlar (Kalp & Zil) - Büyütüldü & İkisi de Beyaz Yapıldı */}
+      {/* Sağ İkonlar (Kalp & Zil) */}
       <div className="flex items-center gap-1.5 justify-end w-16 shrink-0">
         <FriendsActivityHeaderModal />
         {rightElement ?? (
@@ -43,6 +43,18 @@ export function BottomNav() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
+  // Önbellekten anında avatar yükleme (3 saniye gecikmeyi sıfırlama)
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem('episodio_user_avatar');
+      if (cached) {
+        setUserAvatar(cached);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   useEffect(() => {
     const supabase = createClient();
     let channel: any = null;
@@ -57,7 +69,7 @@ export function BottomNav() {
         .eq('is_read', false);
       setUnreadCount(count ?? 0);
 
-      // 2. Kullanıcı Profil Resmi (0 Veritabanı yükü - tek sorgu ve önbellek)
+      // 2. Kullanıcı Profil Resmi
       const { data: profile } = await supabase
         .from('profiles')
         .select('avatar_url')
@@ -66,6 +78,11 @@ export function BottomNav() {
 
       if (profile?.avatar_url) {
         setUserAvatar(profile.avatar_url);
+        try {
+          localStorage.setItem('episodio_user_avatar', profile.avatar_url);
+        } catch {
+          // ignore
+        }
       }
     };
 
@@ -125,12 +142,26 @@ export function BottomNav() {
         setupChannel(session.user.id);
       }
     });
+
+    const handleAvatarUpdate = (e: any) => {
+      if (e?.detail?.avatar_url) {
+        setUserAvatar(e.detail.avatar_url);
+        try {
+          localStorage.setItem('episodio_user_avatar', e.detail.avatar_url);
+        } catch {
+          // ignore
+        }
+      }
+    };
+
     window.addEventListener('focus', refreshUserData);
     window.addEventListener('episodio:messages-read', refreshUserData);
+    window.addEventListener('episodio:avatar-updated', handleAvatarUpdate);
 
     return () => {
       window.removeEventListener('focus', refreshUserData);
       window.removeEventListener('episodio:messages-read', refreshUserData);
+      window.removeEventListener('episodio:avatar-updated', handleAvatarUpdate);
       if (authSub) authSub.unsubscribe();
       if (channel) {
         supabase.removeChannel(channel);
@@ -139,10 +170,11 @@ export function BottomNav() {
   }, []);
 
   return (
-    <nav className="fixed bottom-4 left-4 right-4 z-50 grid h-[56px] grid-cols-5 items-center px-1 bg-[#0A0A0E]/92 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.7)] md:hidden">
+    <nav className="fixed bottom-3.5 left-4 right-4 z-50 grid h-[52px] grid-cols-5 items-center justify-items-center bg-[#0A0A0E]/94 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.7)] md:hidden">
       {navItems.map(({ href, icon, label }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
         const isProfile = href === '/profile';
+        const isChat = href === '/chat';
 
         return (
           <Link
@@ -150,7 +182,7 @@ export function BottomNav() {
             href={href}
             aria-label={label}
             title={label}
-            className="min-w-0 flex h-full items-center justify-center"
+            className="flex h-full w-full items-center justify-center transition-transform active:scale-90"
           >
             {isProfile && userAvatar ? (
               <div className={`relative flex items-center justify-center transition-all duration-200 ${active ? 'scale-110' : 'opacity-65 hover:opacity-100'}`}>
@@ -158,20 +190,20 @@ export function BottomNav() {
                   src={userAvatar}
                   alt="Profil"
                   className={`h-6 w-6 rounded-full object-cover border transition-all ${
-                    active ? 'border-white ring-2 ring-white/40' : 'border-white/20'
+                    active ? 'border-white ring-2 ring-white/50' : 'border-white/20'
                   }`}
                 />
               </div>
             ) : (
-              <span className={`relative transition-colors duration-200 ${active ? 'text-white font-bold' : 'text-white/40 hover:text-white/70'}`}>
+              <span className={`relative flex items-center justify-center transition-colors duration-200 ${active ? 'text-white font-bold' : 'text-white/40 hover:text-white/75'}`}>
                 <span
-                  className="material-symbols-outlined text-[24px]"
+                  className={`material-symbols-outlined text-[23px] ${isChat ? '-rotate-12 translate-y-[-1px]' : ''}`}
                   style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
                 >
                   {icon}
                 </span>
-                {href === '/chat' && unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1.5 bg-[#C91520] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md animate-pulse">
+                {isChat && unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-2 bg-[#C91520] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md animate-pulse">
                     {unreadCount}
                   </span>
                 )}
