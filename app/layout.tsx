@@ -52,6 +52,7 @@ export const metadata: Metadata = {
 
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
 import MobileSplashVideo from '@/components/MobileSplashVideo';
+import CookieConsentBanner from '@/components/CookieConsentBanner';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -75,6 +76,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <MobileSplashVideo />
         {children}
         <PushNotificationPrompt />
+        <CookieConsentBanner />
       </body>
     </html>
   );
