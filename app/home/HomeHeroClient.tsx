@@ -114,25 +114,11 @@ export default function HomeHeroClient({ shows = [] }: HomeHeroClientProps) {
         {/* Foreground Content */}
         <div className="relative z-30 flex h-full flex-col justify-between p-6 sm:p-8 md:p-10">
           
-          {/* Top Tag & Rating */}
+          {/* Top Tag */}
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#C91520]/20 px-3 py-1 text-[11px] font-bold tracking-wider text-[#FF4D56] border border-[#C91520]/40 backdrop-blur-md">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#FF4D56] animate-pulse" />
+            <span className="text-[11px] font-extrabold tracking-widest text-white/80 uppercase">
               HAFTANIN ÖNE ÇIKANI
             </span>
-
-            {currentShow.vote_average > 0 && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-black/40 px-2.5 py-1 text-xs font-bold text-amber-400 backdrop-blur-md border border-white/10">
-                <span className="material-symbols-outlined text-[14px] text-amber-400">star</span>
-                {currentShow.vote_average.toFixed(1)}
-              </span>
-            )}
-
-            {releaseYear && (
-              <span className="hidden sm:inline-block text-xs font-semibold text-white/50">
-                {releaseYear}
-              </span>
-            )}
           </div>
 
           {/* Center Details */}
@@ -163,23 +149,23 @@ export default function HomeHeroClient({ shows = [] }: HomeHeroClientProps) {
               </p>
             )}
 
-            {/* Call to Action Buttons */}
-            <div className="mt-6 flex flex-wrap items-center gap-3">
+            {/* Call to Action Buttons (Smaller/Compact) */}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
               <Link
                 href={`/show/${currentShow.id}`}
-                className="group/btn inline-flex items-center gap-2 rounded-full bg-[#C91520] px-5 py-2.5 text-xs sm:text-sm font-extrabold text-white shadow-[0_4px_20px_rgba(201,21,32,0.4)] transition-all duration-300 hover:bg-[#E21825] hover:shadow-[0_6px_28px_rgba(201,21,32,0.6)] active:scale-95"
+                className="group/btn inline-flex items-center gap-1.5 rounded-full bg-[#C91520] px-3.5 py-1.5 text-[11.5px] font-bold text-white shadow-md transition-all duration-200 hover:bg-[#E21825] active:scale-95"
               >
                 <span>Detayları İncele</span>
-                <span className="material-symbols-outlined text-[18px] transition-transform duration-200 group-hover/btn:translate-x-1">
+                <span className="material-symbols-outlined text-[14px] transition-transform duration-200 group-hover/btn:translate-x-0.5">
                   arrow_forward
                 </span>
               </Link>
 
               <Link
                 href="/search"
-                className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-xs sm:text-sm font-bold text-white backdrop-blur-md transition-all duration-300 hover:bg-white/20 hover:border-white/30 active:scale-95"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11.5px] font-bold text-white backdrop-blur-md transition-all duration-200 hover:bg-white/20 active:scale-95"
               >
-                <span className="material-symbols-outlined text-[18px]">search</span>
+                <span className="material-symbols-outlined text-[14px]">search</span>
                 <span>Tüm Diziler</span>
               </Link>
             </div>
