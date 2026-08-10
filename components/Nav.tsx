@@ -4,16 +4,15 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect, type ReactNode } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { sendLocalNotification } from '@/lib/pushNotifications';
+import FriendsActivityHeaderModal from '@/app/home/FriendsActivityHeaderModal';
 
 const navItems = [
   { href: '/home', icon: 'home', label: 'Ana Sayfa' },
   { href: '/swiper', icon: 'style', label: 'Seç' },
+  { href: '/chat', icon: 'chat_bubble', label: 'Mesajlar' },
   { href: '/search', icon: 'search', label: 'Keşfet' },
-  { href: '/chat', icon: 'chat', label: 'Mesajlar' },
   { href: '/profile', icon: 'person', label: 'Profil' },
 ];
-
-import FriendsActivityHeaderModal from '@/app/home/FriendsActivityHeaderModal';
 
 export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
   return (
@@ -26,12 +25,12 @@ export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
         <img alt="Episodio Logo" className="h-6 w-auto object-contain" src="/logo.png" />
       </Link>
 
-      {/* Sağ İkonlar (Kalp & Zil) */}
-      <div className="flex items-center gap-1 justify-end w-16 shrink-0">
+      {/* Sağ İkonlar (Kalp & Zil) - Büyütüldü & İkisi de Beyaz Yapıldı */}
+      <div className="flex items-center gap-1.5 justify-end w-16 shrink-0">
         <FriendsActivityHeaderModal />
         {rightElement ?? (
-          <Link href="/notifications" aria-label="Bildirimler" className="w-8 h-8 rounded-full border border-white/10 bg-white/[0.03] text-white/75 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[18px]">notifications</span>
+          <Link href="/notifications" aria-label="Bildirimler" className="flex h-9 w-9 items-center justify-center text-white/80 hover:text-white transition-colors">
+            <span className="material-symbols-outlined text-[22px]">notifications</span>
           </Link>
         )}
       </div>
@@ -42,29 +41,42 @@ export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
 export function BottomNav() {
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
     let channel: any = null;
     let userId: string | null = null;
 
-    const fetchUnreadCount = async (uid: string) => {
+    const fetchUserData = async (uid: string) => {
+      // 1. Okunmamış mesaj sayısı
       const { count } = await supabase
         .from('direct_messages')
         .select('*', { count: 'exact', head: true })
         .eq('receiver_id', uid)
         .eq('is_read', false);
       setUnreadCount(count ?? 0);
+
+      // 2. Kullanıcı Profil Resmi (0 Veritabanı yükü - tek sorgu ve önbellek)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', uid)
+        .maybeSingle();
+
+      if (profile?.avatar_url) {
+        setUserAvatar(profile.avatar_url);
+      }
     };
 
-    const refreshUnread = () => {
-      if (userId) void fetchUnreadCount(userId);
+    const refreshUserData = () => {
+      if (userId) void fetchUserData(userId);
     };
 
     async function setupChannel(uid: string) {
       if (channel) return;
       userId = uid;
-      fetchUnreadCount(uid);
+      fetchUserData(uid);
 
       channel = supabase
         .channel(`bottom_nav_unread_messages_${uid}`)
@@ -78,7 +90,7 @@ export function BottomNav() {
           async (payload: any) => {
             const msg = payload.new;
             if (msg && msg.receiver_id === uid && msg.sender_id !== uid) {
-              fetchUnreadCount(uid);
+              fetchUserData(uid);
               const { data: senderProfile } = await supabase
                 .from('profiles')
                 .select('username, full_name')
@@ -113,12 +125,12 @@ export function BottomNav() {
         setupChannel(session.user.id);
       }
     });
-    window.addEventListener('focus', refreshUnread);
-    window.addEventListener('episodio:messages-read', refreshUnread);
+    window.addEventListener('focus', refreshUserData);
+    window.addEventListener('episodio:messages-read', refreshUserData);
 
     return () => {
-      window.removeEventListener('focus', refreshUnread);
-      window.removeEventListener('episodio:messages-read', refreshUnread);
+      window.removeEventListener('focus', refreshUserData);
+      window.removeEventListener('episodio:messages-read', refreshUserData);
       if (authSub) authSub.unsubscribe();
       if (channel) {
         supabase.removeChannel(channel);
@@ -127,25 +139,44 @@ export function BottomNav() {
   }, []);
 
   return (
-    <nav className="bg-[#141414]/94 backdrop-blur-2xl fixed bottom-4 left-4 right-4 z-50 grid h-[58px] grid-cols-5 items-center px-2 border border-white/15 rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.6)] md:hidden">
+    <nav className="fixed bottom-4 left-4 right-4 z-50 grid h-[56px] grid-cols-5 items-center px-1 bg-[#0A0A0E]/92 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.7)] md:hidden">
       {navItems.map(({ href, icon, label }) => {
         const active = pathname === href || pathname.startsWith(`${href}/`);
+        const isProfile = href === '/profile';
+
         return (
           <Link
             key={label}
             href={href}
             aria-label={label}
             title={label}
-            className={`min-w-0 flex h-full items-center justify-center rounded-lg px-1 transition-colors ${active ? 'text-[#D4A017]' : 'text-gray-500 hover:text-gray-200'}`}
+            className="min-w-0 flex h-full items-center justify-center"
           >
-            <span className="relative">
-              <span className="material-symbols-outlined text-[23px]" style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}>{icon}</span>
-              {href === '/chat' && unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1.5 bg-[#C91520] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                  {unreadCount}
+            {isProfile && userAvatar ? (
+              <div className={`relative flex items-center justify-center transition-all duration-200 ${active ? 'scale-110' : 'opacity-65 hover:opacity-100'}`}>
+                <img
+                  src={userAvatar}
+                  alt="Profil"
+                  className={`h-6 w-6 rounded-full object-cover border transition-all ${
+                    active ? 'border-white ring-2 ring-white/40' : 'border-white/20'
+                  }`}
+                />
+              </div>
+            ) : (
+              <span className={`relative transition-colors duration-200 ${active ? 'text-white font-bold' : 'text-white/40 hover:text-white/70'}`}>
+                <span
+                  className="material-symbols-outlined text-[24px]"
+                  style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                >
+                  {icon}
                 </span>
-              )}
-            </span>
+                {href === '/chat' && unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1.5 bg-[#C91520] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md animate-pulse">
+                    {unreadCount}
+                  </span>
+                )}
+              </span>
+            )}
           </Link>
         );
       })}

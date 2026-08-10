@@ -158,7 +158,7 @@ export default function NotificationsBell() {
         onClick={() => { setOpen((prev) => !prev); if (!open) loadNotifications(); }}
         className="relative flex h-9 w-9 items-center justify-center rounded-full border border-transparent bg-transparent text-white transition-colors hover:border-white/[0.1] hover:bg-transparent"
       >
-        <span className="material-symbols-outlined text-[19px]">notifications</span>
+        <span className="material-symbols-outlined text-[22px] text-white/80 hover:text-white transition-colors">notifications</span>
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-5 h-5 rounded-full bg-[#C91520] text-white text-[10px] font-bold flex items-center justify-center px-1">
             {unreadCount > 9 ? '9+' : unreadCount}

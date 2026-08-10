@@ -222,7 +222,7 @@ export default function FriendsActivityHeaderModal() {
         title="Arkadaş Aktiviteleri"
         aria-label="Arkadaş Aktiviteleri"
       >
-        <span className="material-symbols-outlined text-[19px] text-[#C91520]">
+        <span className="material-symbols-outlined text-[22px] text-white/80 hover:text-white transition-colors">
           favorite_border
         </span>
       </button>
@@ -234,9 +234,9 @@ export default function FriendsActivityHeaderModal() {
           <div className="fixed top-[calc(3.75rem+env(safe-area-inset-top))] left-3 right-3 max-h-[calc(100dvh-7rem)] overflow-y-auto bg-[#0a0a0d] border border-white/10 rounded-2xl shadow-2xl p-3.5 z-[120] md:absolute md:top-auto md:left-auto md:right-0 md:mt-2 md:w-[350px] md:max-h-[440px] animate-[chatScaleIn_0.2s_ease-out]">
             
             {/* Header */}
-            <div className="flex items-center justify-between px-2 py-1.5 mb-2 border-b border-[#C91520]/40">
+            <div className="flex items-center justify-between px-2 py-1.5 mb-2 border-b border-white/10">
               <p className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[15px] text-[#C91520]">favorite_border</span>
+                <span className="material-symbols-outlined text-[17px] text-white/80">favorite_border</span>
                 Arkadaş Aktiviteleri
               </p>
               <button
