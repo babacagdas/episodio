@@ -117,7 +117,7 @@ export default function HomeHeroClient({ shows = [] }: HomeHeroClientProps) {
           {/* Center Details */}
           <div className="mt-auto max-w-2xl">
             {/* Tag / Kicker */}
-            <div className="mb-2.5 flex items-center gap-2">
+            <div className="mb-4 sm:mb-5 flex items-center gap-2">
               <span className="text-[13px] sm:text-[14px] font-black tracking-widest uppercase">
                 <span className="text-[#C91520]">HAFTANIN</span>{' '}
                 <span className="text-white">ÖNE ÇIKANI</span>

@@ -127,7 +127,7 @@ export default function UpcomingReleasesHeroClient({ shows = [] }: UpcomingRelea
           {/* Center Details */}
           <div className="mt-auto max-w-2xl">
             {/* Tag / Kicker */}
-            <div className="mb-2.5 flex items-center gap-2">
+            <div className="mb-3.5 flex items-center gap-2">
               <span className="text-[13px] sm:text-[14px] font-black tracking-widest uppercase">
                 <span className="text-emerald-400">YAKINDA</span>{' '}
                 <span className="text-white">EKRANLARDA &bull; YENİ SEZONLAR</span>
@@ -135,7 +135,7 @@ export default function UpcomingReleasesHeroClient({ shows = [] }: UpcomingRelea
             </div>
             {/* Release Date & Countdown Indicator (Backgroundless) */}
             {formattedReleaseDate && (
-              <div className="mb-2 flex flex-wrap items-center gap-2 text-xs font-bold text-white/80">
+              <div className="mb-4 sm:mb-5 flex flex-wrap items-center gap-2 text-xs font-bold text-white/80">
                 <span className="material-symbols-outlined text-[15px] text-emerald-400">event</span>
                 <span>Yayın Tarihi: {formattedReleaseDate}</span>
                 {daysRemainingText && (
