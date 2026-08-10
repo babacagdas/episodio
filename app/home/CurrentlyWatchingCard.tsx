@@ -47,8 +47,14 @@ export default async function CurrentlyWatchingCard() {
 
   return (
     <section className="mb-8">
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <h2 className="text-base font-bold text-white uppercase tracking-wider">Devam Et</h2>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-black text-white uppercase tracking-wider">Devam Et</h2>
+          <span className="text-white/30 text-base font-black">&gt;</span>
+          <span className="text-base sm:text-lg font-black text-[#D4A017] uppercase tracking-wider">
+            Şu An Bu Dizidesin
+          </span>
+        </div>
         <Link href="/watchlist" className="text-xs font-semibold text-[#C91520] transition-colors hover:text-white flex items-center gap-0.5">
           Tümünü Gör
           <span className="material-symbols-outlined text-[15px]">chevron_right</span>
@@ -108,11 +114,14 @@ export default async function CurrentlyWatchingCard() {
 
               {/* Content Overlay */}
               <div className="relative z-20 w-full min-w-0">
+                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#D4A017] flex items-center gap-0.5 mb-0.5">
+                  Şu An Bu Dizidesin &gt;
+                </span>
                 <h3 className="text-[13px] font-black tracking-wide text-white truncate uppercase">
                   {show.show_name}
                 </h3>
-                <div className="flex items-center mt-1">
-                  <span className="text-white/40 text-[10.5px] font-bold">
+                <div className="flex items-center mt-0.5">
+                  <span className="text-white/50 text-[10.5px] font-bold">
                     {show.season} &bull; {show.episode}
                   </span>
                 </div>
