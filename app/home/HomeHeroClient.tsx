@@ -124,20 +124,6 @@ export default function HomeHeroClient({ shows = [] }: HomeHeroClientProps) {
               </span>
             </div>
 
-            {/* Genre tags */}
-            {genres && genres.length > 0 && (
-              <div className="mb-2 flex items-center gap-2">
-                {genres.map((genre) => (
-                  <span
-                    key={genre}
-                    className="text-[11.5px] font-bold text-white/60 uppercase tracking-widest"
-                  >
-                    {genre} &bull;
-                  </span>
-                ))}
-              </div>
-            )}
-
             {/* Show Title */}
             <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl md:text-6xl drop-shadow-xl leading-none">
               {currentShow.name}
