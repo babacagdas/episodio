@@ -22,7 +22,7 @@ export default function WatchlistPage() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
             {Array.from({ length: 12 }).map((_, index) => (
               <CardSkeleton key={index} />
             ))}
@@ -36,7 +36,7 @@ export default function WatchlistPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
             {watchlist.map((show) => (
               <ShowCard key={show.id} show={show} />
             ))}

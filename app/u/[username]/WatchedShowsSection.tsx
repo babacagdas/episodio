@@ -67,7 +67,7 @@ export default function WatchedShowsSection({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
             {shows.map((item) => {
               const poster = item.poster_path ? `${POSTER_BASE}${item.poster_path}` : null;
               return (
