@@ -546,14 +546,14 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                         setSelectedUserId(chat.otherUser.id);
                         if (chat.unreadCount > 0) void markChatAsRead(chat.otherUser.id);
                       }}
-                      className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all text-left ${
+                      className={`w-full flex items-center gap-3.5 p-3 rounded-2xl transition-all text-left ${
                         isActive
-                          ? 'bg-white/[0.06] border-l-2 border-[#D4A017]'
+                          ? 'bg-white/[0.06] border-l-2 border-[#C91520]'
                           : 'hover:bg-white/[0.03] border-l-2 border-transparent hover:translate-x-0.5'
                       }`}
                     >
-                      {/* Profil Resmi */}
-                      <div className={`w-11 h-11 rounded-full border ${isActive ? 'border-[#D4A017]/30' : 'border-white/10'} overflow-hidden bg-[#1A1A1A] shrink-0 flex items-center justify-center relative`}>
+                      {/* Instagram Boyutunda Profil Resmi (w-14 h-14 / 56px) */}
+                      <div className={`w-14 h-14 rounded-full border ${isActive ? 'border-[#C91520]/50' : 'border-white/10'} overflow-hidden bg-[#1A1A1A] shrink-0 flex items-center justify-center relative`}>
                         {chat.otherUser.avatar_url ? (
                           <img
                             src={chat.otherUser.avatar_url}
@@ -561,12 +561,12 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="material-symbols-outlined text-white/30 text-lg">
+                          <span className="material-symbols-outlined text-white/30 text-2xl">
                             person
                           </span>
                         )}
                         {isUnread && (
-                          <span className="absolute -top-0.5 -right-0.5 bg-[#C91520] w-3 h-3 rounded-full border border-[#0E0E0E]" />
+                          <span className="absolute top-0 right-0 bg-[#C91520] w-3 h-3 rounded-full border-2 border-[#0E0E0E]" />
                         )}
                       </div>
 
@@ -574,11 +574,11 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                       <div className="min-w-0 flex-1 flex items-center justify-between gap-2">
                         <div className="min-w-0 flex-1">
                           <div className="flex justify-between items-baseline gap-1 mb-0.5">
-                            <span className={`text-sm font-semibold truncate ${isActive ? 'text-white' : isUnread ? 'text-[#D4A017]' : 'text-white/80'}`}>
+                            <span className={`text-[13.5px] font-semibold truncate ${isActive ? 'text-white font-bold' : isUnread ? 'text-white font-bold' : 'text-white/90'}`}>
                               {displayName}
                             </span>
                             {lastMsg && (
-                              <span className={`text-[10px] shrink-0 ${isUnread ? 'text-[#D4A017] font-semibold' : 'text-white/30'}`}>
+                              <span className={`text-[10.5px] shrink-0 ${isUnread ? 'text-[#C91520] font-bold' : 'text-white/35'}`}>
                                 {new Date(lastMsg.created_at).toLocaleTimeString([], {
                                   hour: '2-digit',
                                   minute: '2-digit',
@@ -586,17 +586,17 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                               </span>
                             )}
                           </div>
-                          <p className={`text-xs truncate leading-normal ${isUnread ? 'text-white/90 font-medium' : 'text-white/45'}`}>
+                          <p className={`text-[12px] truncate leading-normal ${isUnread ? 'text-white font-semibold' : 'text-white/45'}`}>
                             {lastMsg
                               ? lastMsg.sender_id === currentUser.id
-                                ? `Siz: ${lastMsg.content}`
+                                ? `Sen: ${lastMsg.content}`
                                 : lastMsg.content
                               : 'Sohbeti başlatın...'}
                           </p>
                         </div>
 
                         {isUnread && (
-                          <div className="shrink-0 bg-[#C91520] text-white text-[9px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                          <div className="shrink-0 bg-[#C91520] text-white text-[9.5px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                             {chat.unreadCount}
                           </div>
                         )}
