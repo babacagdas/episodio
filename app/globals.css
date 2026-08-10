@@ -33,16 +33,27 @@
     color: #fff;
   }
 
-  /* Kaydırma çubuklarını tüm tarayıcılarda gizleme (Scroll çalışır, çubuk görünmez) */
-  * {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+  /* Kaydırma çubuklarını tüm tarayıcılarda, PWA'da ve mobil cihazlarda tamamen gizleme */
+  *, *::before, *::after {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE and Edge */
   }
 
-  *::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-    width: 0px;
-    height: 0px;
+  ::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, Opera, iOS PWA, Android PWA */
+    width: 0px !important;
+    height: 0px !important;
+    background: transparent !important;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    display: none !important;
+    background: transparent !important;
+  }
+
+  ::-webkit-scrollbar-track {
+    display: none !important;
+    background: transparent !important;
   }
 }
 

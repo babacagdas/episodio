@@ -64,7 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-startup-image" href="/apple-splash.png" />
-        <style dangerouslySetInnerHTML={{ __html: `html,body{background-color:#000000 !important;color-scheme:dark;}` }} />
+        <style dangerouslySetInnerHTML={{ __html: `html,body{background-color:#000000 !important;color-scheme:dark;}*{scrollbar-width:none !important;-ms-overflow-style:none !important;}::-webkit-scrollbar{display:none !important;width:0 !important;height:0 !important;background:transparent !important;}` }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
