@@ -22,6 +22,7 @@ import HomeFeatureBanners from './HomeFeatureBanners';
 import WelcomeOnboardingModal from './WelcomeOnboardingModal';
 import DeferredClientSection from './DeferredClientSection';
 import WhatsAppInviteCard from './WhatsAppInviteCard';
+import RandomDiceStrip from './RandomDiceStrip';
 
 function TopBarFallback() {
   return (
@@ -119,6 +120,8 @@ export default function Home() {
             <Suspense fallback={<SectionFallback />}>
               <HomeListRail />
             </Suspense>
+
+            <RandomDiceStrip />
 
             <Suspense fallback={<SectionFallback tall />}>
               <TrailersContainer />
