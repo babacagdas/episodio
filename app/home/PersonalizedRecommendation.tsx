@@ -60,7 +60,7 @@ export default async function PersonalizedRecommendation() {
     <section className="mb-8">
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
-          <h2 className="premium-section-title">Sana Özel Öneri</h2>
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Sana Özel Öneri</h2>
         </div>
       </div>
 

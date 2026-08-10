@@ -102,24 +102,17 @@ export default function HomeTrailersSection({ trailers = [] }: { trailers: Trail
               </p>
             )}
 
-            {/* Oynat / Fragmanı İzle Butonu */}
+            {/* Oynat / Fragmanı İzle Butonu (Zarif Buton) */}
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setActiveModalTrailer(currentTrailer)}
-                className="group/btn inline-flex items-center gap-2 rounded-full bg-[#C91520] px-4 py-2 text-xs font-extrabold text-white shadow-lg transition-all duration-200 hover:bg-[#E50914] active:scale-95"
+                className="group/btn inline-flex items-center gap-1.5 rounded-full bg-[#C91520] px-3.5 py-1.5 text-[11.5px] font-bold text-white shadow-md transition-all duration-200 hover:bg-[#E50914] active:scale-95"
               >
-                <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                <span className="material-symbols-outlined text-[15px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                   play_arrow
                 </span>
                 <span>Fragmanı İzle</span>
               </button>
-
-              {currentTrailer.voteAverage > 0 && (
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold text-amber-400 backdrop-blur-md border border-white/10">
-                  <span className="material-symbols-outlined text-[15px] text-amber-400" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                  <span>{currentTrailer.voteAverage.toFixed(1)} Puan</span>
-                </div>
-              )}
             </div>
           </div>
 

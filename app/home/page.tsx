@@ -115,6 +115,10 @@ export default function Home() {
               <UpcomingReleasesHero />
             </Suspense>
 
+            <Suspense fallback={<SectionFallback />}>
+              <HomeListRail />
+            </Suspense>
+
             <Suspense fallback={<SectionFallback tall />}>
               <TrailersContainer />
             </Suspense>
@@ -131,10 +135,6 @@ export default function Home() {
                 <TrendingGrid />
               </Suspense>
             </section>
-
-            <Suspense fallback={<SectionFallback />}>
-              <HomeListRail />
-            </Suspense>
 
             <section className="mb-8 xl:hidden">
               <DeferredClientSection fallback={<SectionFallback />} delay={450}>

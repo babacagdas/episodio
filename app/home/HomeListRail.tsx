@@ -14,17 +14,17 @@ export default async function HomeListRail() {
 
   if (followingIds.length === 0) {
     return (
-      <section className="mb-8">
+      <section className="mb-8 select-none">
         <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="text-base font-bold uppercase tracking-wider text-white">Arkadaşlarının Listeleri</h2>
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Arkadaşlarının Listeleri</h2>
         </div>
-        <div className="rounded-xl border border-white/[0.06] bg-transparent p-5 sm:p-6">
-          <p className="text-sm font-semibold leading-relaxed text-white/45">
-            Listelerini görmek için bir arkadaş ekle.
+        <div className="rounded-2xl bg-[#09090c] p-5 sm:p-6 shadow-lg">
+          <p className="text-xs sm:text-sm font-medium leading-relaxed text-white/50">
+            Listelerini görmek ve önerilerini takip etmek için bir arkadaş ekle.
           </p>
           <Link
             href="/search"
-            className="mt-3 inline-flex items-center gap-1 text-[12px] font-bold uppercase tracking-wider text-[#C91520] transition-colors hover:text-white"
+            className="mt-3 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-[#C91520] transition-colors hover:text-white"
           >
             Arkadaş bul
             <span className="material-symbols-outlined text-[15px]">chevron_right</span>
@@ -46,11 +46,11 @@ export default async function HomeListRail() {
 
   if (listRows.length === 0) {
     return (
-      <section className="mb-8">
+      <section className="mb-8 select-none">
         <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="text-base font-bold uppercase tracking-wider text-white">Arkadaşlarının Listeleri</h2>
+          <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Arkadaşlarının Listeleri</h2>
         </div>
-        <div className="rounded-xl border border-white/[0.06] bg-transparent p-5 sm:p-6 text-sm font-semibold leading-relaxed text-white/45">
+        <div className="rounded-2xl bg-[#09090c] p-5 sm:p-6 text-xs sm:text-sm font-medium leading-relaxed text-white/45">
           Takip ettiğin arkadaşların henüz liste paylaşmadı.
         </div>
       </section>
@@ -89,9 +89,9 @@ export default async function HomeListRail() {
   });
 
   return (
-    <section className="mb-8">
+    <section className="mb-8 select-none">
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h2 className="text-base font-bold text-white uppercase tracking-wider">Arkadaşlarının Listeleri</h2>
+        <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Arkadaşlarının Listeleri</h2>
         <Link href="/search" className="inline-flex items-center gap-0.5 text-xs font-semibold text-[#C91520] transition-colors hover:text-white">
           Tümünü Gör
           <span className="material-symbols-outlined text-[15px]">chevron_right</span>
