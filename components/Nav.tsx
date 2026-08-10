@@ -26,11 +26,14 @@ export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
           <button
             type="button"
             onClick={() => setCreateListOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-transparent bg-transparent text-white/80 transition-colors hover:text-white active:scale-95"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-transparent bg-transparent text-white/90 transition-colors hover:text-white hover:bg-white/5 active:scale-95"
             title="Yeni Liste Oluştur"
             aria-label="Yeni Liste Oluştur"
           >
-            <span className="material-symbols-outlined text-[22px] text-white/80 hover:text-white transition-colors">
+            <span
+              className="material-symbols-outlined text-[25px] text-white/90 hover:text-white transition-colors"
+              style={{ fontVariationSettings: "'wght' 300, 'opsz' 24" }}
+            >
               add
             </span>
           </button>
@@ -45,8 +48,13 @@ export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
         <div className="flex items-center gap-1.5 justify-end w-16 shrink-0">
           <FriendsActivityHeaderModal />
           {rightElement ?? (
-            <Link href="/notifications" aria-label="Bildirimler" className="flex h-9 w-9 items-center justify-center text-white/80 hover:text-white transition-colors">
-              <span className="material-symbols-outlined text-[22px]">notifications</span>
+            <Link href="/notifications" aria-label="Bildirimler" className="flex h-9 w-9 items-center justify-center text-white/90 hover:text-white transition-colors hover:bg-white/5 rounded-full">
+              <span
+                className="material-symbols-outlined text-[25px]"
+                style={{ fontVariationSettings: "'wght' 300, 'opsz' 24" }}
+              >
+                notifications
+              </span>
             </Link>
           )}
         </div>

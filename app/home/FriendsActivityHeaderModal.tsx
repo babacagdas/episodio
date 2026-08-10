@@ -265,11 +265,14 @@ export default function FriendsActivityHeaderModal() {
       <button
         type="button"
         onClick={handleOpenToggle}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-transparent bg-transparent text-white transition-colors hover:border-white/[0.1] hover:bg-transparent active:scale-95"
+        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-transparent bg-transparent text-white transition-colors hover:bg-white/5 active:scale-95"
         title="Arkadaş Aktiviteleri"
         aria-label="Arkadaş Aktiviteleri"
       >
-        <span className="material-symbols-outlined text-[22px] text-white/80 hover:text-white transition-colors">
+        <span
+          className="material-symbols-outlined text-[25px] text-white/90 hover:text-white transition-colors"
+          style={{ fontVariationSettings: "'wght' 300, 'opsz' 24" }}
+        >
           favorite_border
         </span>
         {hasUnread && !open && (
