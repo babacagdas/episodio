@@ -33,26 +33,16 @@
     color: #fff;
   }
 
+  /* Kaydırma çubuklarını tüm tarayıcılarda gizleme (Scroll çalışır, çubuk görünmez) */
   * {
-    scrollbar-color: rgba(255,255,255,0.22) transparent;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
   }
 
   *::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-
-  *::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.16);
-    border: 3px solid transparent;
-    border-radius: 999px;
-    background-clip: padding-box;
-  }
-
-  *::-webkit-scrollbar-thumb:hover {
-    background: rgba(255,255,255,0.26);
-    border: 3px solid transparent;
-    background-clip: padding-box;
+    display: none; /* Chrome, Safari, Opera */
+    width: 0px;
+    height: 0px;
   }
 }
 
