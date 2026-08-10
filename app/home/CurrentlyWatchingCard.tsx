@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 
-const BACKDROP_BASE = 'https://image.tmdb.org/t/p/w780';
+const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 
 interface WatchingShow {
   show_id: number;
   show_name: string;
-  backdrop_path: string | null;
+  poster_path: string | null;
   season?: string;
   episode?: string;
   progress?: number;
@@ -36,7 +36,7 @@ export default async function CurrentlyWatchingCard() {
         return {
           show_id: row.show_id,
           show_name: row.show_name,
-          backdrop_path: null,
+          poster_path: row.poster_path,
           season: `S${sNum}`,
           episode: `E${eNum}`,
           progress: pPercent,
@@ -47,6 +47,7 @@ export default async function CurrentlyWatchingCard() {
 
   return (
     <section className="mb-8">
+      {/* Header */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <h2 className="text-base sm:text-lg font-black text-white uppercase tracking-wider">Devam Et</h2>
@@ -62,7 +63,7 @@ export default async function CurrentlyWatchingCard() {
       </div>
 
       {watchingList.length === 0 ? (
-        <div className="rounded-xl border border-white/[0.06] bg-transparent p-5 sm:p-6">
+        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-base font-bold text-white">Bir dizi/film izlemeye başla</h3>
@@ -80,64 +81,59 @@ export default async function CurrentlyWatchingCard() {
           </div>
         </div>
       ) : (
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {watchingList.map((show) => {
-          const backdropUrl = show.backdrop_path ? `${BACKDROP_BASE}${show.backdrop_path}` : null;
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {watchingList.map((show) => {
+            const posterUrl = show.poster_path ? `${POSTER_BASE}${show.poster_path}` : null;
 
-          return (
-            <Link
-              key={show.show_id}
-              href={`/show/${show.show_id}`}
-              className="relative overflow-hidden rounded-xl bg-transparent border border-white/[0.05] aspect-[16/10] flex flex-col justify-end p-4 group cursor-pointer shadow-md select-none"
-            >
-              {/* Background Backdrop Image */}
-              <div className="absolute inset-0 z-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-[#151515] via-[#0e0e0e] to-[#24090c]" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_18%,rgba(255,255,255,0.14),transparent_24rem)]" />
-                {backdropUrl ? (
-                  <img
-                    src={backdropUrl}
-                    alt=""
-                    className="h-full w-full object-cover opacity-50 transition-transform duration-700 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                ) : null}
-                <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/45 to-transparent" />
-              </div>
-
-              {/* Play Overlay Button */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white border border-white/20 opacity-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300">
-                <span className="material-symbols-outlined text-[18px] font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  play_arrow
-                </span>
-              </div>
-
-              {/* Content Overlay */}
-              <div className="relative z-20 w-full min-w-0">
-                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#D4A017] flex items-center gap-0.5 mb-0.5">
-                  Şu An Bu Dizidesin &gt;
-                </span>
-                <h3 className="text-[13px] font-black tracking-wide text-white truncate uppercase">
-                  {show.show_name}
-                </h3>
-                <div className="flex items-center mt-0.5">
-                  <span className="text-white/50 text-[10.5px] font-bold">
-                    {show.season} &bull; {show.episode}
-                  </span>
+            return (
+              <Link
+                key={show.show_id}
+                href={`/show/${show.show_id}`}
+                className="group relative flex items-center gap-3.5 p-2.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/20 transition-all duration-300 select-none overflow-hidden"
+              >
+                {/* Sol: Dikey Dizi Afişi */}
+                <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-xl bg-white/5 border border-white/10 shadow-md">
+                  {posterUrl ? (
+                    <img
+                      src={posterUrl}
+                      alt={show.show_name}
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-white/20">
+                      <span className="material-symbols-outlined text-xl">movie</span>
+                    </div>
+                  )}
+                  {/* Oynat Overlay */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white text-base font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      play_arrow
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Progress Line */}
-              <div className="absolute bottom-0 inset-x-0 h-1 bg-white/10 z-20 overflow-hidden">
-                <div
-                  className="h-full bg-[#C91520] transition-all duration-500"
-                  style={{ width: `${show.progress}%` }}
-                />
-              </div>
-            </Link>
-          );
-        })}
-      </div>
+                {/* Sağ: Dizi Bilgileri & İlerleme */}
+                <div className="flex flex-col justify-center min-w-0 flex-1 pr-1">
+                  <h3 className="text-xs sm:text-sm font-black text-white truncate uppercase tracking-tight group-hover:text-[#D4A017] transition-colors">
+                    {show.show_name}
+                  </h3>
+                  <p className="text-[11px] font-bold text-white/40 mt-1">
+                    {show.season} &bull; {show.episode}
+                  </p>
+
+                  {/* İlerleme Çubuğu */}
+                  <div className="w-full h-1 bg-white/10 rounded-full mt-2.5 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#C91520] to-[#E50914] rounded-full transition-all duration-500"
+                      style={{ width: `${show.progress}%` }}
+                    />
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       )}
     </section>
   );
