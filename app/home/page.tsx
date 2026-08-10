@@ -83,14 +83,14 @@ async function TrailersContainer() {
 
 export default function Home() {
   return (
-    <div className="font-body-md text-body-md antialiased pb-32 md:pb-0 pt-[60px] md:pt-0 bg-[#000000] min-h-screen">
+    <div className="font-body-md text-body-md antialiased pb-32 md:pb-0 pt-14 md:pt-0 bg-[#000000] min-h-screen">
       <WelcomeOnboardingModal />
 
       <MobileHeader rightElement={<NotificationsBell />} />
 
       <Sidebar />
 
-      <main className="overflow-x-hidden px-margin-mobile py-7 md:ml-[200px] md:px-8 xl:pr-6">
+      <main className="overflow-x-hidden px-margin-mobile py-3 md:py-7 md:ml-[200px] md:px-8 xl:pr-6">
         <div className="mx-auto flex max-w-[1540px] gap-7">
           <div className="min-w-0 flex-1">
             <Suspense fallback={<TopBarFallback />}>

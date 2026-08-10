@@ -17,20 +17,21 @@ import FriendsActivityHeaderModal from '@/app/home/FriendsActivityHeaderModal';
 
 export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
   return (
-    <header className="relative flex items-center justify-between w-full px-4 sm:px-6 py-3.5 pt-[calc(0.875rem+env(safe-area-inset-top))] fixed top-0 left-0 right-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-xl border-b border-white/10 md:hidden">
-      <div className="w-8 shrink-0" aria-hidden />
-      
-      {/* Absolutely Centered Logo */}
-      <Link href="/home" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 block w-[118px]">
-        <img alt="Episodio Logo" className="h-auto w-full object-contain" src="/logo.png" />
+    <header className="fixed top-0 left-0 right-0 z-50 flex h-14 w-full items-center justify-between px-4 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-white/10 pt-[env(safe-area-inset-top)] md:hidden">
+      {/* Sol Dengeleyici */}
+      <div className="w-16 shrink-0" aria-hidden />
+
+      {/* Tam Ortalı Logo */}
+      <Link href="/home" className="flex items-center justify-center">
+        <img alt="Episodio Logo" className="h-6 w-auto object-contain" src="/logo.png" />
       </Link>
 
-      {/* Right Icons (Kalp & Zil) */}
-      <div className="flex items-center gap-1 justify-end shrink-0">
+      {/* Sağ İkonlar (Kalp & Zil) */}
+      <div className="flex items-center gap-1 justify-end w-16 shrink-0">
         <FriendsActivityHeaderModal />
         {rightElement ?? (
-          <Link href="/notifications" aria-label="Bildirimler" className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.03] text-white/75 flex items-center justify-center">
-            <span className="material-symbols-outlined text-[20px]">notifications</span>
+          <Link href="/notifications" aria-label="Bildirimler" className="w-8 h-8 rounded-full border border-white/10 bg-white/[0.03] text-white/75 flex items-center justify-center">
+            <span className="material-symbols-outlined text-[18px]">notifications</span>
           </Link>
         )}
       </div>
