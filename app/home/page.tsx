@@ -21,6 +21,7 @@ import HomeTrailersSection from './HomeTrailersSection';
 import HomeFeatureBanners from './HomeFeatureBanners';
 import WelcomeOnboardingModal from './WelcomeOnboardingModal';
 import DeferredClientSection from './DeferredClientSection';
+import WhatsAppInviteCard from './WhatsAppInviteCard';
 
 function TopBarFallback() {
   return (
@@ -140,6 +141,9 @@ export default function Home() {
               <DeferredClientSection fallback={<SectionFallback />} delay={450}>
                 <FriendsActivitySection />
               </DeferredClientSection>
+              <div className="mt-4">
+                <WhatsAppInviteCard />
+              </div>
             </section>
           </div>
 
