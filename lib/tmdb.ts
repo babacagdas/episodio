@@ -2,10 +2,12 @@ export interface Show {
   id: number;
   name: string;
   poster_path: string | null;
+  backdrop_path?: string | null;
   vote_average: number;
   first_air_date: string;
   /** discover/list uçlarında gelir */
   overview?: string;
+  genre_ids?: number[];
 }
 
 export interface Season {
@@ -129,6 +131,71 @@ export async function getTrendingShows(): Promise<Show[]> {
   if (!res.ok) return [];
   const data = await res.json();
   return data.results as Show[];
+}
+
+export async function getHeroShows(): Promise<Show[]> {
+  const apiKey = getTmdbApiKey();
+  if (apiKey) {
+    try {
+      const res = await fetch(
+        `https://api.themoviedb.org/3/trending/tv/week?api_key=${apiKey}&language=tr-TR`,
+        { next: { revalidate: 3600 } }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const results = (data.results ?? []) as Show[];
+        const filtered = results.filter((s) => s.backdrop_path && s.overview && s.overview.trim().length > 10);
+        if (filtered.length >= 3) {
+          return filtered.slice(0, 6);
+        }
+      }
+    } catch {
+      // Fallback below if fetch fails
+    }
+  }
+
+  return [
+    {
+      id: 1396,
+      name: 'Breaking Bad',
+      poster_path: '/anFx9aTOOYqgS3v7x3R84Kz67ly.jpg',
+      backdrop_path: '/tsRy63MuZvE8ZWarmcxAUtY3hNW.jpg',
+      vote_average: 8.9,
+      first_air_date: '2008-01-20',
+      overview: 'Kanser olduğunu öğrenen bir kimya öğretmeni, ailesinin geleceğini güvence altına almak için eski bir öğrencisiyle metamfetamin üretmeye başlar.',
+      genre_ids: [18, 80],
+    },
+    {
+      id: 95557,
+      name: 'Severance',
+      poster_path: '/pEQp22B0MvhRrm8qWdK81q7w00Z.jpg',
+      backdrop_path: '/5D10DzwS301i5b4nS9G223X3h6m.jpg',
+      vote_average: 8.4,
+      first_air_date: '2022-02-17',
+      overview: 'Lumon Industries çalışanları, iş ve özel hayat hafızalarını cerrahi olarak ayıran gizemli bir prosedüre tabi tutulur.',
+      genre_ids: [10765, 9648, 18],
+    },
+    {
+      id: 66732,
+      name: 'Stranger Things',
+      poster_path: '/49WJfeN0moxb9IPfGn88qbuYh9m.jpg',
+      backdrop_path: '/56v2Kj2RCyLBHccDhVUchE2pWdE.jpg',
+      vote_average: 8.6,
+      first_air_date: '2016-07-15',
+      overview: 'Küçük bir kasabada bir çocuğun kaybolmasıyla başlayan gizemli olaylar, gizli deneyleri ve doğaüstü güçleri açığa çıkarır.',
+      genre_ids: [10765, 9648, 18],
+    },
+    {
+      id: 93405,
+      name: 'Squid Game',
+      poster_path: '/dDlEmu3EZ0Pgg93K2SVNen3j82E.jpg',
+      backdrop_path: '/zNfi2a11bT35m6D1K7B32Yf3g7.jpg',
+      vote_average: 8.4,
+      first_air_date: '2021-09-17',
+      overview: 'Para sıkıntısı çeken yüzlerce oyuncu, çocuk oyunlarına dayalı ölümcül bir yarışmaya katılmak için tuhaf bir daveti kabul eder.',
+      genre_ids: [10759, 9648, 18],
+    },
+  ];
 }
 
 /** Profil kapağı için backdrop path (URL üretmek sayfada) */

@@ -39,8 +39,8 @@ function TopBarFallback() {
 
 function HomeHeroFallback() {
   return (
-    <section className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-12">
-      <div className="min-h-[300px] rounded-2xl border border-white/[0.06] md:col-span-12" />
+    <section className="mb-8 w-full">
+      <div className="h-[420px] sm:h-[460px] md:h-[500px] w-full rounded-3xl bg-[#0a0a0a] animate-pulse" />
     </section>
   );
 }
