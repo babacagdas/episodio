@@ -339,10 +339,10 @@ export default function Search() {
             <button
               type="button"
               onClick={() => setRandomModalOpen(true)}
-              className="h-9 inline-flex items-center justify-center gap-1.5 border-b border-emerald-500/75 bg-transparent px-1 text-sm font-bold text-emerald-400 transition-colors hover:border-emerald-400 hover:text-white active:scale-95"
+              className="h-9 inline-flex items-center justify-center px-1 text-2xl transition-transform hover:scale-125 active:scale-95 cursor-pointer -rotate-12 select-none"
+              title="Ne İzlesem? (Zar At)"
             >
-              <span className="text-base">🎲</span>
-              <span>Ne İzlesem?</span>
+              🎲
             </button>
           </div>
         </div>

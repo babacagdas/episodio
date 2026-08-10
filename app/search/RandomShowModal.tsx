@@ -12,27 +12,30 @@ interface RandomShowModalProps {
 
 export default function RandomShowModal({ open, onClose, shows }: RandomShowModalProps) {
   const [selectedShow, setSelectedShow] = useState<Show | null>(null);
-  const [isShuffling, setIsShuffling] = useState(false);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [hasRolled, setHasRolled] = useState(false);
 
-  const pickRandomShow = () => {
-    if (!shows || shows.length === 0) return;
-    setIsShuffling(true);
+  const rollDice = () => {
+    if (!shows || shows.length === 0 || isSpinning) return;
 
-    let count = 0;
-    const interval = setInterval(() => {
-      const idx = Math.floor(Math.random() * shows.length);
-      setSelectedShow(shows[idx]);
-      count++;
-      if (count >= 10) {
-        clearInterval(interval);
-        setIsShuffling(false);
-      }
-    }, 60);
+    setIsSpinning(true);
+    setHasRolled(false);
+
+    const idx = Math.floor(Math.random() * shows.length);
+    const picked = shows[idx];
+
+    setTimeout(() => {
+      setSelectedShow(picked);
+      setIsSpinning(false);
+      setHasRolled(true);
+    }, 650);
   };
 
   useEffect(() => {
     if (open) {
-      pickRandomShow();
+      setHasRolled(false);
+      setIsSpinning(false);
+      setSelectedShow(null);
     }
   }, [open]);
 
@@ -45,66 +48,111 @@ export default function RandomShowModal({ open, onClose, shows }: RandomShowModa
     : null;
 
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-      {/* Dark Overlay */}
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+      {/* Özel Keyframe Animasyonları */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes gentleShake {
+            0%, 100% { transform: rotate(-14deg) translateY(0); }
+            50% { transform: rotate(-8deg) translateY(-8px); }
+          }
+          @keyframes spin3D {
+            0% { transform: rotate(-14deg) scale(1); }
+            50% { transform: rotate(360deg) scale(1.35); }
+            100% { transform: rotate(720deg) scale(1); }
+          }
+          @keyframes slideInRight {
+            0% { opacity: 0; transform: translateX(90px); }
+            100% { opacity: 1; transform: translateX(0); }
+          }
+        `
+      }} />
+
+      {/* Arka Plan Yoğun Bulanık Overlay */}
       <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]"
+        className="absolute inset-0 bg-black/85 backdrop-blur-2xl transition-opacity duration-300"
         onClick={onClose}
       />
 
-      {/* Modal Container */}
-      <div className="relative z-10 w-full max-w-sm sm:max-w-md overflow-hidden rounded-3xl border border-white/10 bg-[#0c0c10]/95 p-5 sm:p-6 shadow-[0_25px_60px_rgba(0,0,0,0.9)] backdrop-blur-2xl animate-[chatScaleIn_0.3s_cubic-bezier(0.16,1,0.3,1)_forwards]">
-        
-        {/* Glow */}
-        <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#C91520]/25 blur-3xl" />
+      {/* Kapat Butonu */}
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute right-5 top-5 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/50 transition-colors hover:bg-white/20 hover:text-white"
+      >
+        <span className="material-symbols-outlined text-xl">close</span>
+      </button>
 
-        {/* Kapat Butonu */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute right-4 top-4 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/40 transition-colors hover:bg-white/10 hover:text-white"
-        >
-          <span className="material-symbols-outlined text-lg">close</span>
-        </button>
+      {/* Ana İçerik Alanı */}
+      <div className="relative z-20 flex flex-col items-center justify-center w-full max-w-md">
 
-        {/* Başlık */}
-        <div className="mb-4 flex items-center gap-2">
-          <span className={`text-2xl transition-transform duration-300 ${isShuffling ? 'animate-spin' : ''}`}>🎲</span>
-          <div>
-            <h2 className="text-sm font-black uppercase tracking-wider text-white">
-              Ne İzlesem?
-            </h2>
-            <p className="text-[11px] font-semibold text-[#D4A017]">
-              Bugün Senin İçin Özel Seçtik
+        {/* 1. EKRAN: Zarı Atmak İçin Ekrana Tıklama / Dönme Durumu */}
+        {(!hasRolled || isSpinning) && (
+          <div
+            onClick={rollDice}
+            className="flex flex-col items-center justify-center cursor-pointer select-none py-12"
+          >
+            <div
+              className={`text-8xl sm:text-9xl filter drop-shadow-[0_20px_40px_rgba(255,255,255,0.15)] transition-transform duration-300 ${
+                isSpinning
+                  ? 'animate-[spin3D_0.65s_cubic-bezier(0.25,1,0.5,1)_forwards]'
+                  : 'animate-[gentleShake_2s_infinite_ease-in-out]'
+              }`}
+            >
+              🎲
+            </div>
+
+            <p className="mt-8 text-xs sm:text-sm font-black uppercase tracking-[0.25em] text-[#D4A017] animate-pulse text-center">
+              {isSpinning ? 'Kaderin Belirleniyor...' : 'Zarı Atmak İçin Ekrana Tıkla'}
             </p>
           </div>
-        </div>
+        )}
 
-        {/* Dizi Detay Kartı */}
-        {selectedShow ? (
-          <div className={`transition-all duration-300 ${isShuffling ? 'scale-95 opacity-50 blur-[1px]' : 'scale-100 opacity-100'}`}>
-            <div className="relative mb-4 flex gap-4 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] p-3.5 shadow-inner">
-              {/* Afiş */}
-              <div className="relative h-32 w-22 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-[#16161c] shadow-md">
-                {posterUrl ? (
-                  <img src={posterUrl} alt={selectedShow.name} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-white/20">
-                    <span className="material-symbols-outlined text-2xl">movie</span>
-                  </div>
-                )}
+        {/* 2. EKRAN: Sağdan Sola Kayarak Gelen Çerçevesiz Dizi Kartı */}
+        {hasRolled && !isSpinning && selectedShow && (
+          <div className="w-full flex flex-col items-center animate-[slideInRight_0.45s_cubic-bezier(0.16,1,0.3,1)_forwards]">
+            
+            {/* Çerçevesiz Şeffaf Cam Kart */}
+            <div className="relative w-full rounded-3xl bg-[#0d0d12]/90 p-5 sm:p-6 shadow-[0_30px_70px_rgba(0,0,0,0.95)] backdrop-blur-3xl border border-white/10">
+              
+              {/* Üst Zar İkonu & Başlık */}
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl -rotate-12 inline-block">🎲</span>
+                  <span className="text-xs font-black uppercase tracking-wider text-[#D4A017]">
+                    Günün Sürpriz Seçimi
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={rollDice}
+                  className="text-xs font-bold text-emerald-400 hover:text-white transition-colors flex items-center gap-1"
+                >
+                  <span>Tekrar At</span>
+                  <span className="text-sm">🎲</span>
+                </button>
               </div>
 
-              {/* Bilgiler */}
-              <div className="flex flex-1 flex-col justify-between min-w-0">
-                <div>
-                  <div className="mb-1 flex items-center justify-between gap-1">
-                    <h3 className="truncate text-base font-black text-white leading-tight">
-                      {selectedShow.name}
-                    </h3>
-                  </div>
+              {/* Dizi Afişi & Bilgiler */}
+              <div className="flex gap-4 items-start mb-5">
+                {/* Afiş */}
+                <div className="relative h-36 w-24 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#16161c] shadow-lg">
+                  {posterUrl ? (
+                    <img src={posterUrl} alt={selectedShow.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-white/20">
+                      <span className="material-symbols-outlined text-2xl">movie</span>
+                    </div>
+                  )}
+                </div>
 
-                  {/* Puan & Çıkış Yılı */}
+                {/* Bilgiler */}
+                <div className="flex flex-1 flex-col min-w-0">
+                  <h3 className="truncate text-lg font-black text-white leading-tight mb-1">
+                    {selectedShow.name}
+                  </h3>
+
                   <div className="mb-2 flex items-center gap-2 text-xs font-bold">
                     {selectedShow.vote_average > 0 && (
                       <span className="inline-flex items-center gap-1 rounded-md bg-[#D4A017]/20 px-2 py-0.5 text-[11px] font-black text-[#D4A017]">
@@ -118,40 +166,37 @@ export default function RandomShowModal({ open, onClose, shows }: RandomShowModa
                     )}
                   </div>
 
-                  <p className="line-clamp-3 text-[11.5px] font-medium leading-relaxed text-white/60">
+                  <p className="line-clamp-4 text-[12px] font-medium leading-relaxed text-white/65">
                     {selectedShow.overview || 'Bu dizi için henüz açıklama bulunmuyor.'}
                   </p>
                 </div>
               </div>
-            </div>
 
-            {/* Aksiyon Butonları */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={pickRandomShow}
-                disabled={isShuffling}
-                className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3.5 text-xs font-bold text-white transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
-              >
-                <span className="text-sm">🎲</span>
-                <span>Tekrar Salla</span>
-              </button>
+              {/* Butonlar */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={rollDice}
+                  className="flex-1 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs font-bold text-white transition-all hover:bg-white/10 active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <span>Tekrar Zarı At</span>
+                  <span className="text-sm">🎲</span>
+                </button>
 
-              <Link
-                href={`/show/${selectedShow.id}`}
-                onClick={onClose}
-                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#C91520] px-4 text-xs font-black text-white shadow-md transition-all hover:bg-[#E50914] active:scale-95"
-              >
-                <span>Dizi Detayına Git</span>
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </Link>
+                <Link
+                  href={`/show/${selectedShow.id}`}
+                  onClick={onClose}
+                  className="flex-1 py-2.5 rounded-xl bg-[#C91520] text-xs font-black text-white shadow-md transition-all hover:bg-[#E50914] active:scale-95 flex items-center justify-center gap-1"
+                >
+                  <span>Diziye Git</span>
+                  <span className="material-symbols-outlined text-sm">chevron_right</span>
+                </Link>
+              </div>
+
             </div>
-          </div>
-        ) : (
-          <div className="flex h-40 items-center justify-center text-white/30 text-xs">
-            Diziler hazırlanıyor...
           </div>
         )}
+
       </div>
     </div>
   );
