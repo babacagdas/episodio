@@ -63,11 +63,9 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
   const [modalSearchQuery, setModalSearchQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  // Beğeni & Silme State'leri
+  // Beğeni State'leri
   const [likedMessages, setLikedMessages] = useState<Record<string, boolean>>({});
   const [heartAnimMsgId, setHeartAnimMsgId] = useState<string | null>(null);
-  const [deleteTargetMsg, setDeleteTargetMsg] = useState<Message | null>(null);
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastTapRef = useRef<{ id: string; time: number } | null>(null);
 
   useEffect(() => {
@@ -92,7 +90,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
     setHeartAnimMsgId(msgId);
     setTimeout(() => {
       setHeartAnimMsgId((curr) => (curr === msgId ? null : curr));
-    }, 700);
+    }, 600);
   };
 
   const handleMessageClick = (msgId: string) => {
@@ -102,49 +100,6 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
       lastTapRef.current = null;
     } else {
       lastTapRef.current = { id: msgId, time: now };
-    }
-  };
-
-  const handleTouchStart = (msg: Message, isMe: boolean) => {
-    if (!isMe) return;
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-    longPressTimerRef.current = setTimeout(() => {
-      setDeleteTargetMsg(msg);
-    }, 450);
-  };
-
-  const handleTouchEnd = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-  };
-
-  const handleContextMenu = (e: React.MouseEvent, msg: Message, isMe: boolean) => {
-    if (!isMe) return;
-    e.preventDefault();
-    setDeleteTargetMsg(msg);
-  };
-
-  const handleDeleteMessage = async () => {
-    if (!deleteTargetMsg) return;
-    const targetId = deleteTargetMsg.id;
-    setDeleteTargetMsg(null);
-
-    setMessages((prev) => prev.filter((m) => m.id !== targetId));
-
-    try {
-      const { error } = await supabase
-        .from('direct_messages')
-        .delete()
-        .eq('id', targetId)
-        .eq('sender_id', currentUser.id);
-
-      if (error) {
-        console.error('Mesaj silme hatası:', error);
-      }
-    } catch (err) {
-      console.error('Mesaj silinirken hata:', err);
     }
   };
 
@@ -819,20 +774,16 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
 
                             <div
                               onClick={() => handleMessageClick(msg.id)}
-                              onTouchStart={() => handleTouchStart(msg, isMe)}
-                              onTouchEnd={handleTouchEnd}
-                              onTouchMove={handleTouchEnd}
-                              onContextMenu={(e) => handleContextMenu(e, msg, isMe)}
                               className={`relative flex flex-col px-4 py-2.5 cursor-pointer select-none transition-transform active:scale-[0.98] ${
                                 isMe
                                   ? 'bg-[#C91520] text-white rounded-[22px] rounded-br-[4px] shadow-[0_6px_20px_rgba(201,21,32,0.22)]'
                                   : 'bg-[#262626] text-white rounded-[22px] rounded-bl-[4px] border border-white/[0.04]'
                               }`}
                             >
-                              {/* Çift Tıklamada Yüzen Kalp Animasyonu */}
+                              {/* Yumuşatılmış Çift Tıklama Kalp Animasyonu */}
                               {heartAnimMsgId === msg.id && (
-                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30 animate-[chatScaleIn_0.3s_cubic-bezier(0.34,1.56,0.64,1)_forwards]">
-                                  <span className="text-3xl drop-shadow-md select-none">❤️</span>
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30 transition-all duration-300 animate-[fadeIn_0.2s_ease-out]">
+                                  <span className="text-2xl opacity-90 scale-105 select-none transition-transform duration-300 drop-shadow-sm">❤️</span>
                                 </div>
                               )}
 
@@ -1067,39 +1018,6 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                   );
                 })
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MESAJ SİLME MODALİ */}
-      {deleteTargetMsg && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-md animate-[fadeIn_0.2s_ease-out]"
-            onClick={() => setDeleteTargetMsg(null)}
-          />
-          <div className="relative z-10 w-full max-w-xs bg-[#121216] border border-white/10 rounded-2xl p-4 flex flex-col items-center text-center shadow-2xl animate-[chatScaleIn_0.2s_ease-out]">
-            <div className="w-10 h-10 rounded-full bg-[#C91520]/20 text-[#C91520] flex items-center justify-center mb-3">
-              <span className="material-symbols-outlined text-xl">delete</span>
-            </div>
-            <h3 className="text-sm font-bold text-white mb-1">Mesajı Sil</h3>
-            <p className="text-xs text-white/50 mb-4">Bu mesajı sohbetten silmek istediğinize emin misiniz?</p>
-            <div className="flex items-center gap-2 w-full">
-              <button
-                type="button"
-                onClick={() => setDeleteTargetMsg(null)}
-                className="flex-1 py-2 text-xs font-semibold text-white/60 hover:text-white rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
-              >
-                İptal
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteMessage}
-                className="flex-1 py-2 text-xs font-semibold text-white rounded-xl bg-[#C91520] hover:bg-[#E50914] transition-colors shadow-md"
-              >
-                Sil
-              </button>
             </div>
           </div>
         </div>
