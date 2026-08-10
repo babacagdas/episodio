@@ -116,6 +116,16 @@ export default function RandomShowModal({ open, onClose, shows }: RandomShowModa
         {hasRolled && !isSpinning && selectedShow && (
           <div className="w-full flex flex-col items-center text-center animate-[slideInRight_0.45s_cubic-bezier(0.16,1,0.3,1)_forwards]">
             
+            {/* Afişin Üstünde Küçük Çerçevesiz Tekrar At Butonu */}
+            <button
+              type="button"
+              onClick={rollDice}
+              className="mb-3 inline-flex items-center gap-1 text-xs font-bold text-[#D4A017] hover:text-white transition-colors cursor-pointer active:scale-95 bg-transparent border-none p-0 tracking-wide"
+            >
+              <span>Tekrar Zarı At</span>
+              <span className="text-sm">🎲</span>
+            </button>
+
             {/* Ortalanmış Büyük Dizi Afişi */}
             <div className="relative h-64 sm:h-76 w-44 sm:w-52 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#16161c] shadow-[0_25px_60px_rgba(0,0,0,0.9)] mb-4">
               {posterUrl ? (
