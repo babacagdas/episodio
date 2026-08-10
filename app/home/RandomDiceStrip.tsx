@@ -19,27 +19,28 @@ export default function RandomDiceStrip() {
 
   return (
     <>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes gentleShake {
+            0%, 100% { transform: rotate(-12deg) translateY(0); }
+            50% { transform: rotate(-6deg) translateY(-5px); }
+          }
+        `
+      }} />
+
       <section
         onClick={() => setModalOpen(true)}
-        className="group relative my-6 flex w-full items-center justify-between border-y border-white/[0.06] bg-transparent py-3 px-1 transition-colors hover:border-white/15 cursor-pointer select-none"
+        className="group relative my-7 flex w-full flex-col items-center justify-center border-y border-white/[0.06] bg-transparent py-5 px-4 text-center transition-colors hover:border-white/20 cursor-pointer select-none"
       >
-        {/* Sol: Orta Büyüklükte Zar */}
-        <div className="flex items-center gap-3">
-          <span className="text-2xl sm:text-3xl inline-block -rotate-12 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
-            🎲
-          </span>
-          <span className="text-sm sm:text-base font-bold text-white transition-colors group-hover:text-[#D4A017]">
-            Bugün Ne İzlesem?
-          </span>
-        </div>
+        {/* Ortada Titreyen Büyütülmüş Zar */}
+        <span className="text-4xl sm:text-5xl inline-block -rotate-12 animate-[gentleShake_2s_infinite_ease-in-out] filter drop-shadow-[0_10px_25px_rgba(255,255,255,0.15)] transition-transform group-hover:scale-115 mb-2.5">
+          🎲
+        </span>
 
-        {/* Sağ: İnce Ok ve İpucu */}
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-white/40 group-hover:text-white transition-colors">
-          <span className="hidden sm:inline">Zarı At</span>
-          <span className="material-symbols-outlined text-base transition-transform duration-200 group-hover:translate-x-1">
-            chevron_right
-          </span>
-        </div>
+        {/* Altında Büyütülmüş Metin */}
+        <span className="text-base sm:text-lg font-black uppercase tracking-wider text-white transition-colors group-hover:text-[#D4A017]">
+          Bugün Ne İzlesem?
+        </span>
       </section>
 
       {/* İnteraktif 3D Zar Modalı */}
