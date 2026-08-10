@@ -699,45 +699,60 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                       return (
                         <div 
                           key={msg.id} 
-                          className="flex flex-col"
+                          className="flex flex-col my-1"
                           style={{
-                            animation: 'chatFadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                            opacity: 0,
-                            transform: 'translateY(12px)'
+                            animation: 'chatFadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                           }}
                         >
                           {showTime && (
-                            <span className="text-[10px] text-white/15 self-center my-3">
-                              {new Date(msg.created_at).toLocaleDateString([], {
+                            <span className="text-[10.5px] font-semibold text-white/30 self-center my-3 tracking-wider uppercase">
+                              {new Date(msg.created_at).toLocaleDateString('tr-TR', {
                                 month: 'short',
                                 day: 'numeric',
                               })}{' '}
+                              &bull;{' '}
                               {new Date(msg.created_at).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })}
                             </span>
                           )}
-                          <div
-                            className={`flex max-w-[76%] flex-col rounded-[1.15rem] px-4 py-2.5 ${
-                              isMe
-                                ? 'bg-[#C91520]/90 text-white self-end rounded-br-md shadow-[0_8px_22px_rgba(201,21,32,0.16)]'
-                                : 'bg-white/[0.04] text-white/90 self-start rounded-bl-md ring-1 ring-white/[0.05]'
-                            }`}
-                          >
-                            <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                              {msg.content}
-                            </p>
-                            <span
-                              className={`text-[9px] self-end mt-1 ${
-                                isMe ? 'text-white/60' : 'text-white/35'
+
+                          <div className={`flex items-end gap-2 ${isMe ? 'self-end justify-end max-w-[80%] sm:max-w-[72%]' : 'self-start justify-start max-w-[80%] sm:max-w-[72%]'}`}>
+                            {/* Gelen mesajda mini profil resmi */}
+                            {!isMe && (
+                              <div className="w-7 h-7 rounded-full overflow-hidden border border-white/10 bg-[#1a1a1a] shrink-0 mb-0.5">
+                                {activeChat.otherUser.avatar_url ? (
+                                  <img src={activeChat.otherUser.avatar_url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-[12px] text-white/40">person</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            <div
+                              className={`flex flex-col px-4 py-2.5 ${
+                                isMe
+                                  ? 'bg-[#C91520] text-white rounded-[22px] rounded-br-[4px] shadow-[0_6px_20px_rgba(201,21,32,0.22)]'
+                                  : 'bg-[#262626] text-white rounded-[22px] rounded-bl-[4px] border border-white/[0.04]'
                               }`}
                             >
-                              {new Date(msg.created_at).toLocaleTimeString([], {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </span>
+                              <p className="text-[13.5px] font-normal leading-[1.4] whitespace-pre-wrap break-words text-white">
+                                {msg.content}
+                              </p>
+                              <span
+                                className={`text-[9.5px] self-end mt-1 font-medium ${
+                                  isMe ? 'text-white/75' : 'text-white/40'
+                                }`}
+                              >
+                                {new Date(msg.created_at).toLocaleTimeString([], {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       );
