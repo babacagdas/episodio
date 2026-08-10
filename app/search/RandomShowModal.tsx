@@ -78,23 +78,24 @@ export default function RandomShowModal({ open, onClose, shows }: RandomShowModa
         }}
       />
 
-      {/* Kapat Butonu */}
+      {/* Kapat Butonu (Tüm telefon ekran modelleri için sabit ve güvenli konumlandırma) */}
       <button
         type="button"
         onClick={onClose}
-        className="absolute right-5 top-5 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/50 transition-colors hover:bg-white/20 hover:text-white"
+        className="fixed right-4 top-[calc(1rem+env(safe-area-inset-top))] z-[130] flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/70 transition-colors hover:bg-white/20 hover:text-white backdrop-blur-md shadow-lg"
+        aria-label="Kapat"
       >
         <span className="material-symbols-outlined text-xl">close</span>
       </button>
 
-      {/* Ana İçerik Alanı */}
-      <div className="relative z-20 flex flex-col items-center justify-center w-full max-w-md">
+      {/* Ana İçerik Alanı (Mobil Taşma Engellemeli Kapsayıcı) */}
+      <div className="relative z-20 flex flex-col items-center justify-center w-full max-w-md max-h-[calc(100dvh-5rem)] overflow-y-auto pt-10 pb-4 select-none">
 
         {/* 1. EKRAN: Zarı Atmak İçin Ekrana Tıklama / 2.15s Dönme Durumu */}
         {(!hasRolled || isSpinning) && (
           <div
             onClick={rollDice}
-            className="flex flex-col items-center justify-center cursor-pointer py-12"
+            className="flex flex-col items-center justify-center cursor-pointer py-10"
           >
             <div
               className={`text-8xl sm:text-9xl filter drop-shadow-[0_20px_40px_rgba(255,255,255,0.15)] transition-transform duration-300 ${
@@ -114,20 +115,20 @@ export default function RandomShowModal({ open, onClose, shows }: RandomShowModa
 
         {/* 2. EKRAN: Ortalanmış Büyük Afişli Çerçevesiz Şık Dizi Sonucu */}
         {hasRolled && !isSpinning && selectedShow && (
-          <div className="w-full flex flex-col items-center text-center animate-[slideInRight_0.45s_cubic-bezier(0.16,1,0.3,1)_forwards]">
+          <div className="w-full flex flex-col items-center text-center animate-[slideInRight_0.45s_cubic-bezier(0.16,1,0.3,1)_forwards] px-2">
             
             {/* Afişin Üstünde Küçük Çerçevesiz Tekrar At Butonu */}
             <button
               type="button"
               onClick={rollDice}
-              className="mb-3 inline-flex items-center gap-1 text-xs font-bold text-[#D4A017] hover:text-white transition-colors cursor-pointer active:scale-95 bg-transparent border-none p-0 tracking-wide"
+              className="mb-2.5 inline-flex items-center gap-1 text-xs font-bold text-[#D4A017] hover:text-white transition-colors cursor-pointer active:scale-95 bg-transparent border-none p-0 tracking-wide"
             >
               <span>Tekrar Zarı At</span>
               <span className="text-sm">🎲</span>
             </button>
 
-            {/* Ortalanmış Büyük Dizi Afişi */}
-            <div className="relative h-64 sm:h-76 w-44 sm:w-52 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#16161c] shadow-[0_25px_60px_rgba(0,0,0,0.9)] mb-4">
+            {/* Ortalanmış Büyük Dizi Afişi (Mobil Boyut Optimize Edildi) */}
+            <div className="relative h-52 sm:h-68 w-36 sm:w-48 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#16161c] shadow-[0_25px_60px_rgba(0,0,0,0.9)] mb-3">
               {posterUrl ? (
                 <img src={posterUrl} alt={selectedShow.name} className="h-full w-full object-cover" />
               ) : (
@@ -138,12 +139,12 @@ export default function RandomShowModal({ open, onClose, shows }: RandomShowModa
             </div>
 
             {/* Dizi Adı */}
-            <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight mb-2 tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-black text-white leading-tight mb-1.5 tracking-tight px-2">
               {selectedShow.name}
             </h2>
 
             {/* Puan & Çıkış Yılı */}
-            <div className="flex items-center justify-center gap-2 mb-3 text-xs font-bold">
+            <div className="flex items-center justify-center gap-2 mb-2 text-xs font-bold">
               {selectedShow.vote_average > 0 && (
                 <span className="inline-flex items-center gap-1 rounded-md bg-[#D4A017]/20 px-2.5 py-0.5 text-xs font-black text-[#D4A017]">
                   ★ {selectedShow.vote_average.toFixed(1)}
@@ -157,7 +158,7 @@ export default function RandomShowModal({ open, onClose, shows }: RandomShowModa
             </div>
 
             {/* Açıklama */}
-            <p className="line-clamp-3 text-xs sm:text-sm font-medium leading-relaxed text-white/70 max-w-sm mb-6">
+            <p className="line-clamp-3 text-[11.5px] sm:text-xs font-medium leading-relaxed text-white/70 max-w-sm mb-5 px-2">
               {selectedShow.overview || 'Bu dizi için henüz açıklama bulunmuyor.'}
             </p>
 
@@ -165,7 +166,7 @@ export default function RandomShowModal({ open, onClose, shows }: RandomShowModa
             <Link
               href={`/show/${selectedShow.id}`}
               onClick={onClose}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#C91520] hover:bg-[#E50914] px-8 py-3 text-xs sm:text-sm font-black text-white shadow-[0_10px_30px_rgba(201,21,32,0.4)] transition-all hover:scale-105 active:scale-95 uppercase tracking-wider"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#C91520] hover:bg-[#E50914] px-7 py-2.5 text-xs sm:text-sm font-black text-white shadow-[0_10px_30px_rgba(201,21,32,0.4)] transition-all hover:scale-105 active:scale-95 uppercase tracking-wider"
             >
               <span>Diziye Git</span>
               <span className="material-symbols-outlined text-base">arrow_forward</span>

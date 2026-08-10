@@ -9,7 +9,7 @@ import FriendsActivityHeaderModal from '@/app/home/FriendsActivityHeaderModal';
 const navItems = [
   { href: '/home', icon: 'home', label: 'Ana Sayfa' },
   { href: '/swiper', icon: 'style', label: 'Seç' },
-  { href: '/chat', icon: 'mark_unread_chat_alt', label: 'Mesajlar' },
+  { href: '/chat', icon: 'chat_bubble', label: 'Mesajlar' },
   { href: '/search', icon: 'search', label: 'Keşfet' },
   { href: '/profile', icon: 'person', label: 'Profil' },
 ];
@@ -203,9 +203,7 @@ export function BottomNav() {
                   {icon}
                 </span>
                 {isChat && unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-2 bg-[#C91520] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center shadow-md animate-pulse">
-                    {unreadCount}
-                  </span>
+                  <span className="absolute top-0.5 right-0.5 h-2 w-2 rounded-full bg-[#C91520] ring-2 ring-[#0A0A0E]" />
                 )}
               </span>
             )}

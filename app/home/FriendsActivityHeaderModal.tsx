@@ -33,6 +33,7 @@ export default function FriendsActivityHeaderModal() {
   const [loading, setLoading] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasFollowing, setHasFollowing] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
 
   // Arka plan scroll engelleme
   useEffect(() => {
@@ -45,6 +46,39 @@ export default function FriendsActivityHeaderModal() {
       document.body.style.overflow = '';
     };
   }, [open]);
+
+  // Sayfa açıldığında arka planda aktiviteleri kontrol et (Yeni bildirim noktası için)
+  useEffect(() => {
+    const checkUnread = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
+        const followingIds = (follows ?? []).map((f: any) => f.following_id);
+        if (followingIds.length === 0) return;
+
+        const { data: statusRes } = await supabase
+          .from('watch_status')
+          .select('updated_at')
+          .in('user_id', followingIds)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+
+        if (statusRes && statusRes.length > 0) {
+          const lastActivityTime = new Date(statusRes[0].updated_at).getTime();
+          const lastSeen = Number(localStorage.getItem('episodio_last_seen_activity') || '0');
+          if (lastActivityTime > lastSeen) {
+            setHasUnread(true);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    };
+    checkUnread();
+  }, []);
 
   const loadActivities = useCallback(async () => {
     setLoading(true);
@@ -174,6 +208,21 @@ export default function FriendsActivityHeaderModal() {
     }
   }, [open, loadActivities]);
 
+  const handleOpenToggle = () => {
+    setOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        setHasUnread(false);
+        try {
+          localStorage.setItem('episodio_last_seen_activity', String(Date.now()));
+        } catch {
+          // ignore
+        }
+      }
+      return next;
+    });
+  };
+
   const displayItems = activities.map((activity) => {
     const name = activity.profile?.full_name || activity.profile?.username || 'Kullanıcı';
     const username = activity.profile?.username;
@@ -215,9 +264,7 @@ export default function FriendsActivityHeaderModal() {
       {/* İçi Boş Kalp İkonu Butonu */}
       <button
         type="button"
-        onClick={() => {
-          setOpen((prev) => !prev);
-        }}
+        onClick={handleOpenToggle}
         className="relative flex h-9 w-9 items-center justify-center rounded-full border border-transparent bg-transparent text-white transition-colors hover:border-white/[0.1] hover:bg-transparent active:scale-95"
         title="Arkadaş Aktiviteleri"
         aria-label="Arkadaş Aktiviteleri"
@@ -225,6 +272,9 @@ export default function FriendsActivityHeaderModal() {
         <span className="material-symbols-outlined text-[22px] text-white/80 hover:text-white transition-colors">
           favorite_border
         </span>
+        {hasUnread && !open && (
+          <span className="absolute bottom-1 right-1 h-2 w-2 rounded-full bg-[#C91520] ring-2 ring-black" />
+        )}
       </button>
 
       {/* Modal / Popover */}
