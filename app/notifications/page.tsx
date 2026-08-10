@@ -65,7 +65,7 @@ export default async function NotificationsPage() {
     <div className="min-h-screen pb-24 md:pb-0 pt-[60px] md:pt-0">
       <MobileHeader />
       <Sidebar />
-      <main className="md:ml-[240px] px-6 md:px-12 py-8 max-w-4xl">
+      <main className="md:ml-[200px] px-6 md:px-12 py-8 max-w-4xl">
         <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
           <div>
             <p className="premium-kicker mb-2">Hesap</p>

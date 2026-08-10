@@ -1,6 +1,6 @@
 export default function ChatLoading() {
   return (
-    <div className="flex h-screen bg-[#090909] md:pl-[240px]">
+    <div className="flex h-screen bg-[#090909] md:pl-[200px]">
       <div className="hidden w-[340px] border-r border-white/[0.06] p-4 md:block">
         <div className="mb-5 h-10 rounded-full border border-white/[0.06]" />
         <div className="space-y-3">

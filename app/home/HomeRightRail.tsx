@@ -54,7 +54,7 @@ export default async function HomeRightRail() {
   const friendColors = ['#C91520', '#D4A017', '#22c55e', '#3b82f6'];
 
   return (
-    <aside className="hidden w-[300px] shrink-0 select-none flex-col gap-5 2xl:flex">
+    <aside className="hidden w-[280px] shrink-0 select-none flex-col gap-5 xl:flex">
       <section className="rounded-2xl border border-white/[0.06] bg-transparent p-5 shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
         <DeferredClientSection
           delay={450}

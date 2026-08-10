@@ -197,7 +197,7 @@ export default function SwiperPage() {
         </Link>
       </header>
 
-      <main className="md:ml-[240px] flex-1 flex flex-col items-center justify-center relative bg-[#090909] py-4 px-4 overflow-hidden h-[calc(100dvh-68px)] md:h-screen pb-20 md:pb-4">
+      <main className="md:ml-[200px] flex-1 flex flex-col items-center justify-center relative bg-[#090909] py-4 px-4 overflow-hidden h-[calc(100dvh-68px)] md:h-screen pb-20 md:pb-4">
         
         {/* Sinematik Arka Plan Blobları */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">

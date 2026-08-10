@@ -68,16 +68,16 @@ export default function Sidebar() {
   }, []);
 
   return (
-    <aside className="hidden md:flex fixed left-0 top-0 z-50 h-full w-[240px] flex-col border-r border-white/[0.08] bg-transparent px-5 py-6">
-      <Link href="/home" className="mx-auto mb-8 block w-[150px]">
+    <aside className="hidden md:flex fixed left-0 top-0 z-50 h-full w-[200px] flex-col border-r border-white/[0.08] bg-transparent px-3.5 py-6">
+      <Link href="/home" className="mx-auto mb-7 block w-[135px]">
         <Image
           alt="Episodio Logo"
           className="h-auto w-full object-contain"
           src="/logo.png"
-          width={300}
-          height={86}
+          width={270}
+          height={77}
           priority
-          sizes="150px"
+          sizes="135px"
         />
       </Link>
 

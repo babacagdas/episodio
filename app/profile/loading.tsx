@@ -1,6 +1,6 @@
 export default function ProfileLoading() {
   return (
-    <main className="w-full overflow-x-hidden md:ml-[240px] md:w-[calc(100%-240px)]">
+    <main className="w-full overflow-x-hidden md:ml-[200px] md:w-[calc(100%-200px)]">
       <div className="h-[220px] border-b border-white/[0.06] md:h-[300px]" />
       <div className="mx-auto -mt-16 max-w-[1200px] px-margin-mobile md:px-12">
         <div className="flex items-end gap-5">

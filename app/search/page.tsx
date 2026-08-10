@@ -297,7 +297,7 @@ export default function Search() {
       <MobileHeader />
       <Sidebar />
 
-      <main className="md:ml-[240px] md:w-[calc(100%-240px)] px-6 md:px-12 pt-8 pb-24 flex flex-col gap-10 overflow-x-hidden">
+      <main className="md:ml-[200px] md:w-[calc(100%-200px)] px-6 md:px-12 pt-8 pb-24 flex flex-col gap-10 overflow-x-hidden">
 
         {/* Title */}
         <div className="flex flex-col gap-1">

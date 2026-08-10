@@ -458,7 +458,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
       <Sidebar />
 
       {/* Ana Sohbet Konteyneri */}
-      <main className="md:ml-[240px] flex-1 flex h-[100dvh] min-h-[100dvh] fixed inset-0 md:relative md:inset-auto md:h-full md:min-h-0 w-full md:w-[calc(100%-240px)] bg-[#090909] overflow-hidden">
+      <main className="md:ml-[200px] flex-1 flex h-[100dvh] min-h-[100dvh] fixed inset-0 md:relative md:inset-auto md:h-full md:min-h-0 w-full md:w-[calc(100%-200px)] bg-[#090909] overflow-hidden">
         
         {/* Sinematik Arka Plan Işık Huzmeleri */}
         <div className="absolute inset-0 pointer-events-none z-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent_26%)]" />

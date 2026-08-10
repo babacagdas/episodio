@@ -36,7 +36,7 @@ export default async function PersonDetailPage({
       <MobileHeader />
       <Sidebar />
 
-      <main className="overflow-x-hidden px-margin-mobile py-7 md:ml-[240px] md:px-10">
+      <main className="overflow-x-hidden px-margin-mobile py-7 md:ml-[200px] md:px-10">
         <div className="mx-auto max-w-[1200px]">
           {/* Smart Back Button */}
           <div className="mb-6">

@@ -98,7 +98,7 @@ export default async function ListDetailPage({ params }: { params: Promise<ListP
       <MobileHeader />
       <Sidebar />
 
-      <main className="md:ml-[240px] px-margin-mobile md:px-12 py-8 max-w-[1400px] mx-auto">
+      <main className="md:ml-[200px] px-margin-mobile md:px-12 py-8 max-w-[1400px] mx-auto">
         <div className="flex items-center gap-2 text-xs text-white/35 mb-4">
           <Link href={isOwner ? '/profile' : ownerUsername ? `/u/${ownerUsername}` : '/search'} className="hover:text-white transition-colors">
             {isOwner ? 'Profil' : ownerName}

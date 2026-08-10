@@ -1,6 +1,6 @@
 export default function AppLoading() {
   return (
-    <div className="min-h-screen bg-[#0A0A0A] px-6 py-8 text-white md:ml-[240px] md:px-10">
+    <div className="min-h-screen bg-[#0A0A0A] px-6 py-8 text-white md:ml-[200px] md:px-10">
       <div className="mb-8 flex items-start justify-between gap-6">
         <div className="space-y-4">
           <div className="h-9 w-72 rounded-full border border-white/[0.06]" />

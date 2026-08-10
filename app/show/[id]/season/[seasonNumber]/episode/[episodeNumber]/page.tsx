@@ -46,7 +46,7 @@ export default async function EpisodePage({
         </Link>
       </div>
 
-      <main className="md:ml-[240px] md:w-[calc(100%-240px)] w-full overflow-x-hidden">
+      <main className="md:ml-[200px] md:w-[calc(100%-200px)] w-full overflow-x-hidden">
         <section className="relative w-full h-[430px] md:h-[520px]">
           <div className="absolute inset-0">
             {heroImage

@@ -198,7 +198,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
       <MobileHeader />
       <Sidebar />
 
-      <main className="md:ml-[240px]">
+      <main className="md:ml-[200px]">
         <section className="relative">
           <div className="relative h-[200px] w-full overflow-hidden bg-[#0A0A0A] md:h-[260px]">
             {coverImageUrl ? (

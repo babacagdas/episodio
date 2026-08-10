@@ -46,7 +46,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
         </Link>
       </div>
 
-      <main className="md:ml-[240px] md:w-[calc(100%-240px)] w-full overflow-x-hidden">
+      <main className="md:ml-[200px] md:w-[calc(100%-200px)] w-full overflow-x-hidden">
         {/* Hero */}
         <section className="relative w-full h-[560px] md:h-[680px]">
           <div className="absolute inset-0">

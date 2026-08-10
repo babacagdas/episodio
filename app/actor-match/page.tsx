@@ -180,7 +180,7 @@ export default function ActorMatchPage() {
         </Link>
       </header>
 
-      <main className="md:ml-[240px] flex-1 flex flex-col items-center justify-center relative bg-[#090909] py-4 px-4 overflow-hidden h-[calc(100dvh-68px)] md:h-screen pb-20 md:pb-4">
+      <main className="md:ml-[200px] flex-1 flex flex-col items-center justify-center relative bg-[#090909] py-4 px-4 overflow-hidden h-[calc(100dvh-68px)] md:h-screen pb-20 md:pb-4">
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.12),transparent_18rem),radial-gradient(circle_at_22%_72%,rgba(201,21,32,0.16),transparent_24rem),linear-gradient(135deg,#050505_0%,#111_46%,rgba(201,21,32,0.13)_100%)] opacity-70" />
           <div className="absolute inset-0 bg-[#070707]/55" />

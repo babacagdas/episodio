@@ -56,7 +56,7 @@ function SectionFallback({ tall = false }: { tall?: boolean }) {
 
 function RightRailFallback() {
   return (
-    <aside className="hidden w-[300px] shrink-0 flex-col gap-5 2xl:flex">
+    <aside className="hidden w-[280px] shrink-0 flex-col gap-5 xl:flex">
       <div className="h-60 rounded-2xl border border-white/[0.06]" />
       <div className="h-72 rounded-2xl border border-white/[0.06]" />
       <div className="h-52 rounded-2xl border border-white/[0.06]" />
@@ -89,7 +89,7 @@ export default function Home() {
 
       <Sidebar />
 
-      <main className="overflow-x-hidden px-margin-mobile py-7 md:ml-[240px] md:px-10 2xl:pr-8">
+      <main className="overflow-x-hidden px-margin-mobile py-7 md:ml-[200px] md:px-8 xl:pr-6">
         <div className="mx-auto flex max-w-[1540px] gap-7">
           <div className="min-w-0 flex-1">
             <Suspense fallback={<TopBarFallback />}>
@@ -131,7 +131,7 @@ export default function Home() {
               <HomeListRail />
             </Suspense>
 
-            <section className="mb-8 2xl:hidden">
+            <section className="mb-8 xl:hidden">
               <DeferredClientSection fallback={<SectionFallback />} delay={450}>
                 <FriendsActivitySection />
               </DeferredClientSection>

@@ -1,6 +1,6 @@
 export default function SearchLoading() {
   return (
-    <div className="min-h-screen px-6 pb-24 pt-8 md:ml-[240px] md:px-12">
+    <div className="min-h-screen px-6 pb-24 pt-8 md:ml-[200px] md:px-12">
       <div className="mb-8 space-y-3">
         <div className="h-8 w-32 rounded-full border border-white/[0.06]" />
         <div className="h-10 max-w-2xl rounded-full border border-white/[0.06]" />
