@@ -34,6 +34,18 @@ export default function FriendsActivityHeaderModal() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hasFollowing, setHasFollowing] = useState(false);
 
+  // Arka plan scroll engelleme
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
   const loadActivities = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
@@ -86,15 +98,41 @@ export default function FriendsActivityHeaderModal() {
 
     const reviewShowIds = (reviewsRes.data ?? []).map((r: any) => r.show_id);
     const missingIds = reviewShowIds.filter((id: number) => !showNameMap[id]);
+    
     if (missingIds.length > 0) {
-      const { data: wlRows } = await supabase
-        .from('watchlist')
-        .select('show_id, show_name, poster_path')
-        .in('show_id', missingIds)
-        .limit(50);
+      const [{ data: wsRows }, { data: wlRows }] = await Promise.all([
+        supabase.from('watch_status').select('show_id, show_name, poster_path').in('show_id', missingIds).limit(50),
+        supabase.from('watchlist').select('show_id, show_name, poster_path').in('show_id', missingIds).limit(50),
+      ]);
+      (wsRows ?? []).forEach((w: any) => {
+        if (!showNameMap[w.show_id]) showNameMap[w.show_id] = { name: w.show_name, poster: w.poster_path };
+      });
       (wlRows ?? []).forEach((w: any) => {
         if (!showNameMap[w.show_id]) showNameMap[w.show_id] = { name: w.show_name, poster: w.poster_path };
       });
+    }
+
+    // TMDB Fallback if still missing name
+    const stillMissingIds = missingIds.filter((id: number) => !showNameMap[id] || showNameMap[id].name.startsWith('Dizi #'));
+    if (stillMissingIds.length > 0) {
+      const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY || process.env.TMDB_API_KEY;
+      if (apiKey) {
+        await Promise.all(
+          stillMissingIds.map(async (sid) => {
+            try {
+              const res = await fetch(`https://api.themoviedb.org/3/tv/${sid}?api_key=${apiKey}&language=tr-TR`);
+              if (res.ok) {
+                const data = await res.json();
+                if (data.name) {
+                  showNameMap[sid] = { name: data.name, poster: data.poster_path };
+                }
+              }
+            } catch {
+              // ignore
+            }
+          })
+        );
+      }
     }
 
     const reviewItems: ActivityItem[] = (reviewsRes.data ?? []).map((r: any) => ({
@@ -174,7 +212,7 @@ export default function FriendsActivityHeaderModal() {
 
   return (
     <div className="relative">
-      {/* Kalp İkonu Butonu */}
+      {/* İçi Boş Kalp İkonu Butonu */}
       <button
         type="button"
         onClick={() => {
@@ -184,21 +222,21 @@ export default function FriendsActivityHeaderModal() {
         title="Arkadaş Aktiviteleri"
         aria-label="Arkadaş Aktiviteleri"
       >
-        <span className="material-symbols-outlined text-[19px] text-[#C91520]" style={{ fontVariationSettings: "'FILL' 1" }}>
-          favorite
+        <span className="material-symbols-outlined text-[19px] text-[#C91520]">
+          favorite_border
         </span>
       </button>
 
       {/* Modal / Popover */}
       {open && (
         <>
-          <div className="fixed inset-0 z-[119]" onClick={() => setOpen(false)} />
-          <div className="fixed top-16 left-3 right-3 max-h-[calc(100dvh-6rem)] overflow-y-auto bg-[#0a0a0d] border border-white/10 rounded-2xl shadow-2xl p-3.5 z-[120] md:absolute md:top-auto md:left-auto md:right-0 md:mt-2 md:w-[350px] md:max-h-[440px] animate-[chatScaleIn_0.2s_ease-out]">
+          <div className="fixed inset-0 z-[119] bg-black/40 backdrop-blur-xs" onClick={() => setOpen(false)} />
+          <div className="fixed top-[calc(3.75rem+env(safe-area-inset-top))] left-3 right-3 max-h-[calc(100dvh-7rem)] overflow-y-auto bg-[#0a0a0d] border border-white/10 rounded-2xl shadow-2xl p-3.5 z-[120] md:absolute md:top-auto md:left-auto md:right-0 md:mt-2 md:w-[350px] md:max-h-[440px] animate-[chatScaleIn_0.2s_ease-out]">
             
             {/* Header */}
             <div className="flex items-center justify-between px-2 py-1.5 mb-2 border-b border-[#C91520]/40">
               <p className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[15px] text-[#C91520]" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                <span className="material-symbols-outlined text-[15px] text-[#C91520]">favorite_border</span>
                 Arkadaş Aktiviteleri
               </p>
               <button

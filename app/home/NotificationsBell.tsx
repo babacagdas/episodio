@@ -140,6 +140,17 @@ export default function NotificationsBell() {
     };
   }, []);
 
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
   return (
     <div className="relative">
       <button
@@ -157,8 +168,8 @@ export default function NotificationsBell() {
 
       {open && (
         <>
-          <div className="fixed inset-0 z-[119]" onClick={() => setOpen(false)} />
-          <div className="fixed top-16 left-3 right-3 max-h-[calc(100dvh-6rem)] overflow-y-auto bg-black border border-white/10 rounded-2xl shadow-2xl p-3 z-[120] md:absolute md:top-auto md:left-auto md:right-0 md:mt-2 md:w-[340px] md:max-h-[420px]">
+          <div className="fixed inset-0 z-[119] bg-black/40 backdrop-blur-xs" onClick={() => setOpen(false)} />
+          <div className="fixed top-[calc(3.75rem+env(safe-area-inset-top))] left-3 right-3 max-h-[calc(100dvh-7rem)] overflow-y-auto bg-black border border-white/10 rounded-2xl shadow-2xl p-3 z-[120] md:absolute md:top-auto md:left-auto md:right-0 md:mt-2 md:w-[340px] md:max-h-[420px]">
             <div className="flex items-center justify-between px-2 py-1 mb-2 border-b border-[#C91520]/50">
               <p className="text-sm font-semibold text-white">Bildirimler</p>
               {unreadCount > 0 && (
