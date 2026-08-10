@@ -9,7 +9,7 @@ import FriendsActivityHeaderModal from '@/app/home/FriendsActivityHeaderModal';
 const navItems = [
   { href: '/home', icon: 'home', label: 'Ana Sayfa' },
   { href: '/swiper', icon: 'style', label: 'Seç' },
-  { href: '/chat', icon: 'send', label: 'Mesajlar' },
+  { href: '/chat', icon: 'mark_unread_chat_alt', label: 'Mesajlar' },
   { href: '/search', icon: 'search', label: 'Keşfet' },
   { href: '/profile', icon: 'person', label: 'Profil' },
 ];
@@ -197,7 +197,7 @@ export function BottomNav() {
             ) : (
               <span className={`relative flex items-center justify-center transition-colors duration-200 ${active ? 'text-white font-bold' : 'text-white/40 hover:text-white/75'}`}>
                 <span
-                  className={`material-symbols-outlined text-[23px] ${isChat ? '-rotate-12 translate-y-[-1px]' : ''}`}
+                  className="material-symbols-outlined text-[23px]"
                   style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
                 >
                   {icon}
