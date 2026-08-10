@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import NotificationsBell from './NotificationsBell';
+import FriendsActivityHeaderModal from './FriendsActivityHeaderModal';
 
 export default async function HomeTopBar() {
   const supabase = await createClient();
@@ -65,6 +66,7 @@ export default async function HomeTopBar() {
             <span>Liste Oluştur</span>
           </Link>
 
+          <FriendsActivityHeaderModal />
           <NotificationsBell />
 
           <Link
