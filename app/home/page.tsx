@@ -121,7 +121,7 @@ export default function Home() {
 
             <section className="mb-8">
               <div className="mb-4 flex items-center justify-between gap-4">
-                <h2 className="text-lg font-bold text-white">Bu Hafta Trend</h2>
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Dizilere Göz At</h2>
                 <Link href="/search" className="inline-flex items-center gap-1 text-xs font-semibold text-[#C91520] transition-colors hover:text-white">
                   Tümünü Gör
                   <span className="material-symbols-outlined text-[16px]">chevron_right</span>
