@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 export interface MoodFilterSelection {
   type: 'genre' | 'format';
   value: number | string;
@@ -14,17 +12,11 @@ interface DiscoverMoodBannerProps {
 }
 
 const MOODS = [
-  { label: '🍿 Kafa Dağıtmalık', genreId: 35 },
-  { label: '🧠 Zihin Bükücü', genreId: 10765 },
-  { label: '⚡ Adrenalin', genreId: 10759 },
-  { label: '🍷 Derin Drama', genreId: 18 },
-  { label: '👻 Gerilim', genreId: 9648 },
-];
-
-const FORMATS = [
-  { label: '⚡ Tek Oturuşta Biter (Mini Dizi)', format: 'mini' },
-  { label: '⏳ Hızlı Tüketim (20-30 Dk)', format: 'short' },
-  { label: '🏆 Efsane Maraton', format: 'marathon' },
+  { label: 'Kafa Dağıtmalık', genreId: 35, icon: 'sentiment_very_satisfied' },
+  { label: 'Zihin Bükücü', genreId: 10765, icon: 'psychology' },
+  { label: 'Adrenalin', genreId: 10759, icon: 'bolt' },
+  { label: 'Derin Drama', genreId: 18, icon: 'auto_awesome' },
+  { label: 'Korku & Gerilim', genreId: 9648, icon: 'dark_mode' },
 ];
 
 export default function DiscoverMoodBanner({ onSelectFilter, activeSelection }: DiscoverMoodBannerProps) {
@@ -36,40 +28,37 @@ export default function DiscoverMoodBanner({ onSelectFilter, activeSelection }: 
     }
   }
 
-  function handleFormatClick(fmt: typeof FORMATS[0]) {
-    if (activeSelection?.type === 'format' && activeSelection.value === fmt.format) {
-      onSelectFilter(null);
-    } else {
-      onSelectFilter({ type: 'format', value: fmt.format, label: fmt.label });
-    }
-  }
-
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0E0E14] via-[#12121A] to-[#0A0A0E] p-5 sm:p-6 shadow-2xl backdrop-blur-xl">
-      {/* Ambient Red & Gold Background Glows */}
-      <div className="absolute top-0 left-0 w-64 h-32 bg-[#C91520]/10 blur-3xl pointer-events-none rounded-full" />
-      <div className="absolute bottom-0 right-0 w-64 h-32 bg-[#D4A017]/10 blur-3xl pointer-events-none rounded-full" />
+    <section className="relative w-full overflow-hidden rounded-2xl border border-white/10 bg-[#121212] p-5 sm:p-6 shadow-xl transition-all duration-300 my-6">
+      {/* Subtle Ambient Glow */}
+      <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-[#C91520]/15 blur-3xl" />
 
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 divide-y lg:divide-y-0 lg:divide-x divide-white/10">
+      <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         
-        {/* SOL TARAF: Ruh Haline Göre Dizi Bul */}
-        <div className="space-y-3.5 pt-1 lg:pt-0">
+        {/* Left Side: Text & Mood Pills */}
+        <div className="flex-1 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-white flex items-center gap-1.5">
-              <span>Ruh Haline Göre Keşfet</span>
-            </h3>
-            {activeSelection?.type === 'genre' && (
+            <div>
+              <h3 className="font-['Poppins',sans-serif] text-base font-extrabold text-white sm:text-xl tracking-tight">
+                Ruh Haline Göre Dizi Bul
+              </h3>
+              <p className="mt-1 text-xs font-medium text-white/50">
+                Anlık modunuza en uygun dizileri tek tıkla canlı keşfedin.
+              </p>
+            </div>
+            {activeSelection && (
               <button
                 type="button"
                 onClick={() => onSelectFilter(null)}
-                className="text-[11px] font-semibold text-[#C91520] hover:underline"
+                className="text-xs font-semibold text-[#C91520] hover:underline shrink-0 ml-2"
               >
-                Temizle
+                Filtreyi Temizle
               </button>
             )}
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          {/* Clean Material Symbols Mood Buttons (No Emojis) */}
+          <div className="flex flex-wrap gap-2.5 pt-1">
             {MOODS.map((m) => {
               const isSelected = activeSelection?.type === 'genre' && activeSelection.value === m.genreId;
               return (
@@ -77,54 +66,54 @@ export default function DiscoverMoodBanner({ onSelectFilter, activeSelection }: 
                   key={m.genreId}
                   type="button"
                   onClick={() => handleMoodClick(m)}
-                  className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all backdrop-blur-md ${
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                     isSelected
-                      ? 'bg-[#C91520] text-white shadow-[0_4px_20px_rgba(201,21,32,0.5)] scale-105'
-                      : 'bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/10 active:scale-95'
+                      ? 'bg-[#C91520] text-white shadow-[0_4px_20px_rgba(201,21,32,0.4)] scale-105'
+                      : 'bg-white/[0.05] text-white/70 hover:text-white hover:bg-white/10 active:scale-95 border border-white/5'
                   }`}
                 >
-                  {m.label}
+                  <span className={`material-symbols-outlined text-[17px] ${isSelected ? 'text-white' : 'text-[#C91520]'}`}>
+                    {m.icon}
+                  </span>
+                  <span>{m.label}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* SAĞ TARAF: Süreye & Tarza Göre Keşfet */}
-        <div className="space-y-3.5 pt-5 lg:pt-0 lg:pl-8">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider text-[#D4A017] flex items-center gap-1.5">
-              <span>Süreye & Tarza Göre Keşfet</span>
-            </h3>
-            {activeSelection?.type === 'format' && (
-              <button
-                type="button"
-                onClick={() => onSelectFilter(null)}
-                className="text-[11px] font-semibold text-[#D4A017] hover:underline"
-              >
-                Temizle
-              </button>
-            )}
-          </div>
+        {/* Right Side: Compact Fanned 3-Poster Cards (Dizi Eşleştirici Tarzı Görsel) */}
+        <div className="relative z-10 flex shrink-0 items-center justify-center self-center md:self-auto py-1">
+          <div className="relative flex h-24 w-28 items-center justify-center sm:h-28 sm:w-32">
+            {/* Poster 1: Peaky Blinders (Left) */}
+            <div className="absolute left-0 top-1/2 h-20 w-13 -translate-y-1/2 -rotate-12 rounded-lg border border-white/10 bg-[#181818] overflow-hidden shadow-md sm:h-22 sm:w-14">
+              <img
+                src="https://image.tmdb.org/t/p/w342/vUUqzWa2LnHIVqkaKVlVGkVcZIW.jpg"
+                alt="Peaky Blinders"
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
 
-          <div className="flex flex-wrap gap-2">
-            {FORMATS.map((f) => {
-              const isSelected = activeSelection?.type === 'format' && activeSelection.value === f.format;
-              return (
-                <button
-                  key={f.format}
-                  type="button"
-                  onClick={() => handleFormatClick(f)}
-                  className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all backdrop-blur-md ${
-                    isSelected
-                      ? 'bg-[#D4A017] text-black shadow-[0_4px_20px_rgba(212,160,23,0.4)] scale-105'
-                      : 'bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/10 active:scale-95'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              );
-            })}
+            {/* Poster 3: Stranger Things (Right) */}
+            <div className="absolute right-0 top-1/2 h-20 w-13 -translate-y-1/2 rotate-12 rounded-lg border border-white/10 bg-[#181818] overflow-hidden shadow-md sm:h-22 sm:w-14">
+              <img
+                src="https://image.tmdb.org/t/p/w342/49WJfeN0moxb9IPfGn8AIqMGskD.jpg"
+                alt="Stranger Things"
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+
+            {/* Poster 2: Breaking Bad (Center - Front) */}
+            <div className="relative z-10 h-22 w-14 scale-105 rounded-lg border border-[#C91520]/60 bg-[#181818] overflow-hidden shadow-xl sm:h-24 sm:w-15">
+              <img
+                src="https://image.tmdb.org/t/p/w342/anFx9aTOOYqgS3v7x3R84Kz67ly.jpg"
+                alt="Breaking Bad"
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
           </div>
         </div>
 
