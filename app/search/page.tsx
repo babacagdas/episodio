@@ -219,7 +219,7 @@ export default function Search() {
         else qs.set('originCountry', f.category.originCountry);
       }
       if (f.year) qs.set('year', String(f.year));
-      if (f.provider) qs.set('providerId', String(f.provider.providerId));
+      if (f.provider) qs.set('providerId', String(f.provider.provider_id));
 
       const res = await fetch(`/api/shows/filter?${qs.toString()}`);
       const data: unknown = await res.json().catch(() => null);

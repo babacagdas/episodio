@@ -7,19 +7,20 @@ export type FilterCategory =
   | { kind: 'origin'; originCountry: string; label: string };
 
 export type PlatformItem = {
-  providerId: number;
-  name: string;
-  logo: string;
+  provider_id: number;
+  provider_name: string;
+  logo_path: string;
 };
 
-export const PLATFORMS: PlatformItem[] = [
-  { providerId: 8, name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg' },
-  { providerId: 337, name: 'Disney+', logo: 'https://image.tmdb.org/t/p/w92/97yvRBw1GzX7fXprcF80er19ot.jpg' },
-  { providerId: 119, name: 'Prime Video', logo: 'https://image.tmdb.org/t/p/w92/pvske1MyAoymrs5bguRfVqYiM9a.jpg' },
-  { providerId: 350, name: 'Apple TV', logo: 'https://image.tmdb.org/t/p/w92/mcbz1LgtErU9p4UdbZ0rG6RTWHX.jpg' },
-  { providerId: 150, name: 'BluTV', logo: 'https://image.tmdb.org/t/p/w92/47klot430ytIqldQUUx2avN45Sr.jpg' },
-  { providerId: 1750, name: 'TOD', logo: 'https://image.tmdb.org/t/p/w92/bFxDjHDXP02u1dLPZfTsTC1L6EA.jpg' },
-  { providerId: 1899, name: 'HBO Max', logo: 'https://image.tmdb.org/t/p/w92/jbe4gVSfRlbPTdESXhEKpornsfu.jpg' },
+// Fallback statik platformlar (TMDB Canlı API ile de beslenir)
+const FALLBACK_PLATFORMS: PlatformItem[] = [
+  { provider_id: 8, provider_name: 'Netflix', logo_path: '/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg' },
+  { provider_id: 337, provider_name: 'Disney+', logo_path: '/97yvRBw1GzX7fXprcF80er19ot.jpg' },
+  { provider_id: 119, provider_name: 'Prime Video', logo_path: '/pvske1MyAoymrs5bguRfVqYiM9a.jpg' },
+  { provider_id: 350, provider_name: 'Apple TV', logo_path: '/mcbz1LgtErU9p4UdbZ0rG6RTWHX.jpg' },
+  { provider_id: 150, provider_name: 'BluTV', logo_path: '/47klot430ytIqldQUUx2avN45Sr.jpg' },
+  { provider_id: 1750, provider_name: 'TOD', logo_path: '/bFxDjHDXP02u1dLPZfTsTC1L6EA.jpg' },
+  { provider_id: 1899, provider_name: 'HBO Max', logo_path: '/jbe4gVSfRlbPTdESXhEKpornsfu.jpg' },
 ];
 
 export const FILTER_CATEGORIES: FilterCategory[] = [
@@ -56,13 +57,32 @@ interface DiscoverFilterPanelProps {
 
 export default function DiscoverFilterPanel({ open, onClose, onApply, initial, busy }: DiscoverFilterPanelProps) {
   const [selectedLabel, setSelectedLabel] = useState<string | null>(initial?.category?.label ?? null);
-  const [selectedProviderId, setSelectedProviderId] = useState<number | null>(initial?.provider?.providerId ?? null);
+  const [selectedProviderId, setSelectedProviderId] = useState<number | null>(initial?.provider?.provider_id ?? null);
   const [year, setYear] = useState<string>(initial?.year ? String(initial.year) : '');
+  const [platforms, setPlatforms] = useState<PlatformItem[]>(FALLBACK_PLATFORMS);
+
+  // TMDB Canlı Platform Listesini Çek
+  useEffect(() => {
+    async function fetchProviders() {
+      try {
+        const res = await fetch('/api/shows/providers');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setPlatforms(data);
+          }
+        }
+      } catch {
+        // Fallback platformlar kullanılır
+      }
+    }
+    fetchProviders();
+  }, []);
 
   useEffect(() => {
     if (!open) return;
     setSelectedLabel(initial?.category?.label ?? null);
-    setSelectedProviderId(initial?.provider?.providerId ?? null);
+    setSelectedProviderId(initial?.provider?.provider_id ?? null);
     setYear(initial?.year ? String(initial.year) : '');
   }, [open, initial]);
 
@@ -77,9 +97,9 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
 
   const handleApply = useCallback(() => {
     const cat = FILTER_CATEGORIES.find((c) => c.label === selectedLabel) ?? null;
-    const prov = PLATFORMS.find((p) => p.providerId === selectedProviderId) ?? null;
+    const prov = platforms.find((p) => p.provider_id === selectedProviderId) ?? null;
     onApply({ category: cat, year: year ? Number(year) : null, provider: prov });
-  }, [onApply, selectedLabel, selectedProviderId, year]);
+  }, [onApply, selectedLabel, selectedProviderId, year, platforms]);
 
   if (!open) return null;
 
@@ -121,39 +141,46 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
         {/* Content */}
         <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-y-contain px-5 py-5 pb-6">
           
-          {/* 1. YAYIN PLATFORMU (Dizilerin Detay Sayfasındaki Gibi Yuvarlak Profilli) */}
+          {/* 1. YAYIN PLATFORMU (Dizilerin Detay Sayfasındaki İkonların Birebir Aynısı) */}
           <section>
             <p className="mb-2.5 text-xs font-bold uppercase tracking-widest text-white/40 flex items-center gap-1.5">
               <span className="material-symbols-outlined text-sm text-[#D4A017]">live_tv</span>
               Yayın Platformu
             </p>
             <div className="flex items-center gap-3 overflow-x-auto pb-2 custom-scrollbar">
-              {PLATFORMS.map((p) => {
-                const isSelected = selectedProviderId === p.providerId;
+              {platforms.map((p) => {
+                const isSelected = selectedProviderId === p.provider_id;
+                const logoUrl = p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : null;
+
                 return (
                   <button
-                    key={p.providerId}
+                    key={p.provider_id}
                     type="button"
-                    onClick={() => setSelectedProviderId(isSelected ? null : p.providerId)}
+                    title={p.provider_name}
+                    onClick={() => setSelectedProviderId(isSelected ? null : p.provider_id)}
                     className="flex flex-col items-center gap-1.5 group shrink-0"
                   >
                     <div
-                      className={`relative w-12 h-12 rounded-full overflow-hidden border-2 transition-all duration-300 ${
+                      className={`relative w-11 h-11 rounded-full overflow-hidden border-2 transition-all duration-300 ${
                         isSelected
                           ? 'border-[#C91520] ring-4 ring-[#C91520]/30 scale-110 shadow-[0_0_20px_rgba(201,21,32,0.5)]'
                           : 'border-white/10 group-hover:border-white/30 bg-[#121216] opacity-75 group-hover:opacity-100'
                       }`}
                     >
-                      <img
-                        src={p.logo}
-                        alt={p.name}
-                        className="w-full h-full object-cover"
-                        loading="eager"
-                        crossOrigin="anonymous"
-                      />
+                      {logoUrl ? (
+                        <img
+                          src={logoUrl}
+                          alt={p.provider_name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-[#18181c] text-white/40 text-xs font-bold">
+                          {p.provider_name[0]}
+                        </div>
+                      )}
                     </div>
                     <span className={`text-[10.5px] font-bold transition-colors ${isSelected ? 'text-[#C91520]' : 'text-white/50 group-hover:text-white'}`}>
-                      {p.name}
+                      {p.provider_name.split(' ')[0]}
                     </span>
                   </button>
                 );
