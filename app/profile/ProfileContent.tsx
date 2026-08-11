@@ -89,6 +89,7 @@ export default function ProfileContent() {
     cover_show_id: null,
   });
   const [activeTab, setActiveTab] = useState<'watchlist' | 'watched' | 'lists' | 'actors'>(initialTab);
+  const [watchedSubStatus, setWatchedSubStatus] = useState<'completed' | 'watching' | 'dropped' | 'plan_to_watch'>('completed');
   const [listCount, setListCount] = useState(0);
   const { watchlist, loading } = useWatchlist(!!user && activeTab === 'watchlist');
   const { lists, sharedLists, likedLists, countsByListId, postersByListId, likesByListId, creatorsByListId, createList, loading: listsLoading, error: listsError } = useLists(!!user && activeTab === 'lists');
@@ -262,22 +263,23 @@ export default function ProfileContent() {
   }, [activeTab, favoriteActorsLoaded, user]);
 
   useEffect(() => {
-    if (!user || activeTab !== 'watched' || watchedLoaded) return;
+    if (!user || activeTab !== 'watched') return;
     const supabase = createClient();
     setWatchedLoading(true);
     void (async () => {
-      const { data: watchedData } = await supabase
+      const { data: watchedData, count } = await supabase
         .from('watch_status')
-        .select('show_id, show_name, poster_path')
+        .select('show_id, show_name, poster_path', { count: 'exact' })
         .eq('user_id', user.id)
-        .eq('status', 'completed')
+        .eq('status', watchedSubStatus)
         .order('updated_at', { ascending: false })
         .range(0, WATCHED_PAGE_SIZE - 1);
       setWatchedShows(watchedData ?? []);
+      if (count !== null) setWatchedCount(count);
       setWatchedLoaded(true);
       setWatchedLoading(false);
     })();
-  }, [activeTab, user, watchedLoaded]);
+  }, [activeTab, user, watchedSubStatus]);
 
   const activeCoverShowId = editOpen ? (form.cover_show_id ?? null) : (profile.cover_show_id ?? null);
 
@@ -527,7 +529,7 @@ export default function ProfileContent() {
       .from('watch_status')
       .select('show_id, show_name, poster_path')
       .eq('user_id', user.id)
-      .eq('status', 'completed')
+      .eq('status', watchedSubStatus)
       .order('updated_at', { ascending: false })
       .range(from, to);
 
@@ -1292,6 +1294,37 @@ export default function ProfileContent() {
                 {profile.activity_visible ? 'Herkese Açık' : 'Gizli'}
               </button>
             </div>
+
+            {/* Alt Durum Filtreleri (Bitirdiklerim, İzliyorum, Yarıda Bıraktıklarım 🔒, İzleyeceklerim 🔒) */}
+            <div className="flex flex-wrap items-center gap-2 mb-5">
+              {[
+                { key: 'completed', label: 'Bitirdiklerim', icon: 'check_circle', color: 'text-emerald-400' },
+                { key: 'watching', label: 'İzliyorum', icon: 'play_arrow', color: 'text-[#C91520]' },
+                { key: 'dropped', label: 'Yarıda Bıraktıklarım 🔒', icon: 'pause_circle', color: 'text-amber-400' },
+                { key: 'plan_to_watch', label: 'İzleyeceklerim 🔒', icon: 'bookmark', color: 'text-sky-400' },
+              ].map((sub) => (
+                <button
+                  key={sub.key}
+                  type="button"
+                  onClick={() => setWatchedSubStatus(sub.key as any)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+                    watchedSubStatus === sub.key
+                      ? 'bg-white/10 text-white border-white/20 shadow-md'
+                      : 'bg-white/[0.03] text-white/40 border-white/5 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <span className={`material-symbols-outlined text-sm ${sub.color}`}>{sub.icon}</span>
+                  <span>{sub.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {(watchedSubStatus === 'dropped' || watchedSubStatus === 'plan_to_watch') && (
+              <div className="mb-4 flex items-center gap-2 text-xs text-white/50 bg-white/5 border border-white/10 px-3.5 py-2 rounded-xl">
+                <span className="material-symbols-outlined text-sm text-amber-400">lock</span>
+                <span>Gizli &bull; Bu sekmeyi ({watchedSubStatus === 'dropped' ? 'Yarıda Bıraktıklarım' : 'İzleyeceklerim'}) profilinizde sadece siz görebilirsiniz.</span>
+              </div>
+            )}
 
             {watchedLoading ? (
               <div className="grid grid-cols-3 gap-2.5 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
