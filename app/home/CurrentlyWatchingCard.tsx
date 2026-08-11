@@ -37,8 +37,8 @@ export default async function CurrentlyWatchingCard() {
           show_id: row.show_id,
           show_name: row.show_name,
           poster_path: row.poster_path,
-          season: `S${sNum}`,
-          episode: `E${eNum}`,
+          season: `${sNum}. Sezon`,
+          episode: `${eNum}. Bölüm`,
           progress: pPercent,
         };
       });
@@ -66,9 +66,9 @@ export default async function CurrentlyWatchingCard() {
         <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-base font-bold text-white">Bir dizi/film izlemeye başla</h3>
+              <h3 className="text-base font-bold text-white">Bir dizi izlemeye başla</h3>
               <p className="mt-1 max-w-xl text-sm leading-relaxed text-white/45">
-                İzlemeye başladığın içerikler burada devam kartı olarak görünür.
+                İzlemeye başladığın içerikler burada takip kartı olarak görünür.
               </p>
             </div>
             <Link
@@ -105,27 +105,32 @@ export default async function CurrentlyWatchingCard() {
                       <span className="material-symbols-outlined text-xl">movie</span>
                     </div>
                   )}
-                  {/* Oynat Overlay */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="material-symbols-outlined text-white text-base font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>
-                      play_arrow
+                  {/* Yorumla & Puanla Overlay */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-center p-1">
+                    <span className="material-symbols-outlined text-amber-400 text-base font-bold">
+                      rate_review
                     </span>
                   </div>
                 </div>
 
-                {/* Sağ: Dizi Bilgileri & İlerleme */}
+                {/* Sağ: Dizi Bilgileri & Yorumla Puanla */}
                 <div className="flex flex-col justify-center min-w-0 flex-1 pr-1">
                   <h3 className="text-xs sm:text-sm font-black text-white truncate uppercase tracking-tight group-hover:text-[#D4A017] transition-colors">
                     {show.show_name}
                   </h3>
-                  <p className="text-[11px] font-bold text-white/40 mt-1">
+                  <p className="text-[11px] font-bold text-white/50 mt-0.5">
                     {show.season} &bull; {show.episode}
                   </p>
 
+                  <span className="mt-2 inline-flex items-center gap-1 text-[10.5px] font-bold text-[#D4A017] group-hover:text-white transition-colors">
+                    <span className="material-symbols-outlined text-[13px]">rate_review</span>
+                    <span>Yorumla ve Puanla</span>
+                  </span>
+
                   {/* İlerleme Çubuğu */}
-                  <div className="w-full h-1 bg-white/10 rounded-full mt-2.5 overflow-hidden">
+                  <div className="w-full h-1 bg-white/10 rounded-full mt-1.5 overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-[#C91520] to-[#E50914] rounded-full transition-all duration-500"
+                      className="h-full bg-gradient-to-r from-[#C91520] to-[#D4A017] rounded-full transition-all duration-500"
                       style={{ width: `${show.progress}%` }}
                     />
                   </div>
