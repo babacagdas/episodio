@@ -202,12 +202,20 @@ export default async function ManagerDashboardPage() {
     <ManagerPinAuth adminEmail={user.email || ''}>
       <div className="min-h-screen bg-[#070709] text-[#F4F6FA] select-none pb-20">
         
-        {/* Header: Sadece Tıklanamayan Logo */}
+        {/* Header: Logo + Haftalık Analiz Butonu */}
         <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0A0A0E]/90 backdrop-blur-2xl px-4 md:px-10 py-4">
-          <div className="mx-auto flex max-w-7xl items-center justify-center sm:justify-start">
+          <div className="mx-auto flex max-w-7xl items-center justify-between">
             <div className="flex items-center">
               <img src="/logo.png" alt="Episodio" className="h-7 w-auto object-contain pointer-events-none select-none" />
             </div>
+
+            <Link
+              href="/manager/analytics"
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-[#C91520]/15 hover:bg-[#C91520]/25 px-4 py-1.5 text-xs font-bold text-white transition-all active:scale-95 shadow-[0_0_20px_rgba(201,21,32,0.25)]"
+            >
+              <span className="material-symbols-outlined text-base text-[#C91520]">analytics</span>
+              <span>Haftalık Analiz</span>
+            </Link>
           </div>
         </header>
 
