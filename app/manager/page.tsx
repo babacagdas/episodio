@@ -8,8 +8,9 @@ import ManagerPinAuth from './ManagerPinAuth';
 
 export const dynamic = 'force-dynamic';
 
-type ProfileRow = {
+type UserItem = {
   id: string;
+  email?: string | null;
   username: string | null;
   full_name: string | null;
   avatar_url: string | null;
@@ -136,10 +137,22 @@ export default async function ManagerDashboardPage() {
     );
   }
 
-  // Veritabanından Doğrudan Veri Çekme (FK İlişki Bağımlılığı Olmadan)
   const admin = createAdminClient();
   const supabase = await createClient();
   const db = admin || supabase;
+
+  // 1. Supabase Auth ve Profiles Verilerini Çekme (Tam Kapsamlı)
+  let authUsersList: any[] = [];
+  if (admin) {
+    try {
+      const { data: authData } = await admin.auth.admin.listUsers({ perPage: 1000 });
+      if (authData?.users) {
+        authUsersList = authData.users;
+      }
+    } catch {
+      // continue
+    }
+  }
 
   const [profilesRes, listsRes, reviewsRes, notesRes, watchRes] = await Promise.all([
     db.from('profiles').select('id, username, full_name, avatar_url, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
@@ -149,19 +162,42 @@ export default async function ManagerDashboardPage() {
     db.from('watch_status').select('id', { count: 'exact', head: true }),
   ]);
 
-  const profiles = (profilesRes.data ?? []) as ProfileRow[];
+  const profilesList = (profilesRes.data ?? []) as UserItem[];
   const lists = (listsRes.data ?? []) as ListRow[];
   const reviews = (reviewsRes.data ?? []) as ReviewRow[];
   const notes = (notesRes.data ?? []) as ShowNoteRow[];
 
-  const totalUserCount = profilesRes.count ?? profiles.length;
+  // Auth Users + Profiles Tablosunu Birleştirme
+  const userMap = new Map<string, UserItem>();
+
+  authUsersList.forEach((u) => {
+    userMap.set(u.id, {
+      id: u.id,
+      email: u.email ?? null,
+      username: u.user_metadata?.username ?? (u.email ? u.email.split('@')[0] : null),
+      full_name: u.user_metadata?.full_name || u.user_metadata?.name || null,
+      avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
+      created_at: u.created_at,
+    });
+  });
+
+  profilesList.forEach((p) => {
+    const existing = userMap.get(p.id);
+    userMap.set(p.id, {
+      id: p.id,
+      email: existing?.email ?? null,
+      username: p.username || existing?.username || null,
+      full_name: p.full_name || existing?.full_name || null,
+      avatar_url: p.avatar_url || existing?.avatar_url || null,
+      created_at: p.created_at || existing?.created_at || null,
+    });
+  });
+
+  const allUsers = Array.from(userMap.values());
+  const totalUserCount = allUsers.length > 0 ? allUsers.length : (profilesRes.count ?? profilesList.length);
   const totalListCount = listsRes.count ?? lists.length;
   const totalReviewCount = (reviewsRes.count ?? 0) + (notesRes.count ?? 0);
   const totalWatchCount = watchRes.count ?? 0;
-
-  // Hızlı profil arama haritası (Map lookup)
-  const profileMap = new Map<string, ProfileRow>();
-  profiles.forEach((p) => profileMap.set(p.id, p));
 
   return (
     <ManagerPinAuth adminEmail={user.email || ''}>
@@ -207,7 +243,7 @@ export default async function ManagerDashboardPage() {
             </p>
           </div>
 
-          {/* 1. Özet İstatistik Kartları (Canlı Canlı Tüm Veriler) */}
+          {/* 1. Özet İstatistik Kartları */}
           <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <StatCard label="Kayıtlı Üyeler" value={totalUserCount} icon="group" badge="Canlı Veri" />
             <StatCard label="İzlenen Diziler" value={totalWatchCount} icon="visibility" />
@@ -221,9 +257,9 @@ export default async function ManagerDashboardPage() {
               <div>
                 <h2 className="text-base font-bold text-white flex items-center gap-2">
                   <span className="material-symbols-outlined text-[#C91520]">person</span>
-                  Kayıtlı Kullanıcılar ({profiles.length})
+                  Kayıtlı Kullanıcılar ({allUsers.length})
                 </h2>
-                <p className="text-xs text-white/40 mt-0.5">Platforma en son katılan üyeler ve profilleri</p>
+                <p className="text-xs text-white/40 mt-0.5">Platforma üye olan tüm kullanıcılar (Email & Google Girişli)</p>
               </div>
             </div>
 
@@ -232,49 +268,60 @@ export default async function ManagerDashboardPage() {
                 <thead>
                   <tr className="border-b border-white/10 text-white/40 uppercase text-[10px] tracking-wider">
                     <th className="py-3 px-3">Kullanıcı</th>
-                    <th className="py-3 px-3">Kullanıcı Adı</th>
+                    <th className="py-3 px-3">Kullanıcı Adı / E-posta</th>
                     <th className="py-3 px-3">Kayıt Tarihi</th>
                     <th className="py-3 px-3 text-right">İşlem</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {profiles.map((p) => {
-                    const name = p.full_name || p.username || 'Kullanıcı';
-                    const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Bilinmiyor';
+                  {allUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-xs text-white/40">
+                        Henüz kullanıcı verisi yüklenemedi veya liste boş.
+                      </td>
+                    </tr>
+                  ) : (
+                    allUsers.map((u) => {
+                      const name = u.full_name || u.username || u.email || 'Kullanıcı';
+                      const dateStr = u.created_at ? new Date(u.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Bilinmiyor';
 
-                    return (
-                      <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="py-3 px-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 rounded-full bg-white/10 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
-                              {p.avatar_url ? (
-                                <img src={p.avatar_url} alt="" className="h-full w-full object-cover" />
-                              ) : (
-                                <span className="material-symbols-outlined text-white/30 text-sm">person</span>
-                              )}
+                      return (
+                        <tr key={u.id} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="py-3 px-3">
+                            <div className="flex items-center gap-3">
+                              <div className="h-9 w-9 rounded-full bg-white/10 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
+                                {u.avatar_url ? (
+                                  <img src={u.avatar_url} alt="" className="h-full w-full object-cover" />
+                                ) : (
+                                  <span className="material-symbols-outlined text-white/30 text-sm">person</span>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <span className="font-semibold text-white truncate block max-w-[160px] sm:max-w-[220px]">{name}</span>
+                                {u.email && <span className="text-[10px] text-white/35 block truncate">{u.email}</span>}
+                              </div>
                             </div>
-                            <span className="font-semibold text-white truncate max-w-[160px] sm:max-w-[220px]">{name}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3 text-white/60 font-medium">
-                          @{p.username || p.id.slice(0, 8)}
-                        </td>
-                        <td className="py-3 px-3 text-white/40">
-                          {dateStr}
-                        </td>
-                        <td className="py-3 px-3 text-right">
-                          <Link
-                            href={`/u/${p.username || p.id}`}
-                            target="_blank"
-                            className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/80 hover:bg-white/15 hover:text-white transition-colors"
-                          >
-                            <span>Profili Gör</span>
-                            <span className="material-symbols-outlined text-xs">open_in_new</span>
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                          </td>
+                          <td className="py-3 px-3 text-white/60 font-medium">
+                            @{u.username || u.id.slice(0, 8)}
+                          </td>
+                          <td className="py-3 px-3 text-white/40">
+                            {dateStr}
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <Link
+                              href={`/u/${u.username || u.id}`}
+                              target="_blank"
+                              className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/80 hover:bg-white/15 hover:text-white transition-colors"
+                            >
+                              <span>Profili Gör</span>
+                              <span className="material-symbols-outlined text-xs">open_in_new</span>
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -295,8 +342,8 @@ export default async function ManagerDashboardPage() {
                   <p className="text-xs text-white/30 py-6 text-center">Henüz liste yok.</p>
                 ) : (
                   lists.map((l) => {
-                    const creator = profileMap.get(l.user_id);
-                    const creatorUsername = creator?.username || creator?.full_name || 'Kullanıcı';
+                    const creator = userMap.get(l.user_id);
+                    const creatorUsername = creator?.username || creator?.full_name || creator?.email || 'Kullanıcı';
 
                     return (
                       <div key={l.id} className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
@@ -339,8 +386,8 @@ export default async function ManagerDashboardPage() {
                 ) : (
                   <>
                     {reviews.map((r) => {
-                      const reviewer = profileMap.get(r.user_id);
-                      const reviewerUsername = reviewer?.username || reviewer?.full_name || 'Kullanıcı';
+                      const reviewer = userMap.get(r.user_id);
+                      const reviewerUsername = reviewer?.username || reviewer?.full_name || reviewer?.email || 'Kullanıcı';
 
                       return (
                         <div key={r.id} className="flex items-start justify-between gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
@@ -373,8 +420,8 @@ export default async function ManagerDashboardPage() {
                     })}
 
                     {notes.map((n, idx) => {
-                      const reviewer = profileMap.get(n.user_id);
-                      const reviewerUsername = reviewer?.username || reviewer?.full_name || 'Kullanıcı';
+                      const reviewer = userMap.get(n.user_id);
+                      const reviewerUsername = reviewer?.username || reviewer?.full_name || reviewer?.email || 'Kullanıcı';
 
                       return (
                         <div key={n.id || `note-${idx}`} className="flex items-start justify-between gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
