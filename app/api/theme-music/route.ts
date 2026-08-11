@@ -1,40 +1,58 @@
 import { NextResponse } from 'next/server';
 
-function isAuthenticTheme(track: any, name: string): boolean {
+function normalizeText(str: string): string {
+  if (!str) return '';
+  return str
+    .toLowerCase()
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/i̇/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c')
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isAuthenticTheme(track: any, searchName: string): boolean {
   if (!track || !track.previewUrl) return false;
 
-  const cleanName = name.toLowerCase().trim();
-  const trackName = (track.trackName || '').toLowerCase();
-  const collectionName = (track.collectionName || '').toLowerCase();
-  const artistName = (track.artistName || '').toLowerCase();
+  const normSearch = normalizeText(searchName);
+  if (!normSearch || normSearch.length < 2) return false;
 
-  // 1. Dizi adı parça adında, albüm adında veya sanatçı adında geçmeli!
+  const normTrack = normalizeText(track.trackName || '');
+  const normCollection = normalizeText(track.collectionName || '');
+  const normArtist = normalizeText(track.artistName || '');
+
+  // 1. Dizi adı (normalize edilmiş) parça, albüm veya sanatçı adında tam olarak veya kelime grubu olarak geçmeli!
   const hasShowName =
-    trackName.includes(cleanName) ||
-    collectionName.includes(cleanName) ||
-    artistName.includes(cleanName);
+    normTrack.includes(normSearch) ||
+    normCollection.includes(normSearch) ||
+    normArtist.includes(normSearch);
 
   if (!hasShowName) return false;
 
-  // 2. Dizi müziği, Jenerik, Soundtrack, OST veya Main Title ifadesi içermeli!
+  // 2. Dizi müziği / Jenerik / Soundtrack / OST anahtar kelimelerinden biri mutlaka olmalı!
   const isSoundtrack =
-    trackName.includes('theme') ||
-    trackName.includes('main title') ||
-    trackName.includes('soundtrack') ||
-    trackName.includes('ost') ||
-    trackName.includes('score') ||
-    trackName.includes('jenerik') ||
-    trackName.includes('dizi müziği') ||
-    trackName.includes('opening') ||
-    trackName.includes('intro') ||
-    collectionName.includes('soundtrack') ||
-    collectionName.includes('ost') ||
-    collectionName.includes('theme') ||
-    collectionName.includes('score') ||
-    collectionName.includes('series') ||
-    collectionName.includes('dizi');
+    normTrack.includes('theme') ||
+    normTrack.includes('main title') ||
+    normTrack.includes('soundtrack') ||
+    normTrack.includes('ost') ||
+    normTrack.includes('score') ||
+    normTrack.includes('jenerik') ||
+    normTrack.includes('dizi muzigi') ||
+    normTrack.includes('opening') ||
+    normTrack.includes('intro') ||
+    normCollection.includes('soundtrack') ||
+    normCollection.includes('ost') ||
+    normCollection.includes('theme') ||
+    normCollection.includes('score') ||
+    normCollection.includes('series') ||
+    normCollection.includes('dizi');
 
-  return isSoundtrack || (hasShowName && (collectionName.includes('music') || collectionName.includes('album')));
+  return isSoundtrack || (hasShowName && normCollection.includes('music'));
 }
 
 export async function GET(request: Request) {
@@ -42,21 +60,32 @@ export async function GET(request: Request) {
   const showName = searchParams.get('show') || '';
   const originalName = searchParams.get('original') || '';
 
-  const namesToTry = Array.from(
-    new Set([originalName.trim(), showName.trim()].filter(Boolean))
-  );
+  // Orijinal ve Türkçe isimler + normalize edilmiş versiyonları
+  const rawNames = [originalName.trim(), showName.trim()].filter(Boolean);
+  const namesToTry: string[] = [];
 
-  if (namesToTry.length === 0) {
+  for (const n of rawNames) {
+    if (!n) continue;
+    namesToTry.push(n);
+    const norm = normalizeText(n);
+    if (norm && norm !== n.toLowerCase()) {
+      namesToTry.push(norm);
+    }
+  }
+
+  const uniqueNames = Array.from(new Set(namesToTry));
+
+  if (uniqueNames.length === 0) {
     return NextResponse.json({ previewUrl: null });
   }
 
   // 1. iTunes Multi-Store (US & TR) Multi-Query Search
-  for (const name of namesToTry) {
+  for (const name of uniqueNames) {
     const searchQueries = [
       `${name} main title theme`,
       `${name} soundtrack`,
       `${name} theme`,
-      `${name} jenerik müziği`,
+      `${name} jenerik`,
     ];
 
     for (const q of searchQueries) {
@@ -76,7 +105,7 @@ export async function GET(request: Request) {
 
           if (results.length === 0) continue;
 
-          // Kesin doğruluk filtresi (Alakasız şarkılar tamamen reddedilir)
+          // Kesin Türkçe ve ASCII karakter doğruluk filtresi
           const match = results.find((t: any) => isAuthenticTheme(t, name));
 
           if (match && match.previewUrl) {
@@ -93,8 +122,8 @@ export async function GET(request: Request) {
     }
   }
 
-  // 2. Deezer API Multi-Query Fallback (Katı Filtre ile)
-  for (const name of namesToTry) {
+  // 2. Deezer API Multi-Query Fallback (Normalize Filtresi ile)
+  for (const name of uniqueNames) {
     try {
       const deezerUrl = `https://api.deezer.com/search?q=${encodeURIComponent(name + ' theme')}`;
       const deezerRes = await fetch(deezerUrl, { next: { revalidate: 86400 } });
@@ -102,12 +131,12 @@ export async function GET(request: Request) {
         const deezerData = await deezerRes.json();
         const dzTrack = deezerData.data?.find((t: any) => {
           if (!t.preview) return false;
-          const title = (t.title || '').toLowerCase();
-          const album = (t.album?.title || '').toLowerCase();
-          const artist = (t.artist?.name || '').toLowerCase();
-          const cleanName = name.toLowerCase();
+          const title = normalizeText(t.title || '');
+          const album = normalizeText(t.album?.title || '');
+          const artist = normalizeText(t.artist?.name || '');
+          const normName = normalizeText(name);
 
-          const hasName = title.includes(cleanName) || album.includes(cleanName) || artist.includes(cleanName);
+          const hasName = title.includes(normName) || album.includes(normName) || artist.includes(normName);
           const isOST = title.includes('theme') || title.includes('soundtrack') || title.includes('jenerik') || album.includes('soundtrack') || album.includes('ost');
 
           return hasName && isOST;
