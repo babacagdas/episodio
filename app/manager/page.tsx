@@ -22,7 +22,6 @@ type ListRow = {
   visibility: string | null;
   user_id: string;
   created_at?: string | null;
-  profiles?: any;
 };
 
 type ReviewRow = {
@@ -32,7 +31,16 @@ type ReviewRow = {
   rating: number | null;
   content: string | null;
   created_at?: string | null;
-  profiles?: any;
+};
+
+type ShowNoteRow = {
+  id?: string;
+  user_id: string;
+  show_id: number;
+  show_name?: string | null;
+  content: string | null;
+  is_public?: boolean;
+  updated_at?: string | null;
 };
 
 async function checkAdminAccess() {
@@ -57,9 +65,10 @@ async function deleteListAction(formData: FormData) {
   if (!listId) return;
 
   const admin = createAdminClient();
-  if (!admin) return;
+  const supabase = await createClient();
+  const db = admin || supabase;
 
-  await admin.from('lists').delete().eq('id', listId);
+  await db.from('lists').delete().eq('id', listId);
   revalidatePath('/manager');
 }
 
@@ -73,9 +82,10 @@ async function deleteReviewAction(formData: FormData) {
   if (!reviewId) return;
 
   const admin = createAdminClient();
-  if (!admin) return;
+  const supabase = await createClient();
+  const db = admin || supabase;
 
-  await admin.from('reviews').delete().eq('id', reviewId);
+  await db.from('reviews').delete().eq('id', reviewId);
   revalidatePath('/manager');
 }
 
@@ -105,7 +115,7 @@ export default async function ManagerDashboardPage() {
   // Yetkisiz Erişim Kartı
   if (!isAllowed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#070707] px-4">
+      <div className="flex min-h-screen items-center justify-center bg-[#070709] px-4">
         <div className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0E0E12] p-8 text-center shadow-2xl">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#C91520]/20 text-[#C91520] border border-[#C91520]/30">
             <span className="material-symbols-outlined text-3xl">lock</span>
@@ -126,25 +136,32 @@ export default async function ManagerDashboardPage() {
     );
   }
 
-  // Veritabanından Yönetici Verilerini Çekme (Supabase Admin veya Standart Client)
+  // Veritabanından Doğrudan Veri Çekme (FK İlişki Bağımlılığı Olmadan)
   const admin = createAdminClient();
   const supabase = await createClient();
   const db = admin || supabase;
 
-  const [profilesRes, listsRes, reviewsRes, watchRes] = await Promise.all([
+  const [profilesRes, listsRes, reviewsRes, notesRes, watchRes] = await Promise.all([
     db.from('profiles').select('id, username, full_name, avatar_url, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
-    db.from('lists').select('id, name, visibility, user_id, created_at, profiles(username, full_name)', { count: 'exact' }).order('created_at', { ascending: false }),
-    db.from('reviews').select('id, user_id, show_id, rating, content, created_at, profiles(username, full_name)', { count: 'exact' }).order('created_at', { ascending: false }),
+    db.from('lists').select('id, name, visibility, user_id, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
+    db.from('reviews').select('id, user_id, show_id, rating, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
+    db.from('show_notes').select('id, user_id, show_id, show_name, content, is_public, updated_at', { count: 'exact' }).order('updated_at', { ascending: false }),
     db.from('watch_status').select('id', { count: 'exact', head: true }),
   ]);
 
   const profiles = (profilesRes.data ?? []) as ProfileRow[];
   const lists = (listsRes.data ?? []) as ListRow[];
   const reviews = (reviewsRes.data ?? []) as ReviewRow[];
+  const notes = (notesRes.data ?? []) as ShowNoteRow[];
+
   const totalUserCount = profilesRes.count ?? profiles.length;
   const totalListCount = listsRes.count ?? lists.length;
-  const totalReviewCount = reviewsRes.count ?? reviews.length;
+  const totalReviewCount = (reviewsRes.count ?? 0) + (notesRes.count ?? 0);
   const totalWatchCount = watchRes.count ?? 0;
+
+  // Hızlı profil arama haritası (Map lookup)
+  const profileMap = new Map<string, ProfileRow>();
+  profiles.forEach((p) => profileMap.set(p.id, p));
 
   return (
     <ManagerPinAuth adminEmail={user.email || ''}>
@@ -184,7 +201,7 @@ export default async function ManagerDashboardPage() {
 
           {/* Başlık */}
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Yönetim Paneli & Genel İstatistikler</h1>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Yönetim Paneli & Canlı İstatistikler</h1>
             <p className="mt-1 text-xs sm:text-sm text-white/45">
               Episodio platformundaki canlı üye sayıları, içerik aktivitesi ve moderasyon araçları.
             </p>
@@ -195,7 +212,7 @@ export default async function ManagerDashboardPage() {
             <StatCard label="Kayıtlı Üyeler" value={totalUserCount} icon="group" badge="Canlı Veri" />
             <StatCard label="İzlenen Diziler" value={totalWatchCount} icon="visibility" />
             <StatCard label="Oluşturulan Listeler" value={totalListCount} icon="format_list_bulleted" />
-            <StatCard label="Yazılan Yorumlar" value={totalReviewCount} icon="rate_review" />
+            <StatCard label="Yazılan Yorumlar & Notlar" value={totalReviewCount} icon="rate_review" />
           </section>
 
           {/* 2. Kayıtlı Üyeler Tablosu (Kimler Üye Olmuş?) */}
@@ -270,15 +287,17 @@ export default async function ManagerDashboardPage() {
             <section className="rounded-3xl border border-white/10 bg-[#0E0E14] p-5 sm:p-6 shadow-2xl flex flex-col">
               <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
                 <span className="material-symbols-outlined text-[#C91520]">format_list_bulleted</span>
-                Son Oluşturulan Listeler
+                Oluşturulan Listeler ({lists.length})
               </h2>
 
-              <div className="space-y-3 flex-1">
+              <div className="space-y-3 flex-1 overflow-y-auto max-h-[420px] pr-1 custom-scrollbar">
                 {lists.length === 0 ? (
                   <p className="text-xs text-white/30 py-6 text-center">Henüz liste yok.</p>
                 ) : (
                   lists.map((l) => {
-                    const creatorUsername = (Array.isArray(l.profiles) ? l.profiles[0]?.username : l.profiles?.username) || 'Kullanıcı';
+                    const creator = profileMap.get(l.user_id);
+                    const creatorUsername = creator?.username || creator?.full_name || 'Kullanıcı';
+
                     return (
                       <div key={l.id} className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
                         <div className="min-w-0 flex-1">
@@ -307,48 +326,73 @@ export default async function ManagerDashboardPage() {
               </div>
             </section>
 
-            {/* Son Yorumlar */}
+            {/* Son Yorumlar & Notlar */}
             <section className="rounded-3xl border border-white/10 bg-[#0E0E14] p-5 sm:p-6 shadow-2xl flex flex-col">
               <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
                 <span className="material-symbols-outlined text-[#C91520]">rate_review</span>
-                Son Yazılan Yorumlar
+                Yazılan Yorumlar ({reviews.length})
               </h2>
 
-              <div className="space-y-3 flex-1">
-                {reviews.length === 0 ? (
+              <div className="space-y-3 flex-1 overflow-y-auto max-h-[420px] pr-1 custom-scrollbar">
+                {reviews.length === 0 && notes.length === 0 ? (
                   <p className="text-xs text-white/30 py-6 text-center">Henüz yorum yok.</p>
                 ) : (
-                  reviews.map((r) => {
-                    const reviewerUsername = (Array.isArray(r.profiles) ? r.profiles[0]?.username : r.profiles?.username) || 'Kullanıcı';
-                    return (
-                      <div key={r.id} className="flex items-start justify-between gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="font-bold text-white">@{reviewerUsername}</span>
-                            {r.rating && (
-                              <span className="text-[10px] font-black text-[#D4A017] bg-[#D4A017]/10 px-1.5 py-0.2 rounded">
-                                ★ {r.rating}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-white/70 mt-1 line-clamp-2 leading-relaxed">
-                            {r.content}
-                          </p>
-                        </div>
+                  <>
+                    {reviews.map((r) => {
+                      const reviewer = profileMap.get(r.user_id);
+                      const reviewerUsername = reviewer?.username || reviewer?.full_name || 'Kullanıcı';
 
-                        <form action={deleteReviewAction}>
-                          <input type="hidden" name="reviewId" value={r.id} />
-                          <button
-                            type="submit"
-                            className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                            title="Yorumu Sil"
-                          >
-                            <span className="material-symbols-outlined text-base">delete</span>
-                          </button>
-                        </form>
-                      </div>
-                    );
-                  })
+                      return (
+                        <div key={r.id} className="flex items-start justify-between gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="font-bold text-white">@{reviewerUsername}</span>
+                              {r.rating && (
+                                <span className="text-[10px] font-black text-[#D4A017] bg-[#D4A017]/10 px-1.5 py-0.2 rounded">
+                                  ★ {r.rating}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-white/70 mt-1 line-clamp-2 leading-relaxed">
+                              {r.content}
+                            </p>
+                          </div>
+
+                          <form action={deleteReviewAction}>
+                            <input type="hidden" name="reviewId" value={r.id} />
+                            <button
+                              type="submit"
+                              className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              title="Yorumu Sil"
+                            >
+                              <span className="material-symbols-outlined text-base">delete</span>
+                            </button>
+                          </form>
+                        </div>
+                      );
+                    })}
+
+                    {notes.map((n, idx) => {
+                      const reviewer = profileMap.get(n.user_id);
+                      const reviewerUsername = reviewer?.username || reviewer?.full_name || 'Kullanıcı';
+
+                      return (
+                        <div key={n.id || `note-${idx}`} className="flex items-start justify-between gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="font-bold text-white">@{reviewerUsername}</span>
+                              <span className="text-[10px] font-semibold text-white/40 bg-white/5 px-1.5 py-0.2 rounded">
+                                {n.show_name || `Dizi #${n.show_id}`} (Not)
+                              </span>
+                            </div>
+                            <p className="text-xs text-white/70 mt-1 line-clamp-2 leading-relaxed">
+                              {n.content}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
                 )}
               </div>
             </section>
