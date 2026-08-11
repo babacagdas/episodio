@@ -125,13 +125,13 @@ export default function WeeklyAnalyticsClient({ weeks }: { weeks: WeeklyData[] }
         )}
       </main>
 
-      {/* Haftalık Detay Modalı (Weekly Detail Modal) */}
+      {/* Haftalık Genişletilmiş Detay Modalı (Weekly Detail Modal max-w-4xl) */}
       {selectedWeek && (
-        <div className="fixed inset-0 z-[160] flex items-center justify-center p-3 sm:p-5">
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-3 sm:p-6">
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/85 backdrop-blur-md" onClick={() => setSelectedWeek(null)} />
 
-          <div className="relative z-10 w-full max-w-2xl max-h-[85vh] bg-[#0E0E14] border border-white/15 rounded-3xl shadow-2xl flex flex-col overflow-hidden">
+          <div className="relative z-10 w-full max-w-4xl max-h-[85vh] bg-[#0E0E14] border border-white/15 rounded-3xl shadow-2xl flex flex-col overflow-hidden">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-[#12121C]">
               <div>
@@ -151,11 +151,11 @@ export default function WeeklyAnalyticsClient({ weeks }: { weeks: WeeklyData[] }
               </button>
             </div>
 
-            {/* Modal Body */}
+            {/* Modal Body (Geniş İki/Üç Kolonlu veya Düzenli Akış) */}
             <div className="overflow-y-auto p-6 space-y-6 custom-scrollbar flex-1">
               
-              {/* 1. Yeni Katılan Üyeler */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+              {/* 1. Katılan Üyeler (Sadece Kullanıcı Adları Gösterilir) */}
+              <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 mb-3 flex items-center gap-2">
                   <span className="material-symbols-outlined text-sm">person_add</span>
                   Katılan Üyeler ({selectedWeek.users.length})
@@ -164,84 +164,89 @@ export default function WeeklyAnalyticsClient({ weeks }: { weeks: WeeklyData[] }
                 {selectedWeek.users.length === 0 ? (
                   <p className="text-xs text-white/30 italic">Bu hafta yeni üye katılmadı.</p>
                 ) : (
-                  <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-                    {selectedWeek.users.map((u) => (
-                      <div key={u.id} className="flex items-center justify-between p-2 rounded-xl bg-white/5">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-white/10 overflow-hidden flex items-center justify-center shrink-0">
-                            {u.avatar_url ? (
-                              <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="material-symbols-outlined text-xs text-white/30">person</span>
-                            )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+                    {selectedWeek.users.map((u) => {
+                      const displayUsername = u.username || (u.email ? u.email.split('@')[0] : u.name) || 'kullanici';
+                      return (
+                        <div key={u.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-7 h-7 rounded-full bg-white/10 overflow-hidden flex items-center justify-center shrink-0">
+                              {u.avatar_url ? (
+                                <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="material-symbols-outlined text-xs text-white/30">person</span>
+                              )}
+                            </div>
+                            <span className="text-xs font-bold text-white truncate">@{displayUsername}</span>
                           </div>
+                          <span className="text-[10px] text-white/35 shrink-0 ml-1">{u.date}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* 2. İki Kolon: Yazılan Yorumlar & Oluşturulan Listeler */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Yazılan Yorumlar & Notlar */}
+                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm">chat</span>
+                    Yazılan Yorumlar & Notlar ({selectedWeek.reviews.length})
+                  </h3>
+
+                  {selectedWeek.reviews.length === 0 ? (
+                    <p className="text-xs text-white/30 italic">Bu hafta yorum yazılmadı.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+                      {selectedWeek.reviews.map((r, idx) => (
+                        <div key={r.id || idx} className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-xs">
+                          <div className="flex items-center justify-between text-white/50 text-[10px] mb-1">
+                            <span className="font-bold text-white">@{r.reviewer}</span>
+                            <span>{r.date}</span>
+                          </div>
+                          <p className="text-white/80 leading-snug">{r.content || 'İçerik yok'}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Oluşturulan Listeler */}
+                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400 mb-3 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-sm">format_list_bulleted</span>
+                    Oluşturulan Listeler ({selectedWeek.lists.length})
+                  </h3>
+
+                  {selectedWeek.lists.length === 0 ? (
+                    <p className="text-xs text-white/30 italic">Bu hafta liste oluşturulmadı.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+                      {selectedWeek.lists.map((l) => (
+                        <div key={l.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 text-xs">
                           <div>
-                            <span className="text-xs font-bold text-white block">{u.name}</span>
-                            {u.email && <span className="text-[10px] text-white/40 block">{u.email}</span>}
+                            <span className="font-bold text-white block">{l.name}</span>
+                            <span className="text-[10px] text-white/40">Oluşturan: @{l.creator}</span>
                           </div>
+                          <span className="text-[10px] text-white/35">{l.date}</span>
                         </div>
-                        <span className="text-[10px] text-white/35">{u.date}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
+
               </div>
 
-              {/* 2. Yazılan Yorumlar & Notlar */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-3 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">chat</span>
-                  Yazılan Yorumlar & Notlar ({selectedWeek.reviews.length})
-                </h3>
-
-                {selectedWeek.reviews.length === 0 ? (
-                  <p className="text-xs text-white/30 italic">Bu hafta yorum yazılmadı.</p>
-                ) : (
-                  <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-                    {selectedWeek.reviews.map((r, idx) => (
-                      <div key={r.id || idx} className="p-2.5 rounded-xl bg-white/5 text-xs">
-                        <div className="flex items-center justify-between text-white/50 text-[10px] mb-1">
-                          <span className="font-bold text-white">@{r.reviewer}</span>
-                          <span>{r.date}</span>
-                        </div>
-                        <p className="text-white/80 leading-snug">{r.content || 'İçerik yok'}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 3. Oluşturulan Listeler */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-purple-400 mb-3 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">format_list_bulleted</span>
-                  Oluşturulan Listeler ({selectedWeek.lists.length})
-                </h3>
-
-                {selectedWeek.lists.length === 0 ? (
-                  <p className="text-xs text-white/30 italic">Bu hafta liste oluşturulmadı.</p>
-                ) : (
-                  <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
-                    {selectedWeek.lists.map((l) => (
-                      <div key={l.id} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 text-xs">
-                        <div>
-                          <span className="font-bold text-white block">{l.name}</span>
-                          <span className="text-[10px] text-white/40">Oluşturan: @{l.creator}</span>
-                        </div>
-                        <span className="text-[10px] text-white/35">{l.date}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 4. İzlenen Diziler */}
+              {/* 3. İzlenen Diziler Özet Çubuğu */}
               <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-sky-400 text-lg">visibility</span>
                   <span className="text-xs font-bold text-white">İzlenen / Tamamlanan Diziler</span>
                 </div>
-                <span className="text-sm font-black text-sky-400 bg-sky-500/10 border border-sky-500/20 px-3 py-1 rounded-xl">
+                <span className="text-sm font-black text-sky-400 bg-sky-500/10 border border-sky-500/20 px-3.5 py-1 rounded-xl">
                   {selectedWeek.watchCount} İşaretleme
                 </span>
               </div>
