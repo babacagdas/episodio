@@ -13,13 +13,13 @@ export type PlatformItem = {
 };
 
 export const PLATFORMS: PlatformItem[] = [
-  { providerId: 8, name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/pbpMk2JmcoNnQwx5JGp8jWfF2Wn.jpg' },
-  { providerId: 337, name: 'Disney+', logo: 'https://image.tmdb.org/t/p/w92/97yvRBwAQ2z7wsXAUtG1AUx4F9a.jpg' },
-  { providerId: 119, name: 'Prime', logo: 'https://image.tmdb.org/t/p/w92/dQeAar5h9pUdVTdFjmgBGioYmYy.jpg' },
-  { providerId: 350, name: 'Apple TV', logo: 'https://image.tmdb.org/t/p/w92/2E03p91xD9jOZz2DhBWFZTVhTs1.jpg' },
-  { providerId: 341, name: 'BluTV', logo: 'https://image.tmdb.org/t/p/w92/x00zD4PsmO3l58s1B2TzN5T5x2x.jpg' },
-  { providerId: 546, name: 'Gain', logo: 'https://image.tmdb.org/t/p/w92/c7M2b37wE3c1D2X3D3D3.jpg' },
-  { providerId: 1899, name: 'Max', logo: 'https://image.tmdb.org/t/p/w92/zxrVdFkcqVG8hWkmyigY2h4vcdE.jpg' },
+  { providerId: 8, name: 'Netflix', logo: 'https://image.tmdb.org/t/p/w92/pbpMk2JmcoNnQwx5JGpXngfoWtp.jpg' },
+  { providerId: 337, name: 'Disney+', logo: 'https://image.tmdb.org/t/p/w92/97yvRBw1GzX7fXprcF80er19ot.jpg' },
+  { providerId: 119, name: 'Prime Video', logo: 'https://image.tmdb.org/t/p/w92/pvske1MyAoymrs5bguRfVqYiM9a.jpg' },
+  { providerId: 350, name: 'Apple TV', logo: 'https://image.tmdb.org/t/p/w92/mcbz1LgtErU9p4UdbZ0rG6RTWHX.jpg' },
+  { providerId: 150, name: 'BluTV', logo: 'https://image.tmdb.org/t/p/w92/47klot430ytIqldQUUx2avN45Sr.jpg' },
+  { providerId: 1750, name: 'TOD', logo: 'https://image.tmdb.org/t/p/w92/bFxDjHDXP02u1dLPZfTsTC1L6EA.jpg' },
+  { providerId: 1899, name: 'HBO Max', logo: 'https://image.tmdb.org/t/p/w92/jbe4gVSfRlbPTdESXhEKpornsfu.jpg' },
 ];
 
 export const FILTER_CATEGORIES: FilterCategory[] = [
@@ -141,10 +141,16 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
                       className={`relative w-12 h-12 rounded-full overflow-hidden border-2 transition-all duration-300 ${
                         isSelected
                           ? 'border-[#C91520] ring-4 ring-[#C91520]/30 scale-110 shadow-[0_0_20px_rgba(201,21,32,0.5)]'
-                          : 'border-white/10 group-hover:border-white/30 bg-[#121216] opacity-65 group-hover:opacity-100'
+                          : 'border-white/10 group-hover:border-white/30 bg-[#121216] opacity-75 group-hover:opacity-100'
                       }`}
                     >
-                      <img src={p.logo} alt={p.name} className="w-full h-full object-cover" />
+                      <img
+                        src={p.logo}
+                        alt={p.name}
+                        className="w-full h-full object-cover"
+                        loading="eager"
+                        crossOrigin="anonymous"
+                      />
                     </div>
                     <span className={`text-[10.5px] font-bold transition-colors ${isSelected ? 'text-[#C91520]' : 'text-white/50 group-hover:text-white'}`}>
                       {p.name}
