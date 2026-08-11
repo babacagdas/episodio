@@ -14,8 +14,8 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Username live check states
   const [usernameChecking, setUsernameChecking] = useState(false);
@@ -87,6 +87,7 @@ export default function SignUp() {
     setLoading(true);
     try {
       const supabase = createClient();
+      const cleanOrigin = location.origin.replace('//www.', '//');
       
       // Final availability double-check
       const { data: existing } = await supabase
@@ -105,6 +106,7 @@ export default function SignUp() {
         email,
         password,
         options: {
+          emailRedirectTo: `${cleanOrigin}/auth/callback`,
           data: {
             preferred_username: cleanUsername,
           },
@@ -129,13 +131,49 @@ export default function SignUp() {
         );
       }
 
-      setSuccess('Hesabın başarıyla oluşturuldu! Yönlendiriliyorsun...');
-      setTimeout(() => router.push('/home'), 1500);
+      // Kayıt başarılı -> Arka plansız sade e-posta kontrol ekranını göster
+      setIsSubmitted(true);
     } catch {
       setError('Kayıt sırasında bağlantı hatası oluştu. Lütfen tekrar dene.');
     } finally {
       setLoading(false);
     }
+  }
+
+  // E-Postanızı Kontrol Edin Ekranı (Sade, Arka plansız tipografi)
+  if (isSubmitted) {
+    return (
+      <div className="bg-[#000000] h-[100dvh] min-h-[100svh] flex items-center justify-center relative overflow-hidden select-none px-5">
+        <div className="relative z-10 w-full max-w-md flex flex-col items-center text-center gap-5">
+          
+          <img alt="Episodio Logo" className="w-[140px] h-auto object-contain mb-2" src="/logo.png" />
+
+          {/* İkon */}
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#C91520]/15 text-[#C91520] border border-[#C91520]/30 shadow-[0_0_35px_rgba(201,21,32,0.3)] animate-pulse">
+            <span className="material-symbols-outlined text-3xl">mark_email_unread</span>
+          </div>
+
+          {/* Arka plansız Tipografik Başlık ve Açıklama */}
+          <div className="space-y-2 max-w-sm">
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">E-postanızı Kontrol Edin</h1>
+            <p className="text-xs sm:text-sm text-white/60 leading-relaxed font-medium">
+              Hesabınızı doğrulamak için <strong className="text-white font-bold">hello@episodio.com.tr</strong> adresinden gönderdiğimiz e-postadaki bağlantıya tıklayın.
+            </p>
+          </div>
+
+          {/* Devam Et Butonu */}
+          <button
+            type="button"
+            onClick={() => router.push(`/signin?msg=${encodeURIComponent('E-postanızı onayladıktan sonra e-posta ve şifrenizle giriş yapabilirsiniz.')}`)}
+            className="mt-4 w-full max-w-[220px] bg-[#C91520] hover:bg-[#A8121B] text-white font-bold text-xs sm:text-sm py-3 rounded-full transition-all shadow-[0_4px_25px_rgba(201,21,32,0.4)] active:scale-95 flex items-center justify-center gap-2"
+          >
+            <span>Devam Et</span>
+            <span className="material-symbols-outlined text-base">arrow_forward</span>
+          </button>
+
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -255,7 +293,6 @@ export default function SignUp() {
             </div>
 
             {error && <p className="text-xs text-[#C91520] text-center bg-[#C91520]/10 border border-[#C91520]/20 rounded-lg py-2">{error}</p>}
-            {success && <p className="text-xs text-green-400 text-center bg-green-400/10 border border-green-400/20 rounded-lg py-2">{success}</p>}
 
             <button
               type="submit"
@@ -279,7 +316,7 @@ export default function SignUp() {
               const cleanOrigin = location.origin.replace('//www.', '//');
               await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${cleanOrigin}/auth/callback` } });
             }}
-            className="w-full bg-white text-[#1F1F1F] border border-white/10 hover:bg-[#F5F5F5] rounded-xl py-2.5 flex items-center justify-center gap-3 transition-colors text-sm font-medium md:py-3"
+            className="w-full bg-[#FFFFFF] text-[#1F1F1F] border border-white/10 hover:bg-[#F5F5F5] rounded-xl py-2.5 flex items-center justify-center gap-3 transition-colors text-sm font-medium md:py-3"
           >
             <svg viewBox="0 0 48 48" className="w-5 h-5" aria-hidden="true">
               <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
