@@ -144,7 +144,7 @@ export default async function ManagerDashboardPage() {
   const supabase = await createClient();
   const db = admin || supabase;
 
-  // 1. Supabase Auth ve Profiles Verilerini Çekme (Tam Kapsamlı)
+  // 1. Supabase Auth ve Profiles Verilerini Çekme (Tam Kapsamlı Canlı Veriler)
   let authUsersList: any[] = [];
   if (admin) {
     try {
@@ -202,6 +202,15 @@ export default async function ManagerDashboardPage() {
   const totalListCount = listsRes.count ?? lists.length;
   const totalReviewCount = (reviewsRes.count ?? 0) + (notesRes.count ?? 0);
 
+  // SON 24 SAAT GÜNLÜK HESAPLAMALARI (Otomatik Tarihli)
+  const now = new Date();
+  const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const todayFormatted = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  const dailyUsersCount = allUsers.filter((u) => u.created_at && u.created_at >= last24h).length;
+  const dailyListsCount = lists.filter((l) => l.created_at && l.created_at >= last24h).length;
+  const dailyReviewsCount = reviews.filter((r) => r.created_at && r.created_at >= last24h).length + notes.filter((n) => n.updated_at && n.updated_at >= last24h).length;
+
   return (
     <ManagerPinAuth adminEmail={user.email || ''}>
       <div className="min-h-screen bg-[#070709] text-[#F4F6FA] select-none pb-20">
@@ -228,26 +237,72 @@ export default async function ManagerDashboardPage() {
 
           {/* Başlık */}
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Yönetim Paneli</h1>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Manager Yönetim Paneli</h1>
             <p className="mt-1 text-xs sm:text-sm text-white/45">
-              Episodio platformundaki canlı üye sayıları, içerik aktivitesi ve moderasyon araçları.
+              Episodio platformundaki tüm canlı üye kayıtları, oluşturulan listeler, yazılan yorumlar ve günlük aktiviteler.
             </p>
           </div>
 
-          {/* 1. Özet İstatistik Kartları (İzlenen Diziler Kaldırıldı, Canlı Veri Yazısı Kaldırıldı) */}
+          {/* 1. Özet İstatistik Kartları (Genel Toplam) */}
           <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard label="Kayıtlı Üyeler" value={totalUserCount} icon="group" />
             <StatCard label="Oluşturulan Listeler" value={totalListCount} icon="format_list_bulleted" />
             <StatCard label="Yazılan Yorumlar & Notlar" value={totalReviewCount} icon="rate_review" />
           </section>
 
-          {/* 2. Sitede Canlı Duyuru / Banner Yönetimi */}
+          {/* 2. GÜNLÜK İSTATİSTİK BANNER'I (SON 24 SAAT - OTOMATİK TARİHLİ) */}
+          <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-[#141018] via-[#12121C] to-[#0A0A10] p-6 shadow-2xl">
+            <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-[#C91520]/10 blur-3xl" />
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-3 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <h3 className="text-base font-black uppercase tracking-wider text-white">
+                  Son 24 Saat Günlük İstatistikleri
+                </h3>
+              </div>
+              <div className="text-xs font-bold text-white/50 bg-white/5 px-3.5 py-1.5 rounded-full border border-white/10 self-start sm:self-auto">
+                📅 {todayFormatted} (Son 24 Saat Raporu)
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-white/40 block mb-1">Yeni Kayıt Üye</span>
+                  <span className="text-2xl font-black text-emerald-400">+{dailyUsersCount}</span>
+                </div>
+                <span className="material-symbols-outlined text-2xl text-emerald-400/40">person_add</span>
+              </div>
+
+              <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-white/40 block mb-1">Yeni Oluşturulan Liste</span>
+                  <span className="text-2xl font-black text-sky-400">+{dailyListsCount}</span>
+                </div>
+                <span className="material-symbols-outlined text-2xl text-sky-400/40">playlist_add</span>
+              </div>
+
+              <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-white/40 block mb-1">Yeni Yorum & Not</span>
+                  <span className="text-2xl font-black text-purple-400">+{dailyReviewsCount}</span>
+                </div>
+                <span className="material-symbols-outlined text-2xl text-purple-400/40">add_comment</span>
+              </div>
+            </div>
+          </section>
+
+          {/* 3. Sitede Canlı Duyuru / Banner Yönetimi */}
           <AnnouncementForm />
 
-          {/* 3. Kayıtlı Üyeler Tablosu (Arama Çubuğu & Max 15 Satır Scroll Özellikli) */}
+          {/* 4. Kayıtlı Üyeler Tablosu (Arama Çubuğu & Max 15 Satır Scroll Özellikli) */}
           <ManagerUserList users={allUsers} />
 
-          {/* 3. İki Kolonlu Yapı: Son Listeler ve Son Yorumlar */}
+          {/* 5. İki Kolonlu Yapı: Son Listeler ve Son Yorumlar */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* Son Listeler */}
