@@ -119,18 +119,18 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
         onClick={onClose}
       />
       
-      {/* Desktopta Geniş Kare/Dikdörtgen Modal (md:max-w-3xl md:w-[740px]) */}
+      {/* Yatay Olarak Rahat ve Geniş Modal (md:max-w-4xl md:w-[860px] lg:w-[900px]) */}
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="discover-filter-title"
-        className="fixed z-[100] left-1/2 top-1/2 w-[calc(100vw-2rem)] md:max-w-3xl md:w-[740px] -translate-x-1/2 -translate-y-1/2 max-h-[min(90vh,calc(100dvh-2rem))]
+        className="fixed z-[100] left-1/2 top-1/2 w-[calc(100vw-2rem)] md:max-w-4xl md:w-[860px] lg:w-[900px] -translate-x-1/2 -translate-y-1/2 max-h-[min(90vh,calc(100dvh-2rem))]
           flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0A0A0E] shadow-[0_25px_80px_rgba(0,0,0,0.95)]"
       >
-        {/* Header (Başlardaki İkonlar Kaldırıldı) */}
-        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 px-6 py-4.5">
+        {/* Header */}
+        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 px-6 sm:px-8 py-5">
           <div>
-            <h2 id="discover-filter-title" className="text-lg font-bold tracking-tight text-white">
+            <h2 id="discover-filter-title" className="text-xl font-bold tracking-tight text-white">
               Filtreler
             </h2>
             <p className="mt-0.5 text-xs text-white/40">Platform, tür ve yayın yılına göre içerik süzün</p>
@@ -144,10 +144,10 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
           </button>
         </div>
 
-        {/* Content (Desktopta Geniş İki Kolonlu/Düzenli Yapı) */}
-        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-y-contain px-6 py-6">
+        {/* Content Body */}
+        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-y-contain px-6 sm:px-8 py-6">
           
-          {/* 1. YAYIN PLATFORMU (Türkiye'deki Tüm TMDB Platformları - Yuvarlak Profilli) */}
+          {/* 1. YAYIN PLATFORMU (Çerçevesiz, Temiz Yuvarlak Profilli İkonlar) */}
           <section>
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-bold uppercase tracking-widest text-white/40">
@@ -164,7 +164,8 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
               )}
             </div>
 
-            <div className="flex flex-wrap gap-3 max-h-52 overflow-y-auto custom-scrollbar p-1">
+            {/* Mobilde Yatay Scroll, Desktopta Rahat Yan Yana Izgara */}
+            <div className="flex items-center gap-3.5 overflow-x-auto md:flex-wrap md:max-h-48 md:overflow-y-auto pb-3 md:pb-1 custom-scrollbar p-1">
               {platforms.map((p) => {
                 const isSelected = selectedProviderId === p.provider_id;
                 const logoUrl = p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : null;
@@ -175,13 +176,13 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
                     type="button"
                     title={p.provider_name}
                     onClick={() => setSelectedProviderId(isSelected ? null : p.provider_id)}
-                    className="flex flex-col items-center gap-1.5 group shrink-0 w-16"
+                    className="flex flex-col items-center gap-1.5 group shrink-0 w-14 sm:w-16"
                   >
                     <div
-                      className={`relative w-11 h-11 rounded-full overflow-hidden border-2 transition-all duration-300 ${
+                      className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-full overflow-hidden transition-all duration-300 ${
                         isSelected
-                          ? 'border-[#C91520] ring-4 ring-[#C91520]/30 scale-110 shadow-[0_0_20px_rgba(201,21,32,0.5)]'
-                          : 'border-white/10 group-hover:border-white/30 bg-[#121216] opacity-70 group-hover:opacity-100'
+                          ? 'ring-4 ring-[#C91520] scale-110 shadow-[0_0_20px_rgba(201,21,32,0.6)]'
+                          : 'opacity-70 group-hover:opacity-100 group-hover:scale-105'
                       }`}
                     >
                       {logoUrl ? (
@@ -205,10 +206,10 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
             </div>
           </section>
 
-          {/* Grid Layout (Desktopta Yan Yana Tür ve Yıl) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Grid Layout (Desktopta Rahat İki Kolon) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
-            {/* 2. KATEGORİ & TÜR */}
+            {/* 2. KATEGORİ & TÜR (Çerçevesiz, Düzgün Butonlar) */}
             <section>
               <p className="mb-3 text-xs font-bold uppercase tracking-widest text-white/40">
                 Kategori & Tür
@@ -221,10 +222,10 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
                       key={cat.label}
                       type="button"
                       onClick={() => setSelectedLabel(selected ? null : cat.label)}
-                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                      className={`px-4 py-2 rounded-2xl text-xs font-bold transition-all ${
                         selected
-                          ? 'bg-[#C91520] border-[#C91520] text-white shadow-[0_2px_12px_rgba(201,21,32,0.4)]'
-                          : 'bg-white/[0.04] border-white/10 text-white/60 hover:text-white hover:bg-white/10'
+                          ? 'bg-[#C91520] text-white shadow-[0_4px_16px_rgba(201,21,32,0.4)]'
+                          : 'bg-white/[0.04] text-white/60 hover:text-white hover:bg-white/10'
                       }`}
                     >
                       {cat.label}
@@ -234,12 +235,12 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
               </div>
             </section>
 
-            {/* 3. YAYIN YILI */}
+            {/* 3. YAYIN YILI (Temiz Listeleme) */}
             <section className="min-h-0">
               <p className="mb-3 text-xs font-bold uppercase tracking-widest text-white/40">
                 Yayın Yılı
               </p>
-              <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/60">
+              <div className="overflow-hidden rounded-2xl bg-white/[0.02]">
                 <div
                   className="overflow-y-auto overscroll-y-contain pr-1 custom-scrollbar"
                   style={{ maxHeight: YEAR_LIST_MAX_HEIGHT }}
@@ -247,12 +248,12 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
                   <button
                     type="button"
                     onClick={() => setYear('')}
-                    className={`flex w-full items-center border-b border-white/5 px-4 py-2 text-left text-xs font-semibold transition hover:bg-white/[0.04] ${
-                      year === '' ? 'text-white bg-white/5' : 'text-white/50'
+                    className={`flex w-full items-center px-4 py-2.5 text-left text-xs font-bold transition hover:bg-white/[0.04] ${
+                      year === '' ? 'text-white bg-white/5' : 'text-white/40'
                     }`}
                   >
                     Tüm Yıllar
-                    {year === '' && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#C91520]" />}
+                    {year === '' && <span className="ml-auto h-2 w-2 rounded-full bg-[#C91520]" />}
                   </button>
                   {YEARS.map((y) => {
                     const active = String(y) === year;
@@ -261,12 +262,12 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
                         key={y}
                         type="button"
                         onClick={() => setYear(String(y))}
-                        className={`flex w-full items-center border-b border-white/5 px-4 py-2 text-left text-xs font-semibold transition last:border-b-0 hover:bg-white/[0.04] ${
-                          active ? 'text-white bg-white/5' : 'text-white/50'
+                        className={`flex w-full items-center px-4 py-2.5 text-left text-xs font-bold transition hover:bg-white/[0.04] ${
+                          active ? 'text-white bg-white/5' : 'text-white/40'
                         }`}
                       >
                         {y}
-                        {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#C91520]" />}
+                        {active && <span className="ml-auto h-2 w-2 rounded-full bg-[#C91520]" />}
                       </button>
                     );
                   })}
@@ -277,7 +278,7 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
           </div>
 
           {/* Footer Actions */}
-          <div className="mt-auto flex items-center justify-between border-t border-white/10 pt-4.5">
+          <div className="mt-auto flex items-center justify-between border-t border-white/10 pt-5">
             <button
               type="button"
               onClick={() => {
@@ -293,7 +294,7 @@ export default function DiscoverFilterPanel({ open, onClose, onApply, initial, b
               type="button"
               disabled={busy || !canApply}
               onClick={handleApply}
-              className="px-6 py-2.5 rounded-full bg-[#C91520] hover:bg-[#E50914] text-white font-bold text-xs transition-all shadow-[0_4px_20px_rgba(201,21,32,0.4)] active:scale-95 disabled:opacity-40"
+              className="px-7 py-3 rounded-full bg-[#C91520] hover:bg-[#E50914] text-white font-bold text-xs transition-all shadow-[0_4px_25px_rgba(201,21,32,0.4)] active:scale-95 disabled:opacity-40"
             >
               {busy ? 'Yükleniyor…' : 'Filtreyi Uygula'}
             </button>
