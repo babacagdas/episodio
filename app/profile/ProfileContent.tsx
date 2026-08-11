@@ -1295,26 +1295,27 @@ export default function ProfileContent() {
               </button>
             </div>
 
-            {/* Alt Durum Filtreleri (Bitirdiklerim, İzliyorum, Yarıda Bıraktıklarım, İzleyeceklerim) */}
-            <div className="flex flex-wrap items-center gap-2 mb-5">
+            {/* Alt Durum Filtreleri (Bitirdiklerim, İzliyorum, Yarıda Bıraktıklarım, İzleyeceklerim) - Mobilde Yan Yana 4'lü Grid */}
+            <div className="grid grid-cols-4 gap-1 sm:gap-2 mb-5 w-full">
               {[
-                { key: 'completed', label: 'Bitirdiklerim', icon: 'check_circle', color: 'text-emerald-400' },
-                { key: 'watching', label: 'İzliyorum', icon: 'play_arrow', color: 'text-[#C91520]' },
-                { key: 'dropped', label: 'Yarıda Bıraktıklarım', icon: 'pause_circle', color: 'text-amber-400' },
-                { key: 'plan_to_watch', label: 'İzleyeceklerim', icon: 'bookmark', color: 'text-sky-400' },
+                { key: 'completed', label: 'Bitirdim', fullLabel: 'Bitirdiklerim', icon: 'check_circle', color: 'text-emerald-400' },
+                { key: 'watching', label: 'İzliyorum', fullLabel: 'İzliyorum', icon: 'play_arrow', color: 'text-[#C91520]' },
+                { key: 'dropped', label: 'Yarıda', fullLabel: 'Yarıda Bıraktıklarım', icon: 'pause_circle', color: 'text-amber-400' },
+                { key: 'plan_to_watch', label: 'Planlanan', fullLabel: 'İzleyeceklerim', icon: 'bookmark', color: 'text-sky-400' },
               ].map((sub) => (
                 <button
                   key={sub.key}
                   type="button"
                   onClick={() => setWatchedSubStatus(sub.key as any)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+                  className={`w-full py-2 px-1 rounded-xl text-[10.5px] sm:text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1 border text-center ${
                     watchedSubStatus === sub.key
                       ? 'bg-white/10 text-white border-white/20 shadow-md'
                       : 'bg-white/[0.03] text-white/40 border-white/5 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  <span className={`material-symbols-outlined text-sm ${sub.color}`}>{sub.icon}</span>
-                  <span>{sub.label}</span>
+                  <span className={`material-symbols-outlined text-xs sm:text-sm ${sub.color}`}>{sub.icon}</span>
+                  <span className="sm:hidden truncate">{sub.label}</span>
+                  <span className="hidden sm:inline">{sub.fullLabel}</span>
                 </button>
               ))}
             </div>
