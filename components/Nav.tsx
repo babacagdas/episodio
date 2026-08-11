@@ -20,43 +20,46 @@ export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 flex h-14 w-full items-center justify-between px-4 bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-white/10 pt-[env(safe-area-inset-top)] md:hidden">
-        {/* Sol Tarafta Artı Butonu (Liste Oluştur) */}
-        <div className="flex items-center justify-start w-16 shrink-0">
-          <button
-            type="button"
-            onClick={() => setCreateListOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-transparent bg-transparent text-white/90 transition-colors hover:text-white hover:bg-white/5 active:scale-95"
-            title="Yeni Liste Oluştur"
-            aria-label="Yeni Liste Oluştur"
-          >
-            <span
-              className="material-symbols-outlined text-[25px] text-white/90 hover:text-white transition-colors"
-              style={{ fontVariationSettings: "'wght' 300, 'opsz' 24" }}
+      <header className="fixed top-0 left-0 right-0 z-50 w-full bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-white/10 md:hidden">
+        {/* Güvenli Çentik Alanı Altında Sabit 56px (h-14) Header Satırı */}
+        <div className="flex h-14 w-full items-center justify-between px-4 mt-[env(safe-area-inset-top,0px)]">
+          {/* Sol Tarafta Artı Butonu (Liste Oluştur) */}
+          <div className="flex items-center justify-start w-16 shrink-0">
+            <button
+              type="button"
+              onClick={() => setCreateListOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-transparent bg-transparent text-white/90 transition-colors hover:text-white hover:bg-white/5 active:scale-95"
+              title="Yeni Liste Oluştur"
+              aria-label="Yeni Liste Oluştur"
             >
-              add
-            </span>
-          </button>
-        </div>
-
-        {/* Tam Ortalı Logo */}
-        <Link href="/home" className="flex items-center justify-center">
-          <img alt="Episodio Logo" className="h-7 w-auto object-contain" src="/logo.png" />
-        </Link>
-
-        {/* Sağ İkonlar (Kalp & Zil) */}
-        <div className="flex items-center gap-1.5 justify-end w-16 shrink-0">
-          <FriendsActivityHeaderModal />
-          {rightElement ?? (
-            <Link href="/notifications" aria-label="Bildirimler" className="flex h-9 w-9 items-center justify-center text-white/90 hover:text-white transition-colors hover:bg-white/5 rounded-full">
               <span
-                className="material-symbols-outlined text-[25px]"
+                className="material-symbols-outlined text-[25px] text-white/90 hover:text-white transition-colors"
                 style={{ fontVariationSettings: "'wght' 300, 'opsz' 24" }}
               >
-                notifications
+                add
               </span>
-            </Link>
-          )}
+            </button>
+          </div>
+
+          {/* Tam Ortalı Logo */}
+          <Link href="/home" className="flex items-center justify-center">
+            <img alt="Episodio Logo" className="h-7 w-auto object-contain" src="/logo.png" />
+          </Link>
+
+          {/* Sağ İkonlar (Kalp & Zil) */}
+          <div className="flex items-center gap-1.5 justify-end w-16 shrink-0">
+            <FriendsActivityHeaderModal />
+            {rightElement ?? (
+              <Link href="/notifications" aria-label="Bildirimler" className="flex h-9 w-9 items-center justify-center text-white/90 hover:text-white transition-colors hover:bg-white/5 rounded-full">
+                <span
+                  className="material-symbols-outlined text-[25px]"
+                  style={{ fontVariationSettings: "'wght' 300, 'opsz' 24" }}
+                >
+                  notifications
+                </span>
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 

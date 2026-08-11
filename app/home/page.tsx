@@ -85,7 +85,7 @@ async function TrailersContainer() {
 
 export default function Home() {
   return (
-    <div className="font-body-md text-body-md antialiased pb-32 md:pb-0 pt-14 md:pt-0 bg-[#000000] min-h-screen">
+    <div className="font-body-md text-body-md antialiased pb-32 md:pb-0 pt-[calc(3.5rem+env(safe-area-inset-top,0px))] md:pt-0 bg-[#000000] min-h-screen">
       <WelcomeOnboardingModal />
 
       <MobileHeader rightElement={<NotificationsBell />} />
