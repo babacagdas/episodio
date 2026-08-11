@@ -9,7 +9,6 @@ import { createClient } from '@/lib/supabase/client';
 import ShowCard from '@/components/ShowCard';
 import ListPreviewCard from '@/components/ListPreviewCard';
 import DiscoverFilterPanel, { type AppliedFilters } from './DiscoverFilterPanel';
-import DiscoverMoodBanner, { type MoodFilterSelection } from './DiscoverMoodBanner';
 import RandomShowModal from './RandomShowModal';
 
 interface UserSearchProfile {
@@ -245,50 +244,11 @@ export default function Search() {
     }
   }, []);
 
-  const [moodSelection, setMoodSelection] = useState<MoodFilterSelection | null>(null);
-
   const clearDiscoverFilter = useCallback(() => {
     setActiveFilters(null);
     setFilteredShows([]);
     setFilterError(null);
-    setMoodSelection(null);
   }, []);
-
-  const handleSelectMoodFilter = useCallback(async (sel: MoodFilterSelection | null) => {
-    setMoodSelection(sel);
-    if (!sel) {
-      clearDiscoverFilter();
-      return;
-    }
-
-    setFilterApplying(true);
-    setFilterError(null);
-    try {
-      const qs = new URLSearchParams();
-      if (sel.type === 'genre') {
-        qs.set('genreId', String(sel.value));
-      } else if (sel.type === 'format') {
-        qs.set('format', String(sel.value));
-      }
-
-      const res = await fetch(`/api/shows/filter?${qs.toString()}`);
-      const data: unknown = await res.json().catch(() => null);
-      if (res.ok && Array.isArray(data)) {
-        setFilteredShows(data as Show[]);
-        setActiveFilters({
-          category: sel.type === 'genre' ? { kind: 'genre', genreId: Number(sel.value), label: sel.label } : null,
-          year: null,
-          provider: null,
-        });
-      } else {
-        setFilterError('Diziler yüklenemedi');
-      }
-    } catch {
-      setFilterError('Bağlantı hatası');
-    } finally {
-      setFilterApplying(false);
-    }
-  }, [clearDiscoverFilter]);
 
   const toggleFollow = useCallback(async (profile: UserSearchProfile) => {
     if (!currentUserId) {
@@ -392,14 +352,6 @@ export default function Search() {
         </div>
         {filterError && (
           <p className="text-xs text-[#C91520] max-w-4xl -mt-4">{filterError}</p>
-        )}
-
-        {/* Ruh Haline & Süreye Göre Keşfet Banner'ı (Veritabanına Sıfır Yük) */}
-        {!query.trim() && (
-          <DiscoverMoodBanner
-            onSelectFilter={handleSelectMoodFilter}
-            activeSelection={moodSelection}
-          />
         )}
 
         {/* Results / Trending */}
