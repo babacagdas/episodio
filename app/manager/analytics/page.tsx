@@ -19,7 +19,7 @@ async function checkAdminAccess() {
   return { user, isAllowed };
 }
 
-// Hafta Başı ve Sonu Hesaplayıcı (Pazartesi - Pazar)
+// Hafta Başı ve Sonu Hesaplayıcı (Pazartesi 00:00 - Pazar 23:59)
 function getISOWeekInfo(d: Date): { start: Date; end: Date; weekKey: string; label: string } {
   const date = new Date(d);
   const day = date.getDay();
@@ -40,6 +40,15 @@ function getISOWeekInfo(d: Date): { start: Date; end: Date; weekKey: string; lab
   return { start, end, weekKey, label };
 }
 
+type UnifiedUser = {
+  id: string;
+  name: string;
+  username: string | null;
+  email?: string | null;
+  avatar_url: string | null;
+  created_at?: string | null;
+};
+
 export default async function WeeklyAnalyticsPage() {
   const { user, isAllowed } = await checkAdminAccess();
 
@@ -51,7 +60,7 @@ export default async function WeeklyAnalyticsPage() {
   const supabase = await createClient();
   const db = admin || supabase;
 
-  // Supabase Auth & Profiles
+  // Supabase Auth Users & Public Profiles
   let authUsersList: any[] = [];
   if (admin) {
     try {
@@ -66,8 +75,8 @@ export default async function WeeklyAnalyticsPage() {
     db.from('profiles').select('id, username, full_name, avatar_url, created_at').order('created_at', { ascending: false }),
     db.from('lists').select('id, name, visibility, user_id, created_at').order('created_at', { ascending: false }),
     db.from('reviews').select('id, user_id, show_id, rating, content, created_at').order('created_at', { ascending: false }),
-    db.from('show_notes').select('id, user_id, show_id, show_name, content, is_public, updated_at').order('updated_at', { ascending: false }),
-    db.from('watch_status').select('id, updated_at').order('updated_at', { ascending: false }),
+    db.from('show_notes').select('id, user_id, show_id, show_name, content, is_public, updated_at, created_at').order('updated_at', { ascending: false }),
+    db.from('watch_status').select('id, updated_at, created_at').order('updated_at', { ascending: false }),
   ]);
 
   const profilesList = (profilesRes.data ?? []);
@@ -76,8 +85,8 @@ export default async function WeeklyAnalyticsPage() {
   const notesList = (notesRes.data ?? []);
   const watchList = (watchRes.data ?? []);
 
-  // Map users together
-  const userMap = new Map<string, { id: string; name: string; username: string | null; email?: string | null; avatar_url: string | null }>();
+  // Map users together (Auth Users + Profiles)
+  const userMap = new Map<string, UnifiedUser>();
 
   authUsersList.forEach((u) => {
     userMap.set(u.id, {
@@ -86,6 +95,7 @@ export default async function WeeklyAnalyticsPage() {
       username: u.user_metadata?.username ?? (u.email ? u.email.split('@')[0] : null),
       email: u.email ?? null,
       avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
+      created_at: u.created_at,
     });
   });
 
@@ -97,8 +107,11 @@ export default async function WeeklyAnalyticsPage() {
       username: p.username || existing?.username || null,
       email: existing?.email ?? null,
       avatar_url: p.avatar_url || existing?.avatar_url || null,
+      created_at: p.created_at || existing?.created_at || null,
     });
   });
+
+  const allUsers = Array.from(userMap.values());
 
   // Dynamic Weekly Grouping Map
   const weekMap = new Map<string, WeeklyData>();
@@ -123,33 +136,34 @@ export default async function WeeklyAnalyticsPage() {
     return weekMap.get(info.weekKey)!;
   }
 
-  // Ensure current week exists
+  // Current week initialisation
   getOrCreateWeek(now);
 
-  // Group Users
-  profilesList.forEach((p: any) => {
-    if (!p.created_at) return;
-    const d = new Date(p.created_at);
+  // 1. Group ALL Users (Auth Users + Profiles)
+  allUsers.forEach((u) => {
+    const rawDate = u.created_at ? new Date(u.created_at) : now;
+    const d = isNaN(rawDate.getTime()) ? now : rawDate;
     const week = getOrCreateWeek(d);
-    const userInfo = userMap.get(p.id);
     const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
     week.users.push({
-      id: p.id,
-      name: userInfo?.name || 'Kullanıcı',
-      username: userInfo?.username || null,
-      email: userInfo?.email || null,
-      avatar_url: userInfo?.avatar_url || null,
+      id: u.id,
+      name: u.name || 'Kullanıcı',
+      username: u.username || null,
+      email: u.email || null,
+      avatar_url: u.avatar_url || null,
       date: dateStr,
     });
   });
 
-  // Group Lists
+  // 2. Group Lists
   listsList.forEach((l: any) => {
-    if (!l.created_at) return;
-    const d = new Date(l.created_at);
+    const rawDate = l.created_at ? new Date(l.created_at) : now;
+    const d = isNaN(rawDate.getTime()) ? now : rawDate;
     const week = getOrCreateWeek(d);
     const userInfo = userMap.get(l.user_id);
     const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+
     week.lists.push({
       id: l.id,
       name: l.name,
@@ -159,13 +173,14 @@ export default async function WeeklyAnalyticsPage() {
     });
   });
 
-  // Group Reviews
+  // 3. Group Reviews
   reviewsList.forEach((r: any) => {
-    if (!r.created_at) return;
-    const d = new Date(r.created_at);
+    const rawDate = r.created_at ? new Date(r.created_at) : now;
+    const d = isNaN(rawDate.getTime()) ? now : rawDate;
     const week = getOrCreateWeek(d);
     const userInfo = userMap.get(r.user_id);
     const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+
     week.reviews.push({
       id: r.id,
       content: r.content,
@@ -175,13 +190,14 @@ export default async function WeeklyAnalyticsPage() {
     });
   });
 
-  // Group Notes
+  // 4. Group Notes
   notesList.forEach((n: any) => {
-    if (!n.updated_at) return;
-    const d = new Date(n.updated_at);
+    const rawDate = n.updated_at || n.created_at ? new Date(n.updated_at || n.created_at) : now;
+    const d = isNaN(rawDate.getTime()) ? now : rawDate;
     const week = getOrCreateWeek(d);
     const userInfo = userMap.get(n.user_id);
     const dateStr = d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+
     week.reviews.push({
       id: n.id || `note-${Math.random()}`,
       content: n.content,
@@ -192,10 +208,10 @@ export default async function WeeklyAnalyticsPage() {
     });
   });
 
-  // Group Watch Count
+  // 5. Group Watch Count
   watchList.forEach((w: any) => {
-    if (!w.updated_at) return;
-    const d = new Date(w.updated_at);
+    const rawDate = w.updated_at || w.created_at ? new Date(w.updated_at || w.created_at) : now;
+    const d = isNaN(rawDate.getTime()) ? now : rawDate;
     const week = getOrCreateWeek(d);
     week.watchCount += 1;
   });
