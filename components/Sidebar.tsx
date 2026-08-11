@@ -14,7 +14,6 @@ const navItems = [
 ];
 
 const shortcutItems = [
-  { href: '/games', icon: 'sports_esports', label: 'Dizi Oyunları' },
   { href: '/watchlist', icon: 'bookmark', label: 'İzleme Listesi' },
   { href: '/swiper', icon: 'style', label: 'Mutlaka İzlenecekler' },
   { href: '/actor-match', icon: 'person_search', label: 'Oyuncu Eşleştirici' },

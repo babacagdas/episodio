@@ -23,8 +23,8 @@ export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
       <header className="fixed top-0 left-0 right-0 z-50 w-full bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-white/10 md:hidden">
         {/* Güvenli Çentik Alanı Altında Sabit 56px (h-14) Header Satırı */}
         <div className="flex h-14 w-full items-center justify-between px-4 mt-[env(safe-area-inset-top,0px)]">
-          {/* Sol Tarafta Artı Butonu (Liste Oluştur) ve Oyunlar Butonu (Joistik) */}
-          <div className="flex items-center justify-start gap-1 w-20 shrink-0">
+          {/* Sol Tarafta Artı Butonu (Liste Oluştur) */}
+          <div className="flex items-center justify-start w-16 shrink-0">
             <button
               type="button"
               onClick={() => setCreateListOpen(true)}
@@ -39,17 +39,6 @@ export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
                 add
               </span>
             </button>
-
-            <Link
-              href="/games"
-              className="flex h-9 w-9 items-center justify-center rounded-full text-white/90 hover:text-[#C91520] hover:bg-white/5 transition-colors active:scale-95"
-              title="Dizi Oyunları"
-              aria-label="Dizi Oyunları"
-            >
-              <span className="material-symbols-outlined text-[23px] text-[#C91520]">
-                sports_esports
-              </span>
-            </Link>
           </div>
 
           {/* Tam Ortalı Logo */}
