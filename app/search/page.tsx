@@ -214,9 +214,13 @@ export default function Search() {
     setFilterError(null);
     try {
       const qs = new URLSearchParams();
-      if (f.category.kind === 'genre') qs.set('genreId', String(f.category.genreId));
-      else qs.set('originCountry', f.category.originCountry);
+      if (f.category) {
+        if (f.category.kind === 'genre') qs.set('genreId', String(f.category.genreId));
+        else qs.set('originCountry', f.category.originCountry);
+      }
       if (f.year) qs.set('year', String(f.year));
+      if (f.provider) qs.set('providerId', String(f.provider.providerId));
+
       const res = await fetch(`/api/shows/filter?${qs.toString()}`);
       const data: unknown = await res.json().catch(() => null);
       if (!res.ok) {
