@@ -1295,13 +1295,13 @@ export default function ProfileContent() {
               </button>
             </div>
 
-            {/* Alt Durum Filtreleri (Bitirdiklerim, İzliyorum, Yarıda Bıraktıklarım 🔒, İzleyeceklerim 🔒) */}
+            {/* Alt Durum Filtreleri (Bitirdiklerim, İzliyorum, Yarıda Bıraktıklarım, İzleyeceklerim) */}
             <div className="flex flex-wrap items-center gap-2 mb-5">
               {[
                 { key: 'completed', label: 'Bitirdiklerim', icon: 'check_circle', color: 'text-emerald-400' },
                 { key: 'watching', label: 'İzliyorum', icon: 'play_arrow', color: 'text-[#C91520]' },
-                { key: 'dropped', label: 'Yarıda Bıraktıklarım 🔒', icon: 'pause_circle', color: 'text-amber-400' },
-                { key: 'plan_to_watch', label: 'İzleyeceklerim 🔒', icon: 'bookmark', color: 'text-sky-400' },
+                { key: 'dropped', label: 'Yarıda Bıraktıklarım', icon: 'pause_circle', color: 'text-amber-400' },
+                { key: 'plan_to_watch', label: 'İzleyeceklerim', icon: 'bookmark', color: 'text-sky-400' },
               ].map((sub) => (
                 <button
                   key={sub.key}
