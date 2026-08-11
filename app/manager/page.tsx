@@ -17,6 +17,7 @@ type UserItem = {
   full_name: string | null;
   avatar_url: string | null;
   created_at?: string | null;
+  is_banned?: boolean;
 };
 
 type ListRow = {
@@ -179,10 +180,11 @@ export default async function ManagerDashboardPage() {
       full_name: u.user_metadata?.full_name || u.user_metadata?.name || null,
       avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
       created_at: u.created_at,
+      is_banned: !!u.user_metadata?.is_banned,
     });
   });
 
-  profilesList.forEach((p) => {
+  profilesList.forEach((p: any) => {
     const existing = userMap.get(p.id);
     userMap.set(p.id, {
       id: p.id,
@@ -191,6 +193,7 @@ export default async function ManagerDashboardPage() {
       full_name: p.full_name || existing?.full_name || null,
       avatar_url: p.avatar_url || existing?.avatar_url || null,
       created_at: p.created_at || existing?.created_at || null,
+      is_banned: p.is_banned !== undefined ? !!p.is_banned : existing?.is_banned || false,
     });
   });
 
