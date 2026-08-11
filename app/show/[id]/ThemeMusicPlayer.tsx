@@ -17,57 +17,20 @@ export default function ThemeMusicPlayer({ showName }: ThemeMusicPlayerProps) {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // iTunes Public API'den Jenerik Müziğini Sorgula (0 DB Yükü & Yüksek Doğruluk Filtresi)
+  // Sunucu API Proxy üzerinden Jenerik Müziğini Sorgula (PWA & WebKit CORS Uyumlu)
   async function fetchThemeMusic() {
     if (hasFetched) return;
     setLoading(true);
     setError(false);
 
-    const cleanShowName = showName.toLowerCase().trim();
-
     try {
-      const queries = [
-        `${showName} TV Series Main Title Theme`,
-        `${showName} Soundtrack Theme`,
-        `${showName} Jenerik`,
-        `${showName} Theme`,
-      ];
+      const res = await fetch(`/api/theme-music?show=${encodeURIComponent(showName)}`);
+      const data = await res.json();
 
-      let foundTrack: any = null;
-
-      for (const q of queries) {
-        if (foundTrack) break;
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=6`);
-        const data = await res.json();
-        if (!data.results || data.results.length === 0) continue;
-
-        // 1. Aşama: Hem dizi adını hem de 'theme' / 'soundtrack' / 'jenerik' ifadesini içeren kesin eşleşme
-        const exactMatch = data.results.find((t: any) => {
-          if (!t.previewUrl) return false;
-          const trackLower = (t.trackName || '').toLowerCase();
-          const collectionLower = (t.collectionName || '').toLowerCase();
-
-          const matchesShowName = trackLower.includes(cleanShowName) || collectionLower.includes(cleanShowName);
-          const isTheme = trackLower.includes('theme') || trackLower.includes('main title') || trackLower.includes('ost') || trackLower.includes('soundtrack') || trackLower.includes('jenerik') || collectionLower.includes('soundtrack') || collectionLower.includes('ost');
-
-          return matchesShowName && isTheme;
-        });
-
-        // 2. Aşama: En azından dizi adı eşleşen müzik
-        const nameMatch = data.results.find((t: any) => {
-          if (!t.previewUrl) return false;
-          const trackLower = (t.trackName || '').toLowerCase();
-          const collectionLower = (t.collectionName || '').toLowerCase();
-          return trackLower.includes(cleanShowName) || collectionLower.includes(cleanShowName);
-        });
-
-        foundTrack = exactMatch || nameMatch;
-      }
-
-      if (foundTrack && foundTrack.previewUrl) {
-        setAudioUrl(foundTrack.previewUrl);
-        setTrackName(foundTrack.trackName);
-        setArtistName(foundTrack.artistName);
+      if (data?.previewUrl) {
+        setAudioUrl(data.previewUrl);
+        setTrackName(data.trackName || 'Jenerik Müziği');
+        setArtistName(data.artistName || '');
         setHasFetched(true);
       } else {
         setError(true);
