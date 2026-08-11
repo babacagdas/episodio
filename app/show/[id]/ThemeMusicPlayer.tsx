@@ -17,37 +17,57 @@ export default function ThemeMusicPlayer({ showName }: ThemeMusicPlayerProps) {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // iTunes Public API'den Jenerik Müziğini Sorgula (0 DB Yükü!)
+  // iTunes Public API'den Jenerik Müziğini Sorgula (0 DB Yükü & Yüksek Doğruluk Filtresi)
   async function fetchThemeMusic() {
     if (hasFetched) return;
     setLoading(true);
     setError(false);
 
+    const cleanShowName = showName.toLowerCase().trim();
+
     try {
-      // 1. Önce "showName main title theme" dene
-      const query = `${showName} main title theme`;
-      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=3`);
-      const data = await res.json();
+      const queries = [
+        `${showName} TV Series Main Title Theme`,
+        `${showName} Soundtrack Theme`,
+        `${showName} Jenerik`,
+        `${showName} Theme`,
+      ];
 
-      let track = data.results?.find((t: any) =>
-        t.previewUrl && (
-          t.trackName.toLowerCase().includes('theme') ||
-          t.trackName.toLowerCase().includes('main title') ||
-          t.trackName.toLowerCase().includes(showName.toLowerCase())
-        )
-      ) || data.results?.[0];
+      let foundTrack: any = null;
 
-      // Bulunamadıysa sadece "showName theme" dene
-      if (!track || !track.previewUrl) {
-        const fallbackRes = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(showName + ' theme')}&media=music&entity=song&limit=3`);
-        const fallbackData = await fallbackRes.json();
-        track = fallbackData.results?.[0];
+      for (const q of queries) {
+        if (foundTrack) break;
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music&entity=song&limit=6`);
+        const data = await res.json();
+        if (!data.results || data.results.length === 0) continue;
+
+        // 1. Aşama: Hem dizi adını hem de 'theme' / 'soundtrack' / 'jenerik' ifadesini içeren kesin eşleşme
+        const exactMatch = data.results.find((t: any) => {
+          if (!t.previewUrl) return false;
+          const trackLower = (t.trackName || '').toLowerCase();
+          const collectionLower = (t.collectionName || '').toLowerCase();
+
+          const matchesShowName = trackLower.includes(cleanShowName) || collectionLower.includes(cleanShowName);
+          const isTheme = trackLower.includes('theme') || trackLower.includes('main title') || trackLower.includes('ost') || trackLower.includes('soundtrack') || trackLower.includes('jenerik') || collectionLower.includes('soundtrack') || collectionLower.includes('ost');
+
+          return matchesShowName && isTheme;
+        });
+
+        // 2. Aşama: En azından dizi adı eşleşen müzik
+        const nameMatch = data.results.find((t: any) => {
+          if (!t.previewUrl) return false;
+          const trackLower = (t.trackName || '').toLowerCase();
+          const collectionLower = (t.collectionName || '').toLowerCase();
+          return trackLower.includes(cleanShowName) || collectionLower.includes(cleanShowName);
+        });
+
+        foundTrack = exactMatch || nameMatch;
       }
 
-      if (track && track.previewUrl) {
-        setAudioUrl(track.previewUrl);
-        setTrackName(track.trackName);
-        setArtistName(track.artistName);
+      if (foundTrack && foundTrack.previewUrl) {
+        setAudioUrl(foundTrack.previewUrl);
+        setTrackName(foundTrack.trackName);
+        setArtistName(foundTrack.artistName);
         setHasFetched(true);
       } else {
         setError(true);
