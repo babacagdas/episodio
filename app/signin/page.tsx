@@ -12,9 +12,19 @@ function SignInContent() {
 
   useEffect(() => {
     const err = searchParams.get('error');
-    if (err) {
-      setError(decodeURIComponent(err));
+    const msg = searchParams.get('msg');
+
+    if (msg) {
+      setInfo(decodeURIComponent(msg));
+    } else if (err) {
+      const decodedErr = decodeURIComponent(err);
+      if (decodedErr.toLowerCase().includes('pkce') || decodedErr.toLowerCase().includes('code verifier')) {
+        setInfo('E-posta doğrulaması tamamlandı. Lütfen e-posta ve şifrenizle giriş yapın.');
+      } else {
+        setError(decodedErr);
+      }
     }
+
     const code = searchParams.get('code');
     if (code) {
       router.push(`/auth/callback?code=${code}&next=${encodeURIComponent(nextPath)}`);
