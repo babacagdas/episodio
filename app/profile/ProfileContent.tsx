@@ -937,14 +937,14 @@ export default function ProfileContent() {
       )}
       {/* Cover & Avatar */}
       <section className="relative">
-        <div className="h-[120px] sm:h-[160px] md:h-[220px] lg:h-[300px] w-full relative overflow-hidden bg-[#0A0A0A]">
+        <div className="h-[180px] sm:h-[220px] md:h-[280px] lg:h-[340px] w-full relative overflow-hidden bg-[#0A0A0A]">
           {coverImageUrl ? (
-            <img src={coverImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
+            <img src={coverImageUrl} alt="Profil Kapağı" className="absolute inset-0 w-full h-full object-cover object-center sm:object-[center_35%]" />
           ) : null}
           <div
             className={`absolute inset-0 pointer-events-none ${
               coverImageUrl
-                ? 'bg-[#C91520]/[0.06]'
+                ? 'bg-gradient-to-t from-[#0A0A0A] via-black/20 to-transparent opacity-80'
                 : 'bg-gradient-to-br from-[#C91520]/30 via-[#141414] to-[#0A0A0A]'
             }`}
             aria-hidden
@@ -1014,7 +1014,7 @@ export default function ProfileContent() {
             </div>
           </div>
         )}
-        <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-11 sm:-mt-12 md:-mt-[4.25rem] lg:-mt-24 z-10">
+        <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-14 sm:-mt-16 md:-mt-20 lg:-mt-24 z-10">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-2 sm:gap-3 md:gap-md">
             <div className="w-[5.5rem] h-[5.5rem] sm:w-24 sm:h-24 md:w-[8.5rem] md:h-[8.5rem] lg:w-36 lg:h-36 rounded-full border-[3px] sm:border-4 border-[#0A0A0A] overflow-hidden bg-[#141414] shrink-0 flex items-center justify-center">
               {avatar

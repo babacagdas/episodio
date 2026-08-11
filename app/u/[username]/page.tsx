@@ -200,22 +200,22 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
 
       <main className="md:ml-[200px]">
         <section className="relative">
-          <div className="relative h-[200px] w-full overflow-hidden bg-[#0A0A0A] md:h-[260px]">
+          <div className="relative h-[180px] sm:h-[220px] md:h-[280px] lg:h-[340px] w-full overflow-hidden bg-[#0A0A0A]">
             {coverImageUrl ? (
               <img
                 src={coverImageUrl}
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover object-center"
+                alt="Profil Kapağı"
+                className="absolute inset-0 h-full w-full object-cover object-center sm:object-[center_35%]"
               />
             ) : null}
             <div
               className={`absolute inset-0 pointer-events-none ${
-                coverImageUrl ? 'bg-[#C91520]/[0.06]' : 'bg-gradient-to-br from-[#C91520]/30 via-[#141414] to-[#0A0A0A]'
+                coverImageUrl ? 'bg-gradient-to-t from-[#0A0A0A] via-black/20 to-transparent opacity-80' : 'bg-gradient-to-br from-[#C91520]/30 via-[#141414] to-[#0A0A0A]'
               }`}
               aria-hidden
             />
           </div>
-          <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-16 md:-mt-20 z-10">
+          <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-14 sm:-mt-16 md:-mt-20 lg:-mt-24 z-10">
             <div className="flex flex-col md:flex-row items-center md:items-end gap-md">
               <div className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-[#0A0A0A] overflow-hidden bg-[#141414] shrink-0 flex items-center justify-center">
                 {profile.avatar_url
