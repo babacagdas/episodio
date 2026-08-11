@@ -47,6 +47,24 @@ type ShowNoteRow = {
   updated_at?: string | null;
 };
 
+type EpisodeDiscussionRow = {
+  id: string;
+  user_id: string;
+  show_id: number;
+  season_number?: number;
+  episode_number?: number;
+  content: string | null;
+  created_at?: string | null;
+};
+
+type EpisodeReplyRow = {
+  id: string;
+  user_id: string;
+  comment_id: string;
+  content: string | null;
+  created_at?: string | null;
+};
+
 async function checkAdminAccess() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -83,13 +101,21 @@ async function deleteReviewAction(formData: FormData) {
   if (!isAllowed) return;
 
   const reviewId = String(formData.get('reviewId') ?? '');
+  const type = String(formData.get('type') ?? 'review');
   if (!reviewId) return;
 
   const admin = createAdminClient();
   const supabase = await createClient();
   const db = admin || supabase;
 
-  await db.from('reviews').delete().eq('id', reviewId);
+  if (type === 'episode') {
+    await db.from('episode_discussions').delete().eq('id', reviewId);
+  } else if (type === 'reply') {
+    await db.from('episode_comment_replies').delete().eq('id', reviewId);
+  } else {
+    await db.from('reviews').delete().eq('id', reviewId);
+  }
+
   revalidatePath('/manager');
 }
 
@@ -157,17 +183,21 @@ export default async function ManagerDashboardPage() {
     }
   }
 
-  const [profilesRes, listsRes, reviewsRes, notesRes] = await Promise.all([
+  const [profilesRes, listsRes, reviewsRes, notesRes, epDiscussionsRes, epRepliesRes] = await Promise.all([
     db.from('profiles').select('id, username, full_name, avatar_url, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
     db.from('lists').select('id, name, visibility, user_id, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
     db.from('reviews').select('id, user_id, show_id, rating, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
     db.from('show_notes').select('id, user_id, show_id, show_name, content, is_public, updated_at', { count: 'exact' }).order('updated_at', { ascending: false }),
+    db.from('episode_discussions').select('id, user_id, show_id, season_number, episode_number, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
+    db.from('episode_comment_replies').select('id, user_id, comment_id, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
   ]);
 
   const profilesList = (profilesRes.data ?? []) as UserItem[];
   const lists = (listsRes.data ?? []) as ListRow[];
   const reviews = (reviewsRes.data ?? []) as ReviewRow[];
   const notes = (notesRes.data ?? []) as ShowNoteRow[];
+  const epDiscussions = (epDiscussionsRes.data ?? []) as EpisodeDiscussionRow[];
+  const epReplies = (epRepliesRes.data ?? []) as EpisodeReplyRow[];
 
   // Auth Users + Profiles Tablosunu Birleştirme
   const userMap = new Map<string, UserItem>();
@@ -200,7 +230,13 @@ export default async function ManagerDashboardPage() {
   const allUsers = Array.from(userMap.values());
   const totalUserCount = allUsers.length > 0 ? allUsers.length : (profilesRes.count ?? profilesList.length);
   const totalListCount = listsRes.count ?? lists.length;
-  const totalReviewCount = (reviewsRes.count ?? 0) + (notesRes.count ?? 0);
+  
+  // TÜM YORUM VE YANIT TİPLERİNİN TOPLAMI (Eksiksiz %100 Gerçek Yorum Sayısı)
+  const totalReviewCount = 
+    (reviewsRes.count ?? reviews.length) + 
+    (notesRes.count ?? notes.length) + 
+    (epDiscussionsRes.count ?? epDiscussions.length) + 
+    (epRepliesRes.count ?? epReplies.length);
 
   // SON 24 SAAT GÜNLÜK HESAPLAMALARI (Otomatik Tarihli)
   const now = new Date();
@@ -209,7 +245,12 @@ export default async function ManagerDashboardPage() {
 
   const dailyUsersCount = allUsers.filter((u) => u.created_at && u.created_at >= last24h).length;
   const dailyListsCount = lists.filter((l) => l.created_at && l.created_at >= last24h).length;
-  const dailyReviewsCount = reviews.filter((r) => r.created_at && r.created_at >= last24h).length + notes.filter((n) => n.updated_at && n.updated_at >= last24h).length;
+  
+  const dailyReviewsCount = 
+    reviews.filter((r) => r.created_at && r.created_at >= last24h).length +
+    notes.filter((n) => n.updated_at && n.updated_at >= last24h).length +
+    epDiscussions.filter((d) => d.created_at && d.created_at >= last24h).length +
+    epReplies.filter((rp) => rp.created_at && rp.created_at >= last24h).length;
 
   return (
     <ManagerPinAuth adminEmail={user.email || ''}>
@@ -247,7 +288,7 @@ export default async function ManagerDashboardPage() {
           <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard label="Kayıtlı Üyeler" value={totalUserCount} icon="group" />
             <StatCard label="Oluşturulan Listeler" value={totalListCount} icon="format_list_bulleted" />
-            <StatCard label="Yazılan Yorumlar & Notlar" value={totalReviewCount} icon="rate_review" />
+            <StatCard label="Yazılan Tüm Yorumlar & Notlar" value={totalReviewCount} icon="rate_review" />
           </section>
 
           {/* 2. GÜNLÜK İSTATİSTİK BANNER'I (SON 24 SAAT - OTOMATİK TARİHLİ) */}
@@ -288,7 +329,7 @@ export default async function ManagerDashboardPage() {
 
               <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-4 flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-bold text-white/40 block mb-1">Yeni Yorum & Not</span>
+                  <span className="text-xs font-bold text-white/40 block mb-1">Yeni Yorum & Yanıt</span>
                   <span className="text-2xl font-black text-purple-400">+{dailyReviewsCount}</span>
                 </div>
                 <span className="material-symbols-outlined text-2xl text-purple-400/40">add_comment</span>
@@ -348,18 +389,22 @@ export default async function ManagerDashboardPage() {
               </div>
             </section>
 
-            {/* Son Yorumlar & Notlar */}
+            {/* Son Yorumlar, Bölüm Tartışmaları & Notlar (Tüm Kaynaklar) */}
             <section className="rounded-3xl border border-white/10 bg-[#0E0E14] p-5 sm:p-6 shadow-2xl flex flex-col">
-              <h2 className="text-base font-bold text-white mb-4 flex items-center gap-2 border-b border-white/10 pb-3">
-                <span className="material-symbols-outlined text-[#C91520]">rate_review</span>
-                Yazılan Yorumlar ({reviews.length})
+              <h2 className="text-base font-bold text-white mb-4 flex items-center justify-between border-b border-white/10 pb-3">
+                <span className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[#C91520]">rate_review</span>
+                  Tüm Yorumlar & İncelemeler
+                </span>
+                <span className="text-xs font-bold text-[#C91520]">Toplam: {totalReviewCount}</span>
               </h2>
 
               <div className="space-y-3 flex-1 overflow-y-auto max-h-[420px] pr-1 custom-scrollbar">
-                {reviews.length === 0 && notes.length === 0 ? (
+                {reviews.length === 0 && notes.length === 0 && epDiscussions.length === 0 && epReplies.length === 0 ? (
                   <p className="text-xs text-white/30 py-6 text-center">Henüz yorum yok.</p>
                 ) : (
                   <>
+                    {/* Dizi İncelemeleri */}
                     {reviews.map((r) => {
                       const reviewer = userMap.get(r.user_id);
                       const reviewerUsername = reviewer?.username || reviewer?.full_name || reviewer?.email || 'Kullanıcı';
@@ -369,6 +414,9 @@ export default async function ManagerDashboardPage() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 text-xs">
                               <span className="font-bold text-white">@{reviewerUsername}</span>
+                              <span className="text-[9.5px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20">
+                                Dizi İncelemesi
+                              </span>
                               {r.rating && (
                                 <span className="text-[10px] font-black text-[#D4A017] bg-[#D4A017]/10 px-1.5 py-0.2 rounded">
                                   ★ {r.rating}
@@ -382,6 +430,7 @@ export default async function ManagerDashboardPage() {
 
                           <form action={deleteReviewAction}>
                             <input type="hidden" name="reviewId" value={r.id} />
+                            <input type="hidden" name="type" value="review" />
                             <button
                               type="submit"
                               className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
@@ -394,6 +443,75 @@ export default async function ManagerDashboardPage() {
                       );
                     })}
 
+                    {/* Bölüm Yorumları */}
+                    {epDiscussions.map((d) => {
+                      const reviewer = userMap.get(d.user_id);
+                      const reviewerUsername = reviewer?.username || reviewer?.full_name || reviewer?.email || 'Kullanıcı';
+
+                      return (
+                        <div key={d.id} className="flex items-start justify-between gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="font-bold text-white">@{reviewerUsername}</span>
+                              <span className="text-[9.5px] font-bold text-sky-400 bg-sky-500/10 px-1.5 py-0.2 rounded border border-sky-500/20">
+                                S{d.season_number ?? 1} E{d.episode_number ?? 1} Bölüm Yorumu
+                              </span>
+                            </div>
+                            <p className="text-xs text-white/70 mt-1 line-clamp-2 leading-relaxed">
+                              {d.content}
+                            </p>
+                          </div>
+
+                          <form action={deleteReviewAction}>
+                            <input type="hidden" name="reviewId" value={d.id} />
+                            <input type="hidden" name="type" value="episode" />
+                            <button
+                              type="submit"
+                              className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              title="Bölüm Yorumunu Sil"
+                            >
+                              <span className="material-symbols-outlined text-base">delete</span>
+                            </button>
+                          </form>
+                        </div>
+                      );
+                    })}
+
+                    {/* Bölüm Yorum Yanıtları */}
+                    {epReplies.map((rp) => {
+                      const reviewer = userMap.get(rp.user_id);
+                      const reviewerUsername = reviewer?.username || reviewer?.full_name || reviewer?.email || 'Kullanıcı';
+
+                      return (
+                        <div key={rp.id} className="flex items-start justify-between gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-colors">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="font-bold text-white">@{reviewerUsername}</span>
+                              <span className="text-[9.5px] font-bold text-purple-400 bg-purple-500/10 px-1.5 py-0.2 rounded border border-purple-500/20">
+                                Yorum Yanıtı
+                              </span>
+                            </div>
+                            <p className="text-xs text-white/70 mt-1 line-clamp-2 leading-relaxed">
+                              {rp.content}
+                            </p>
+                          </div>
+
+                          <form action={deleteReviewAction}>
+                            <input type="hidden" name="reviewId" value={rp.id} />
+                            <input type="hidden" name="type" value="reply" />
+                            <button
+                              type="submit"
+                              className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                              title="Yanıtı Sil"
+                            >
+                              <span className="material-symbols-outlined text-base">delete</span>
+                            </button>
+                          </form>
+                        </div>
+                      );
+                    })}
+
+                    {/* Dizi Notları */}
                     {notes.map((n, idx) => {
                       const reviewer = userMap.get(n.user_id);
                       const reviewerUsername = reviewer?.username || reviewer?.full_name || reviewer?.email || 'Kullanıcı';
@@ -403,7 +521,7 @@ export default async function ManagerDashboardPage() {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 text-xs">
                               <span className="font-bold text-white">@{reviewerUsername}</span>
-                              <span className="text-[10px] font-semibold text-white/40 bg-white/5 px-1.5 py-0.2 rounded">
+                              <span className="text-[9.5px] font-semibold text-white/40 bg-white/5 px-1.5 py-0.2 rounded">
                                 {n.show_name || `Dizi #${n.show_id}`} (Not)
                               </span>
                             </div>
