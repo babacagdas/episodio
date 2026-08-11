@@ -19,7 +19,7 @@ function getTmdbKey() {
 
 async function fetchDiscoverPage(
   page: number,
-  opts: { genreId?: number; originCountry?: string; year?: number; providerId?: number }
+  opts: { genreId?: number; originCountry?: string; year?: number; providerId?: number; format?: string }
 ): Promise<CatalogShowRow[]> {
   const key = getTmdbKey();
   if (!key) return [];
@@ -34,6 +34,14 @@ async function fetchDiscoverPage(
   if (opts.providerId) {
     tmdbUrl.searchParams.set('with_watch_providers', String(opts.providerId));
     tmdbUrl.searchParams.set('watch_region', 'TR');
+  }
+  if (opts.format === 'mini') {
+    tmdbUrl.searchParams.set('with_type', '2');
+  } else if (opts.format === 'short') {
+    tmdbUrl.searchParams.set('with_runtime.lte', '35');
+  } else if (opts.format === 'marathon') {
+    tmdbUrl.searchParams.set('sort_by', 'vote_count.desc');
+    tmdbUrl.searchParams.set('vote_count.gte', '300');
   }
   if (opts.year) {
     tmdbUrl.searchParams.set('first_air_date.gte', `${opts.year}-01-01`);
@@ -64,7 +72,7 @@ async function fetchDiscoverPage(
   }));
 }
 
-async function fetchDiscoverAllPages(opts: { genreId?: number; originCountry?: string; year?: number; providerId?: number }) {
+async function fetchDiscoverAllPages(opts: { genreId?: number; originCountry?: string; year?: number; providerId?: number; format?: string }) {
   const merged: CatalogShowRow[] = [];
   const seen = new Set<number>();
   for (let page = 1; page <= 5; page++) {
@@ -148,6 +156,7 @@ export async function GET(req: NextRequest) {
   const originCountry = qs.get('originCountry')?.trim().toUpperCase() || undefined;
   const yearRaw = qs.get('year');
   const providerIdRaw = qs.get('providerId');
+  const format = qs.get('format')?.trim() || undefined;
 
   const genreId = genreIdRaw ? Number(genreIdRaw) : undefined;
   const year = yearRaw ? Number(yearRaw) : undefined;
@@ -156,16 +165,16 @@ export async function GET(req: NextRequest) {
   if (year !== undefined && (Number.isNaN(year) || year < 1900 || year > 2100)) {
     return NextResponse.json({ error: 'Geçersiz yıl' }, { status: 400 });
   }
-  if (!genreId && !originCountry && !providerId) {
-    return NextResponse.json({ error: 'Kategori, platform veya ülke seçin' }, { status: 400 });
+  if (!genreId && !originCountry && !providerId && !format) {
+    return NextResponse.json({ error: 'Kategori, platform veya format seçin' }, { status: 400 });
   }
   if (genreId !== undefined && Number.isNaN(genreId)) {
     return NextResponse.json({ error: 'Geçersiz tür' }, { status: 400 });
   }
 
-  // Eğer platform seçilmişse doğrudan TMDB Discover API'den çek
-  if (providerId) {
-    const merged = await fetchDiscoverAllPages({ genreId, originCountry, year, providerId });
+  // Eğer platform veya format seçilmişse doğrudan TMDB Discover API'den çek
+  if (providerId || format) {
+    const merged = await fetchDiscoverAllPages({ genreId, originCountry, year, providerId, format });
     return NextResponse.json(merged.map(mapToShow));
   }
 
