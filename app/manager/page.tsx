@@ -6,6 +6,7 @@ import { createAdminClient, isAdminEmail } from '@/lib/supabase/admin';
 
 import ManagerPinAuth from './ManagerPinAuth';
 import ManagerUserList from './ManagerUserList';
+import AnnouncementForm from './AnnouncementForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -237,7 +238,10 @@ export default async function ManagerDashboardPage() {
             <StatCard label="Yazılan Yorumlar & Notlar" value={totalReviewCount} icon="rate_review" />
           </section>
 
-          {/* 2. Kayıtlı Üyeler Tablosu (Arama Çubuğu & Max 15 Satır Scroll Özellikli) */}
+          {/* 2. Sitede Canlı Duyuru / Banner Yönetimi */}
+          <AnnouncementForm />
+
+          {/* 3. Kayıtlı Üyeler Tablosu (Arama Çubuğu & Max 15 Satır Scroll Özellikli) */}
           <ManagerUserList users={allUsers} />
 
           {/* 3. İki Kolonlu Yapı: Son Listeler ve Son Yorumlar */}

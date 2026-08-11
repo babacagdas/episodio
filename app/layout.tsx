@@ -53,6 +53,7 @@ export const metadata: Metadata = {
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
 import MobileSplashVideo from '@/components/MobileSplashVideo';
 import CookieConsentBanner from '@/components/CookieConsentBanner';
+import SiteAnnouncementBanner from '@/components/SiteAnnouncementBanner';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -74,6 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="antialiased bg-[#000000] text-[#F4F6FA]" style={{ backgroundColor: '#000000' }} suppressHydrationWarning>
         <MobileSplashVideo />
+        <SiteAnnouncementBanner />
         {children}
         <PushNotificationPrompt />
         <CookieConsentBanner />
