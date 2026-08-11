@@ -205,11 +205,25 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
       .from('episode_discussions')
       .insert({ user_id: userId, show_id: showId, season_number: seasonNumber, episode_number: episodeNumber, rating, content: buildSpoilerContent(content.trim(), commentSpoiler) })
       .select('*').single();
+
     if (!error && data) {
       const { data: p } = await supabase.from('profiles').select('username, full_name, avatar_url').eq('id', userId).single();
       const parsed = parseSpoiler(data.content ?? '');
       setComments(prev => [{ ...data, content: parsed.content, isSpoiler: parsed.isSpoiler, profile: p ?? null, likeCount: 0, likedByMe: false, replies: [] }, ...prev]);
       setContent(''); setRating(0); setCommentSpoiler(false);
+
+      // Yorum yapıldığında izleme durumunu 'watching' olarak güncelle
+      try {
+        await supabase.from('watch_status').upsert({
+          user_id: userId,
+          show_id: showId,
+          show_name: `Show #${showId}`,
+          status: 'watching',
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,show_id' });
+      } catch {
+        // continue
+      }
 
       // mention notifications (unique; only among followed users)
       const rawMentions = Array.from((content ?? '').matchAll(/@([a-zA-Z0-9_]+)/g)).map((m) => m[1]?.toLowerCase()).filter(Boolean);

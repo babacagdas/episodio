@@ -7,9 +7,10 @@ interface WatchingShow {
   show_id: number;
   show_name: string;
   poster_path: string | null;
-  season?: string;
-  episode?: string;
-  progress?: number;
+  seasonNum: number;
+  episodeNum: number;
+  hasComment: boolean;
+  linkHref: string;
 }
 
 export default async function CurrentlyWatchingCard() {
@@ -28,18 +29,45 @@ export default async function CurrentlyWatchingCard() {
       .limit(4);
 
     if (rows && rows.length > 0) {
+      const showIds = rows.map((r) => r.show_id);
+
+      // Fetch user's latest episode comments for these shows
+      const { data: latestComments } = await supabase
+        .from('episode_discussions')
+        .select('show_id, season_number, episode_number, created_at')
+        .eq('user_id', user.id)
+        .in('show_id', showIds)
+        .order('created_at', { ascending: false });
+
+      const commentMap: Record<number, { season: number; episode: number }> = {};
+      if (latestComments) {
+        for (const c of latestComments) {
+          if (!commentMap[c.show_id]) {
+            commentMap[c.show_id] = {
+              season: c.season_number,
+              episode: c.episode_number,
+            };
+          }
+        }
+      }
+
       watchingList = rows.map((row) => {
-        const sNum = (row.show_id % 3) + 1;
-        const eNum = (row.show_id % 12) + 1;
-        const pPercent = ((row.show_id * 17) % 75) + 15;
+        const comment = commentMap[row.show_id];
+        const seasonNum = comment ? comment.season : 1;
+        const episodeNum = comment ? comment.episode : 1;
+        const hasComment = !!comment;
+        const linkHref = comment
+          ? `/show/${row.show_id}/season/${seasonNum}/episode/${episodeNum}`
+          : `/show/${row.show_id}`;
 
         return {
           show_id: row.show_id,
           show_name: row.show_name,
           poster_path: row.poster_path,
-          season: `${sNum}. Sezon`,
-          episode: `${eNum}. Bölüm`,
-          progress: pPercent,
+          seasonNum,
+          episodeNum,
+          hasComment,
+          linkHref,
         };
       });
     }
@@ -68,7 +96,7 @@ export default async function CurrentlyWatchingCard() {
             <div>
               <h3 className="text-base font-bold text-white">Bir dizi izlemeye başla</h3>
               <p className="mt-1 max-w-xl text-sm leading-relaxed text-white/45">
-                İzlemeye başladığın içerikler burada takip kartı olarak görünür.
+                İzlemeye başladığın ve yorum yaptığın içerikler burada kaldığın bölüm takibiyle görünür.
               </p>
             </div>
             <Link
@@ -88,7 +116,7 @@ export default async function CurrentlyWatchingCard() {
             return (
               <Link
                 key={show.show_id}
-                href={`/show/${show.show_id}`}
+                href={show.linkHref}
                 className="group relative flex items-center gap-3.5 p-2.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/20 transition-all duration-300 select-none overflow-hidden"
               >
                 {/* Sol: Dikey Dizi Afişi */}
@@ -118,8 +146,10 @@ export default async function CurrentlyWatchingCard() {
                   <h3 className="text-xs sm:text-sm font-black text-white truncate uppercase tracking-tight group-hover:text-[#D4A017] transition-colors">
                     {show.show_name}
                   </h3>
+                  
+                  {/* Dinamik Sezon & Bölüm */}
                   <p className="text-[11px] font-bold text-white/50 mt-0.5">
-                    {show.season} &bull; {show.episode}
+                    {show.seasonNum}. Sezon &bull; {show.episodeNum}. Bölüm
                   </p>
 
                   <span className="mt-2 inline-flex items-center gap-1 text-[10.5px] font-bold text-[#D4A017] group-hover:text-white transition-colors">
@@ -131,7 +161,7 @@ export default async function CurrentlyWatchingCard() {
                   <div className="w-full h-1 bg-white/10 rounded-full mt-1.5 overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-[#C91520] to-[#D4A017] rounded-full transition-all duration-500"
-                      style={{ width: `${show.progress}%` }}
+                      style={{ width: `${Math.min(100, show.episodeNum * 12)}%` }}
                     />
                   </div>
                 </div>
