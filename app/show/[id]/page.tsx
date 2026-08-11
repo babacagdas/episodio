@@ -6,6 +6,7 @@ import WatchlistButton from './WatchlistButton';
 import WatchStatusButton from './WatchStatusButton';
 import ShowTabs from './ShowTabs';
 import AddToListButton from './AddToListButton';
+import ThemeMusicPlayer from './ThemeMusicPlayer';
 
 const BACKDROP_BASE = 'https://image.tmdb.org/t/p/original';
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
@@ -109,7 +110,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
               </div>
             )}
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <WatchStatusButton showId={show.id} showName={show.name} posterPath={show.poster_path} />
               <WatchlistButton show={{
                 id: show.id,
@@ -123,6 +124,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
                 name: show.name,
                 poster_path: show.poster_path,
               }} />
+              <ThemeMusicPlayer showName={show.name} />
             </div>
           </div>
         </section>
