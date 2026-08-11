@@ -69,6 +69,53 @@ export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
   );
 }
 
+export function MobileSocialFooter() {
+  return (
+    <div className="flex md:hidden items-center justify-center gap-4 py-6 pb-24 border-t border-white/5 my-6 select-none">
+      <a
+        href="https://www.instagram.com/episodiotr/"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Episodio Instagram"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/50 transition-colors hover:text-white hover:bg-white/10"
+        title="Instagram"
+      >
+        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="5" />
+          <circle cx="12" cy="12" r="4" />
+          <circle cx="17.5" cy="6.5" r="0.7" fill="currentColor" stroke="none" />
+        </svg>
+      </a>
+
+      <a
+        href="https://www.tiktok.com/@episodiotr?_r=1&_t=ZS-98na1193h7U"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Episodio TikTok"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/50 transition-colors hover:text-white hover:bg-white/10"
+        title="TikTok"
+      >
+        <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+          <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 1 1-5.2-1.74 2.89 2.89 0 0 1 2.31-2.22V8.2a6.34 6.34 0 0 0-6.13 6.34 6.34 6.34 0 0 0 10.74 4.5 6.34 6.34 0 0 0 1.73-4.5V9.4a8.16 8.16 0 0 0 4.77 1.52V7.47a4.85 4.85 0 0 1-1.00-.78z"/>
+        </svg>
+      </a>
+
+      <a
+        href="https://x.com/episodiotr?s=11"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Episodio X (Twitter)"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/50 transition-colors hover:text-white hover:bg-white/10"
+        title="X (Twitter)"
+      >
+        <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        </svg>
+      </a>
+    </div>
+  );
+}
+
 export function BottomNav() {
   const pathname = usePathname();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -201,46 +248,49 @@ export function BottomNav() {
   }, []);
 
   return (
-    <nav className="fixed bottom-3.5 left-4 right-4 z-50 grid h-[52px] grid-cols-5 items-center justify-items-center bg-[#0A0A0E]/94 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.7)] md:hidden">
-      {navItems.map(({ href, icon, label }) => {
-        const active = pathname === href || pathname.startsWith(`${href}/`);
-        const isProfile = href === '/profile';
-        const isChat = href === '/chat';
+    <>
+      <MobileSocialFooter />
+      <nav className="fixed bottom-3.5 left-4 right-4 z-50 grid h-[52px] grid-cols-5 items-center justify-items-center bg-[#0A0A0E]/94 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.7)] md:hidden">
+        {navItems.map(({ href, icon, label }) => {
+          const active = pathname === href || pathname.startsWith(`${href}/`);
+          const isProfile = href === '/profile';
+          const isChat = href === '/chat';
 
-        return (
-          <Link
-            key={label}
-            href={href}
-            aria-label={label}
-            title={label}
-            className="flex h-full w-full items-center justify-center transition-transform active:scale-90"
-          >
-            {isProfile && userAvatar ? (
-              <div className={`relative flex items-center justify-center transition-all duration-200 ${active ? 'scale-110' : 'opacity-65 hover:opacity-100'}`}>
-                <img
-                  src={userAvatar}
-                  alt="Profil"
-                  className={`h-6 w-6 rounded-full object-cover border transition-all ${
-                    active ? 'border-white ring-2 ring-white/50' : 'border-white/20'
-                  }`}
-                />
-              </div>
-            ) : (
-              <span className={`relative flex items-center justify-center transition-colors duration-200 ${active ? 'text-white font-bold' : 'text-white/40 hover:text-white/75'}`}>
-                <span
-                  className="material-symbols-outlined text-[23px]"
-                  style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
-                >
-                  {icon}
+          return (
+            <Link
+              key={label}
+              href={href}
+              aria-label={label}
+              title={label}
+              className="flex h-full w-full items-center justify-center transition-transform active:scale-90"
+            >
+              {isProfile && userAvatar ? (
+                <div className={`relative flex items-center justify-center transition-all duration-200 ${active ? 'scale-110' : 'opacity-65 hover:opacity-100'}`}>
+                  <img
+                    src={userAvatar}
+                    alt="Profil"
+                    className={`h-6 w-6 rounded-full object-cover border transition-all ${
+                      active ? 'border-white ring-2 ring-white/50' : 'border-white/20'
+                    }`}
+                  />
+                </div>
+              ) : (
+                <span className={`relative flex items-center justify-center transition-colors duration-200 ${active ? 'text-[#C91520] font-bold' : 'text-white/40 hover:text-white/75'}`}>
+                  <span
+                    className="material-symbols-outlined text-[23px]"
+                    style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                  >
+                    {icon}
+                  </span>
+                  {isChat && unreadCount > 0 && (
+                    <span className="absolute top-0.5 right-0.5 h-2 w-2 rounded-full bg-[#C91520] ring-2 ring-[#0A0A0E]" />
+                  )}
                 </span>
-                {isChat && unreadCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 h-2 w-2 rounded-full bg-[#C91520] ring-2 ring-[#0A0A0E]" />
-                )}
-              </span>
-            )}
-          </Link>
-        );
-      })}
-    </nav>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+    </>
   );
 }

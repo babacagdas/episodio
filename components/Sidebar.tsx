@@ -131,28 +131,59 @@ export default function Sidebar() {
       </div>
 
       <div className="mt-auto flex flex-col gap-3 px-1">
-        <a
-          href="https://www.instagram.com/episodiotr/"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Episodio Instagram"
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/45 transition-all duration-200 hover:border-[#C91520]/40 hover:bg-[#C91520]/10 hover:text-white"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="1.8"
+        {/* Sosyal Medya İkonları (Instagram, TikTok, X) */}
+        <div className="flex items-center gap-2">
+          <a
+            href="https://www.instagram.com/episodiotr/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Episodio Instagram"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/45 transition-all duration-200 hover:border-[#C91520]/40 hover:bg-[#C91520]/10 hover:text-white"
+            title="Instagram"
           >
-            <rect x="3" y="3" width="18" height="18" rx="5" />
-            <circle cx="12" cy="12" r="4" />
-            <circle cx="17.5" cy="6.5" r="0.7" fill="currentColor" stroke="none" />
-          </svg>
-        </a>
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.8"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="5" />
+              <circle cx="12" cy="12" r="4" />
+              <circle cx="17.5" cy="6.5" r="0.7" fill="currentColor" stroke="none" />
+            </svg>
+          </a>
+
+          <a
+            href="https://www.tiktok.com/@episodiotr?_r=1&_t=ZS-98na1193h7U"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Episodio TikTok"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/45 transition-all duration-200 hover:border-[#C91520]/40 hover:bg-[#C91520]/10 hover:text-white"
+            title="TikTok"
+          >
+            <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 1 1-5.2-1.74 2.89 2.89 0 0 1 2.31-2.22V8.2a6.34 6.34 0 0 0-6.13 6.34 6.34 6.34 0 0 0 10.74 4.5 6.34 6.34 0 0 0 1.73-4.5V9.4a8.16 8.16 0 0 0 4.77 1.52V7.47a4.85 4.85 0 0 1-1.00-.78z"/>
+            </svg>
+          </a>
+
+          <a
+            href="https://x.com/episodiotr?s=11"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Episodio X (Twitter)"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/45 transition-all duration-200 hover:border-[#C91520]/40 hover:bg-[#C91520]/10 hover:text-white"
+            title="X (Twitter)"
+          >
+            <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+          </a>
+        </div>
+
         <p className="max-w-[180px] text-[10px] leading-relaxed text-white/22">
           © 2026 episodio. Tüm hakları saklıdır.
         </p>
