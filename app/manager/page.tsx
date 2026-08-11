@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient, isAdminEmail } from '@/lib/supabase/admin';
 
 import ManagerPinAuth from './ManagerPinAuth';
+import ManagerUserList from './ManagerUserList';
 
 export const dynamic = 'force-dynamic';
 
@@ -154,12 +155,11 @@ export default async function ManagerDashboardPage() {
     }
   }
 
-  const [profilesRes, listsRes, reviewsRes, notesRes, watchRes] = await Promise.all([
+  const [profilesRes, listsRes, reviewsRes, notesRes] = await Promise.all([
     db.from('profiles').select('id, username, full_name, avatar_url, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
     db.from('lists').select('id, name, visibility, user_id, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
     db.from('reviews').select('id, user_id, show_id, rating, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
     db.from('show_notes').select('id, user_id, show_id, show_name, content, is_public, updated_at', { count: 'exact' }).order('updated_at', { ascending: false }),
-    db.from('watch_status').select('id', { count: 'exact', head: true }),
   ]);
 
   const profilesList = (profilesRes.data ?? []) as UserItem[];
@@ -197,135 +197,40 @@ export default async function ManagerDashboardPage() {
   const totalUserCount = allUsers.length > 0 ? allUsers.length : (profilesRes.count ?? profilesList.length);
   const totalListCount = listsRes.count ?? lists.length;
   const totalReviewCount = (reviewsRes.count ?? 0) + (notesRes.count ?? 0);
-  const totalWatchCount = watchRes.count ?? 0;
 
   return (
     <ManagerPinAuth adminEmail={user.email || ''}>
       <div className="min-h-screen bg-[#070709] text-[#F4F6FA] select-none pb-20">
         
-        {/* Header */}
+        {/* Header: Sadece Tıklanamayan Logo */}
         <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0A0A0E]/90 backdrop-blur-2xl px-4 md:px-10 py-4">
-          <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Link href="/home" aria-label="Episodio Ana Sayfa">
-                <img src="/logo.png" alt="Episodio" className="h-7 w-auto object-contain" />
-              </Link>
-              <span className="rounded-full bg-[#C91520]/20 border border-[#C91520]/30 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-[#C91520]">
-                Manager Panel
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Yönetici: <strong className="text-white">{user.email}</strong></span>
-              </div>
-
-              <Link
-                href="/home"
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/20"
-              >
-                <span className="material-symbols-outlined text-base">home</span>
-                <span className="hidden sm:inline">Siteye Dön</span>
-              </Link>
+          <div className="mx-auto flex max-w-7xl items-center justify-center sm:justify-start">
+            <div className="flex items-center">
+              <img src="/logo.png" alt="Episodio" className="h-7 w-auto object-contain pointer-events-none select-none" />
             </div>
           </div>
         </header>
 
         {/* Main Container */}
-        <main className="mx-auto max-w-7xl px-4 md:px-10 pt-8 space-y-10">
+        <main className="mx-auto max-w-7xl px-4 md:px-10 pt-8 space-y-8">
 
           {/* Başlık */}
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Yönetim Paneli & Canlı İstatistikler</h1>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">Yönetim Paneli</h1>
             <p className="mt-1 text-xs sm:text-sm text-white/45">
               Episodio platformundaki canlı üye sayıları, içerik aktivitesi ve moderasyon araçları.
             </p>
           </div>
 
-          {/* 1. Özet İstatistik Kartları */}
-          <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            <StatCard label="Kayıtlı Üyeler" value={totalUserCount} icon="group" badge="Canlı Veri" />
-            <StatCard label="İzlenen Diziler" value={totalWatchCount} icon="visibility" />
+          {/* 1. Özet İstatistik Kartları (İzlenen Diziler Kaldırıldı, Canlı Veri Yazısı Kaldırıldı) */}
+          <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <StatCard label="Kayıtlı Üyeler" value={totalUserCount} icon="group" />
             <StatCard label="Oluşturulan Listeler" value={totalListCount} icon="format_list_bulleted" />
             <StatCard label="Yazılan Yorumlar & Notlar" value={totalReviewCount} icon="rate_review" />
           </section>
 
-          {/* 2. Kayıtlı Üyeler Tablosu (Kimler Üye Olmuş?) */}
-          <section className="rounded-3xl border border-white/10 bg-[#0E0E14] p-5 sm:p-6 shadow-2xl">
-            <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
-              <div>
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#C91520]">person</span>
-                  Kayıtlı Kullanıcılar ({allUsers.length})
-                </h2>
-                <p className="text-xs text-white/40 mt-0.5">Platforma üye olan tüm kullanıcılar (Email & Google Girişli)</p>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-white/10 text-white/40 uppercase text-[10px] tracking-wider">
-                    <th className="py-3 px-3">Kullanıcı</th>
-                    <th className="py-3 px-3">Kullanıcı Adı / E-posta</th>
-                    <th className="py-3 px-3">Kayıt Tarihi</th>
-                    <th className="py-3 px-3 text-right">İşlem</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {allUsers.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="py-8 text-center text-xs text-white/40">
-                        Henüz kullanıcı verisi yüklenemedi veya liste boş.
-                      </td>
-                    </tr>
-                  ) : (
-                    allUsers.map((u) => {
-                      const name = u.full_name || u.username || u.email || 'Kullanıcı';
-                      const dateStr = u.created_at ? new Date(u.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Bilinmiyor';
-
-                      return (
-                        <tr key={u.id} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="py-3 px-3">
-                            <div className="flex items-center gap-3">
-                              <div className="h-9 w-9 rounded-full bg-white/10 border border-white/10 overflow-hidden shrink-0 flex items-center justify-center">
-                                {u.avatar_url ? (
-                                  <img src={u.avatar_url} alt="" className="h-full w-full object-cover" />
-                                ) : (
-                                  <span className="material-symbols-outlined text-white/30 text-sm">person</span>
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <span className="font-semibold text-white truncate block max-w-[160px] sm:max-w-[220px]">{name}</span>
-                                {u.email && <span className="text-[10px] text-white/35 block truncate">{u.email}</span>}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 text-white/60 font-medium">
-                            @{u.username || u.id.slice(0, 8)}
-                          </td>
-                          <td className="py-3 px-3 text-white/40">
-                            {dateStr}
-                          </td>
-                          <td className="py-3 px-3 text-right">
-                            <Link
-                              href={`/u/${u.username || u.id}`}
-                              target="_blank"
-                              className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/80 hover:bg-white/15 hover:text-white transition-colors"
-                            >
-                              <span>Profili Gör</span>
-                              <span className="material-symbols-outlined text-xs">open_in_new</span>
-                            </Link>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          {/* 2. Kayıtlı Üyeler Tablosu (Arama Çubuğu & Max 15 Satır Scroll Özellikli) */}
+          <ManagerUserList users={allUsers} />
 
           {/* 3. İki Kolonlu Yapı: Son Listeler ve Son Yorumlar */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
