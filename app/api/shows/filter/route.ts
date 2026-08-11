@@ -19,7 +19,7 @@ function getTmdbKey() {
 
 async function fetchDiscoverPage(
   page: number,
-  opts: { genreId?: number; originCountry?: string; year?: number; providerId?: number; format?: string }
+  opts: { genreId?: number; originCountry?: string; year?: number; providerId?: number; format?: string; top?: number }
 ): Promise<CatalogShowRow[]> {
   const key = getTmdbKey();
   if (!key) return [];
@@ -27,7 +27,8 @@ async function fetchDiscoverPage(
   const tmdbUrl = new URL('https://api.themoviedb.org/3/discover/tv');
   tmdbUrl.searchParams.set('api_key', key);
   tmdbUrl.searchParams.set('language', 'tr-TR');
-  tmdbUrl.searchParams.set('sort_by', 'popularity.desc');
+  tmdbUrl.searchParams.set('sort_by', opts.top === 50 ? 'vote_average.desc' : 'popularity.desc');
+  if (opts.top === 50) tmdbUrl.searchParams.set('vote_count.gte', '500');
   tmdbUrl.searchParams.set('page', String(page));
   if (opts.genreId) tmdbUrl.searchParams.set('with_genres', String(opts.genreId));
   if (opts.originCountry) tmdbUrl.searchParams.set('with_origin_country', opts.originCountry);
@@ -72,10 +73,11 @@ async function fetchDiscoverPage(
   }));
 }
 
-async function fetchDiscoverAllPages(opts: { genreId?: number; originCountry?: string; year?: number; providerId?: number; format?: string }) {
+async function fetchDiscoverAllPages(opts: { genreId?: number; originCountry?: string; year?: number; providerId?: number; format?: string; top?: number }) {
   const merged: CatalogShowRow[] = [];
   const seen = new Set<number>();
-  for (let page = 1; page <= 5; page++) {
+  const maxPages = opts.top === 10 ? 1 : opts.top === 50 ? 3 : 5;
+  for (let page = 1; page <= maxPages; page++) {
     const batch = await fetchDiscoverPage(page, opts);
     if (!batch.length) break;
     for (const row of batch) {
@@ -85,7 +87,7 @@ async function fetchDiscoverAllPages(opts: { genreId?: number; originCountry?: s
       }
     }
   }
-  return merged;
+  return opts.top ? merged.slice(0, opts.top) : merged;
 }
 
 async function hydrateCatalog(
@@ -157,24 +159,26 @@ export async function GET(req: NextRequest) {
   const yearRaw = qs.get('year');
   const providerIdRaw = qs.get('providerId');
   const format = qs.get('format')?.trim() || undefined;
+  const topRaw = qs.get('top');
 
   const genreId = genreIdRaw ? Number(genreIdRaw) : undefined;
   const year = yearRaw ? Number(yearRaw) : undefined;
   const providerId = providerIdRaw ? Number(providerIdRaw) : undefined;
+  const top = topRaw ? Number(topRaw) : undefined;
 
   if (year !== undefined && (Number.isNaN(year) || year < 1900 || year > 2100)) {
     return NextResponse.json({ error: 'Geçersiz yıl' }, { status: 400 });
   }
-  if (!genreId && !originCountry && !providerId && !format) {
-    return NextResponse.json({ error: 'Kategori, platform veya format seçin' }, { status: 400 });
+  if (!genreId && !originCountry && !providerId && !format && !top) {
+    return NextResponse.json({ error: 'Kategori, platform, format veya liste seçin' }, { status: 400 });
   }
   if (genreId !== undefined && Number.isNaN(genreId)) {
     return NextResponse.json({ error: 'Geçersiz tür' }, { status: 400 });
   }
 
-  // Eğer platform veya format seçilmişse doğrudan TMDB Discover API'den çek
-  if (providerId || format) {
-    const merged = await fetchDiscoverAllPages({ genreId, originCountry, year, providerId, format });
+  // Eğer platform, format veya top seçilmişse doğrudan TMDB Discover API'den çek
+  if (providerId || format || top) {
+    const merged = await fetchDiscoverAllPages({ genreId, originCountry, year, providerId, format, top });
     return NextResponse.json(merged.map(mapToShow));
   }
 

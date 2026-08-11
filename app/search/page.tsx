@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import ShowCard from '@/components/ShowCard';
 import ListPreviewCard from '@/components/ListPreviewCard';
 import DiscoverFilterPanel, { type AppliedFilters } from './DiscoverFilterPanel';
+import TopCollectionsBanners from './TopCollectionsBanners';
 import RandomShowModal from './RandomShowModal';
 
 interface UserSearchProfile {
@@ -244,11 +245,45 @@ export default function Search() {
     }
   }, []);
 
+  const [activeCollection, setActiveCollection] = useState<'top10' | 'top50' | null>(null);
+
   const clearDiscoverFilter = useCallback(() => {
     setActiveFilters(null);
     setFilteredShows([]);
     setFilterError(null);
+    setActiveCollection(null);
   }, []);
+
+  const handleSelectCollection = useCallback(async (type: 'top10' | 'top50') => {
+    if (activeCollection === type) {
+      clearDiscoverFilter();
+      setActiveCollection(null);
+      return;
+    }
+
+    setActiveCollection(type);
+    setFilterApplying(true);
+    setFilterError(null);
+    try {
+      const topNum = type === 'top10' ? 10 : 50;
+      const res = await fetch(`/api/shows/filter?top=${topNum}`);
+      const data: unknown = await res.json().catch(() => null);
+      if (res.ok && Array.isArray(data)) {
+        setFilteredShows(data as Show[]);
+        setActiveFilters({
+          category: { kind: 'genre', genreId: 0, label: type === 'top10' ? 'Top 10 Diziler' : 'Top 50 Efsaneler' },
+          year: null,
+          provider: null,
+        });
+      } else {
+        setFilterError('Liste yüklenemedi');
+      }
+    } catch {
+      setFilterError('Bağlantı hatası');
+    } finally {
+      setFilterApplying(false);
+    }
+  }, [activeCollection, clearDiscoverFilter]);
 
   const toggleFollow = useCallback(async (profile: UserSearchProfile) => {
     if (!currentUserId) {
@@ -352,6 +387,14 @@ export default function Search() {
         </div>
         {filterError && (
           <p className="text-xs text-[#C91520] max-w-4xl -mt-4">{filterError}</p>
+        )}
+
+        {/* Top 10 ve Top 50 Yelpaze Şeklinde Banners */}
+        {!query.trim() && (
+          <TopCollectionsBanners
+            onSelectCollection={handleSelectCollection}
+            activeType={activeCollection}
+          />
         )}
 
         {/* Results / Trending */}
