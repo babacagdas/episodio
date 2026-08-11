@@ -14,10 +14,13 @@ export function createAdminClient() {
 export function isAdminEmail(email?: string | null) {
   if (!email) return false;
 
-  const adminEmails = (process.env.ADMIN_EMAILS ?? '')
+  const defaultAdmins = ['koroglucagdas44@gmail.com'];
+  const envAdmins = (process.env.ADMIN_EMAILS ?? '')
     .split(',')
     .map((value) => value.trim().toLowerCase())
     .filter(Boolean);
 
-  return adminEmails.includes(email.toLowerCase());
+  const allAdmins = [...defaultAdmins, ...envAdmins];
+
+  return allAdmins.includes(email.toLowerCase());
 }
