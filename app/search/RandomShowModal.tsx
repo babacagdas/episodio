@@ -7,38 +7,54 @@ import type { Show } from '@/lib/tmdb';
 interface RandomShowModalProps {
   open: boolean;
   onClose: () => void;
-  shows: Show[];
+  shows?: Show[];
 }
 
-export default function RandomShowModal({ open, onClose, shows }: RandomShowModalProps) {
+export default function RandomShowModal({ open, onClose, shows = [] }: RandomShowModalProps) {
   const [selectedShow, setSelectedShow] = useState<Show | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const [hasRolled, setHasRolled] = useState(false);
-
-  const rollDice = () => {
-    if (!shows || shows.length === 0 || isSpinning) return;
-
-    setIsSpinning(true);
-    setHasRolled(false);
-
-    const idx = Math.floor(Math.random() * shows.length);
-    const picked = shows[idx];
-
-    // 2.15 saniyelik daha uzun zar dönme heyecanı
-    setTimeout(() => {
-      setSelectedShow(picked);
-      setIsSpinning(false);
-      setHasRolled(true);
-    }, 2150);
-  };
+  const [pool, setPool] = useState<Show[]>([]);
 
   useEffect(() => {
     if (open) {
       setHasRolled(false);
       setIsSpinning(false);
       setSelectedShow(null);
+
+      // #50 - #150 Sıralamasındaki 100 Dizilik Özel Havuzu Yükle
+      fetch('/api/shows/random-pool')
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            setPool(data);
+          } else if (shows && shows.length > 0) {
+            setPool(shows);
+          }
+        })
+        .catch(() => {
+          if (shows && shows.length > 0) setPool(shows);
+        });
     }
-  }, [open]);
+  }, [open, shows]);
+
+  const rollDice = () => {
+    const activePool = pool.length > 0 ? pool : shows;
+    if (!activePool || activePool.length === 0 || isSpinning) return;
+
+    setIsSpinning(true);
+    setHasRolled(false);
+
+    const idx = Math.floor(Math.random() * activePool.length);
+    const picked = activePool[idx];
+
+    // 2.15 saniyelik zar dönme heyecanı
+    setTimeout(() => {
+      setSelectedShow(picked);
+      setIsSpinning(false);
+      setHasRolled(true);
+    }, 2150);
+  };
 
   if (!open) return null;
 
@@ -78,7 +94,7 @@ export default function RandomShowModal({ open, onClose, shows }: RandomShowModa
         }}
       />
 
-      {/* Kapat Butonu (Tüm telefon ekran modelleri için sabit ve güvenli konumlandırma) */}
+      {/* Kapat Butonu */}
       <button
         type="button"
         onClick={onClose}
@@ -88,7 +104,7 @@ export default function RandomShowModal({ open, onClose, shows }: RandomShowModa
         <span className="material-symbols-outlined text-xl">close</span>
       </button>
 
-      {/* Ana İçerik Alanı (Mobil Taşma Engellemeli Kapsayıcı) */}
+      {/* Ana İçerik Alanı */}
       <div className="relative z-20 flex flex-col items-center justify-center w-full max-w-md max-h-[calc(100dvh-5rem)] overflow-y-auto pt-10 pb-4 select-none">
 
         {/* 1. EKRAN: Zarı Atmak İçin Ekrana Tıklama / 2.15s Dönme Durumu */}
@@ -127,7 +143,7 @@ export default function RandomShowModal({ open, onClose, shows }: RandomShowModa
               <span className="text-sm">🎲</span>
             </button>
 
-            {/* Ortalanmış Büyük Dizi Afişi (Mobil Boyut Optimize Edildi) */}
+            {/* Ortalanmış Büyük Dizi Afişi */}
             <div className="relative h-52 sm:h-68 w-36 sm:w-48 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-[#16161c] shadow-[0_25px_60px_rgba(0,0,0,0.9)] mb-3">
               {posterUrl ? (
                 <img src={posterUrl} alt={selectedShow.name} className="h-full w-full object-cover" />

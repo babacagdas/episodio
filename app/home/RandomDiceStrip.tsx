@@ -9,7 +9,7 @@ export default function RandomDiceStrip() {
   const [shows, setShows] = useState<Show[]>([]);
 
   useEffect(() => {
-    fetch('/api/trending')
+    fetch('/api/shows/random-pool')
       .then((res) => res.json())
       .then((data) => {
         if (Array.isArray(data)) setShows(data);
