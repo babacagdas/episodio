@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-type Status = 'watching' | 'completed' | 'dropped' | null;
+type Status = 'watching' | 'completed' | 'dropped' | 'plan_to_watch' | null;
 
 const OPTIONS: { value: Status; label: string; icon: string; color: string }[] = [
   { value: 'watching', label: 'İzliyorum', icon: 'play_arrow', color: 'bg-[#C91520] border-[#C91520] text-white shadow-[0_0_15px_rgba(201,21,32,0.4)]' },
-  { value: 'completed', label: 'Bitirdim', icon: 'check_circle', color: 'bg-emerald-600/90 border-emerald-500 text-white' },
-  { value: 'dropped', label: 'Bıraktım', icon: 'cancel', color: 'bg-white/10 border-white/20 text-white/80' },
+  { value: 'completed', label: 'Bitirdim', icon: 'check_circle', color: 'bg-emerald-600/90 border-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)]' },
+  { value: 'dropped', label: 'Yarıda Bıraktım', icon: 'pause_circle', color: 'bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.2)]' },
+  { value: 'plan_to_watch', label: 'İzleyeceğim', icon: 'bookmark', color: 'bg-sky-500/20 border-sky-500/40 text-sky-300' },
 ];
 
 export default function WatchStatusButton({ showId, showName, posterPath }: {
@@ -81,7 +82,7 @@ export default function WatchStatusButton({ showId, showName, posterPath }: {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full mt-2 z-50 bg-[#0A0A0D] border border-white/10 rounded-2xl p-1 shadow-2xl min-w-[160px] backdrop-blur-xl">
+          <div className="absolute left-0 top-full mt-2 z-50 bg-[#0A0A0D] border border-white/10 rounded-2xl p-1.5 shadow-2xl min-w-[170px] backdrop-blur-xl space-y-0.5">
             {OPTIONS.map(opt => (
               <button
                 key={opt.value}
