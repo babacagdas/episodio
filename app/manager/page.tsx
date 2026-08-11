@@ -130,15 +130,18 @@ export default async function ManagerDashboardPage() {
   const db = admin || supabase;
 
   const [profilesRes, listsRes, reviewsRes, watchRes] = await Promise.all([
-    db.from('profiles').select('id, username, full_name, avatar_url, created_at').order('created_at', { ascending: false }).limit(50),
-    db.from('lists').select('id, name, visibility, user_id, created_at, profiles(username, full_name)').order('created_at', { ascending: false }).limit(20),
-    db.from('reviews').select('id, user_id, show_id, rating, content, created_at, profiles(username, full_name)').order('created_at', { ascending: false }).limit(20),
+    db.from('profiles').select('id, username, full_name, avatar_url, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
+    db.from('lists').select('id, name, visibility, user_id, created_at, profiles(username, full_name)', { count: 'exact' }).order('created_at', { ascending: false }),
+    db.from('reviews').select('id, user_id, show_id, rating, content, created_at, profiles(username, full_name)', { count: 'exact' }).order('created_at', { ascending: false }),
     db.from('watch_status').select('id', { count: 'exact', head: true }),
   ]);
 
   const profiles = (profilesRes.data ?? []) as ProfileRow[];
   const lists = (listsRes.data ?? []) as ListRow[];
   const reviews = (reviewsRes.data ?? []) as ReviewRow[];
+  const totalUserCount = profilesRes.count ?? profiles.length;
+  const totalListCount = listsRes.count ?? lists.length;
+  const totalReviewCount = reviewsRes.count ?? reviews.length;
   const totalWatchCount = watchRes.count ?? 0;
 
   return (
@@ -184,12 +187,12 @@ export default async function ManagerDashboardPage() {
           </p>
         </div>
 
-        {/* 1. Özet İstatistik Kartları */}
+        {/* 1. Özet İstatistik Kartları (Canlı Canlı Tüm Veriler) */}
         <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard label="Kayıtlı Üyeler" value={profiles.length} icon="group" badge="Aktif" />
+          <StatCard label="Kayıtlı Üyeler" value={totalUserCount} icon="group" badge="Canlı Veri" />
           <StatCard label="İzlenen Diziler" value={totalWatchCount} icon="visibility" />
-          <StatCard label="Oluşturulan Listeler" value={lists.length} icon="format_list_bulleted" />
-          <StatCard label="Yazılan Yorumlar" value={reviews.length} icon="rate_review" />
+          <StatCard label="Oluşturulan Listeler" value={totalListCount} icon="format_list_bulleted" />
+          <StatCard label="Yazılan Yorumlar" value={totalReviewCount} icon="rate_review" />
         </section>
 
         {/* 2. Kayıtlı Üyeler Tablosu (Kimler Üye Olmuş?) */}
