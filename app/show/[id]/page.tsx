@@ -124,7 +124,7 @@ export default async function ShowDetailPage({ params }: { params: Promise<{ id:
                 name: show.name,
                 poster_path: show.poster_path,
               }} />
-              <ThemeMusicPlayer showName={show.name} />
+              <ThemeMusicPlayer showName={show.name} originalName={show.original_name} />
             </div>
           </div>
         </section>

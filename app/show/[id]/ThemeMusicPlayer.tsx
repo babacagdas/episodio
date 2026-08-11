@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 
 interface ThemeMusicPlayerProps {
   showName: string;
+  originalName?: string;
 }
 
-export default function ThemeMusicPlayer({ showName }: ThemeMusicPlayerProps) {
+export default function ThemeMusicPlayer({ showName, originalName }: ThemeMusicPlayerProps) {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [trackName, setTrackName] = useState<string>('');
   const [artistName, setArtistName] = useState<string>('');
@@ -24,7 +25,8 @@ export default function ThemeMusicPlayer({ showName }: ThemeMusicPlayerProps) {
     setError(false);
 
     try {
-      const res = await fetch(`/api/theme-music?show=${encodeURIComponent(showName)}`);
+      const url = `/api/theme-music?show=${encodeURIComponent(showName)}&original=${encodeURIComponent(originalName || '')}`;
+      const res = await fetch(url);
       const data = await res.json();
 
       if (data?.previewUrl) {
