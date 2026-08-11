@@ -133,20 +133,20 @@ export default function FollowListsModal({
       )}
 
       {open && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4">
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-3 sm:p-4">
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setOpen(false)} />
+          <div className="absolute inset-0 bg-black/85 backdrop-blur-md" onClick={() => setOpen(false)} />
 
           {/* Modal Container: Instagram style pure dark modal */}
           <div className="relative z-10 w-full max-w-[420px] h-[480px] bg-[#121212] border border-white/15 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
             
-            {/* Instagram Style Header Tabs */}
-            <div className="relative flex items-center border-b border-white/10 shrink-0 bg-[#121212]">
-              <div className="flex w-full">
+            {/* Header Tabs & Dedicated Close Button */}
+            <div className="relative flex items-center justify-between border-b border-white/10 shrink-0 bg-[#121212] px-3 py-1.5">
+              <div className="flex items-center gap-1 min-w-0 pr-8">
                 <button
                   type="button"
                   onClick={() => loadList('followers')}
-                  className={`flex-1 py-3 text-center text-xs sm:text-sm font-semibold transition-colors border-b-2 ${
+                  className={`px-3 py-2 text-center text-xs sm:text-sm font-semibold transition-colors border-b-2 ${
                     tab === 'followers'
                       ? 'border-white text-white font-bold'
                       : 'border-transparent text-white/40 hover:text-white/70'
@@ -157,7 +157,7 @@ export default function FollowListsModal({
                 <button
                   type="button"
                   onClick={() => loadList('following')}
-                  className={`flex-1 py-3 text-center text-xs sm:text-sm font-semibold transition-colors border-b-2 ${
+                  className={`px-3 py-2 text-center text-xs sm:text-sm font-semibold transition-colors border-b-2 ${
                     tab === 'following'
                       ? 'border-white text-white font-bold'
                       : 'border-transparent text-white/40 hover:text-white/70'
@@ -170,10 +170,10 @@ export default function FollowListsModal({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="absolute right-3 text-white/40 hover:text-white transition-colors p-1"
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/50 hover:text-white transition-colors shrink-0"
                 aria-label="Kapat"
               >
-                <span className="material-symbols-outlined text-xl">close</span>
+                <span className="material-symbols-outlined text-lg">close</span>
               </button>
             </div>
 

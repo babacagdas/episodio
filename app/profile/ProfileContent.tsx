@@ -801,7 +801,7 @@ export default function ProfileContent() {
 
       {/* Create List Modal */}
       {listModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/85 backdrop-blur-md" onClick={() => setListModalOpen(false)} />
           <div className="relative z-10 w-full max-w-[380px] bg-[#0A0A0D] border border-white/[0.08] rounded-3xl p-5 flex flex-col gap-4 shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(201,21,32,0.08)]">
             <div className="flex items-center justify-between pb-1 border-b border-white/[0.06]">
