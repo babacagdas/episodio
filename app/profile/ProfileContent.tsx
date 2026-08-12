@@ -1113,8 +1113,8 @@ export default function ProfileContent({
                 <div className="w-px h-8 bg-white/10" />
                 {[
                   { val: statsLoading ? '...' : watchedCount, label: 'İzlendi' },
-                  { val: formattedWatchTime, label: 'İzleme Süresi' },
                   { val: statsLoading ? '...' : reviewCount, label: 'Yorum' },
+                  { val: formattedWatchTime, label: 'İzleme Süresi' },
                 ].map(({ val, label }) => (
                   <div key={label} className="text-center">
                     <span className="block text-2xl font-bold text-white">{val}</span>
