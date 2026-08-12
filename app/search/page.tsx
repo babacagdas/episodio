@@ -432,94 +432,10 @@ export default function Search() {
               )}
 
               {!query.trim() && (
-                <>
-                  {/* 🏆 Top 10 & 🍿 Top 50 Tarihin En İyi Dizileri Banners (Mobilde Kare & Yan Yana) */}
-                  <div className="grid grid-cols-2 gap-2.5 sm:gap-4 mb-6">
-                    {/* Card 1: Tarihin Top 10 Dizisi */}
-                    <button
-                      type="button"
-                      onClick={() => handleApplyTopPreset(10)}
-                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#D4A017]/30 bg-gradient-to-br from-[#1c170b] via-[#121214] to-[#0A0A0C] p-3.5 sm:p-5 text-left shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition-all duration-300 hover:border-[#D4A017]/60 hover:bg-[#1a1710] hover:shadow-[0_15px_40px_rgba(212,160,23,0.15)] active:scale-[0.98] aspect-[1/1] sm:aspect-auto"
-                    >
-                      {/* Golden Ambient Glow */}
-                      <div className="pointer-events-none absolute -right-6 -top-6 h-24 sm:h-32 w-24 sm:w-32 rounded-full bg-[#D4A017]/15 blur-2xl transition-opacity group-hover:opacity-100" />
-
-                      <div className="relative z-10">
-                        <div className="flex items-center justify-between gap-1 mb-1.5 sm:mb-2">
-                          <span className="rounded-full bg-[#D4A017]/15 px-2 py-0.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#D4A017] border border-[#D4A017]/30">
-                            🏆 TOP 10
-                          </span>
-                          <span className="material-symbols-outlined text-xs sm:text-base text-[#D4A017] transition-transform group-hover:translate-x-0.5">
-                            arrow_forward
-                          </span>
-                        </div>
-                        <h3 className="font-extrabold text-white text-xs sm:text-lg leading-tight">
-                          Tarihin Top 10 Dizisi
-                        </h3>
-                        <p className="mt-0.5 sm:mt-1 text-[9.5px] sm:text-xs font-medium text-white/50 line-clamp-1 sm:line-clamp-2">
-                          En yüksek puanlı efsane başyapıtlar
-                        </p>
-                      </div>
-
-                      {/* Compact Fanned 3-Poster Mini Deck (Yelpaze Görünümü) */}
-                      <div className="relative z-10 mt-2 sm:mt-4 flex h-14 sm:h-20 items-center justify-center">
-                        <div className="absolute left-1/2 -translate-x-1/2 -rotate-[14deg] -translate-x-4 h-11 w-7 sm:h-16 sm:w-11 rounded-md border border-white/20 bg-[#141414] overflow-hidden shadow-md group-hover:-rotate-[18deg] group-hover:-translate-x-5 transition-transform">
-                          <img src="https://image.tmdb.org/t/p/w185/vUUqzWa2LnHIVqkaKVlVGkVcZIW.jpg" alt="Peaky Blinders" className="h-full w-full object-cover" />
-                        </div>
-                        <div className="absolute left-1/2 -translate-x-1/2 rotate-[14deg] translate-x-4 h-11 w-7 sm:h-16 sm:w-11 rounded-md border border-white/20 bg-[#141414] overflow-hidden shadow-md group-hover:rotate-[18deg] group-hover:translate-x-5 transition-transform">
-                          <img src="https://image.tmdb.org/t/p/w185/rTc7ZXdroqjkKivFPvCPX0Ru7uw.jpg" alt="The Sopranos" className="h-full w-full object-cover" />
-                        </div>
-                        <div className="relative z-10 h-13 w-8 sm:h-18 sm:w-12 scale-105 rounded-md border border-[#D4A017]/80 bg-[#141414] overflow-hidden shadow-xl group-hover:scale-110 transition-transform">
-                          <img src="https://image.tmdb.org/t/p/w185/anFx9aTOOYqgS3v7x3R84Kz67ly.jpg" alt="Breaking Bad" className="h-full w-full object-cover" />
-                        </div>
-                      </div>
-                    </button>
-
-                    {/* Card 2: Tarihin Top 50 Dizisi */}
-                    <button
-                      type="button"
-                      onClick={() => handleApplyTopPreset(50)}
-                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#C91520]/30 bg-gradient-to-br from-[#210a0e] via-[#121214] to-[#0A0A0C] p-3.5 sm:p-5 text-left shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition-all duration-300 hover:border-[#C91520]/60 hover:bg-[#220d11] hover:shadow-[0_15px_40px_rgba(201,21,32,0.15)] active:scale-[0.98] aspect-[1/1] sm:aspect-auto"
-                    >
-                      {/* Crimson Ambient Glow */}
-                      <div className="pointer-events-none absolute -right-6 -top-6 h-24 sm:h-32 w-24 sm:w-32 rounded-full bg-[#C91520]/15 blur-2xl transition-opacity group-hover:opacity-100" />
-
-                      <div className="relative z-10">
-                        <div className="flex items-center justify-between gap-1 mb-1.5 sm:mb-2">
-                          <span className="rounded-full bg-[#C91520]/15 px-2 py-0.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#C91520] border border-[#C91520]/30">
-                            🍿 TOP 50
-                          </span>
-                          <span className="material-symbols-outlined text-xs sm:text-base text-[#C91520] transition-transform group-hover:translate-x-0.5">
-                            arrow_forward
-                          </span>
-                        </div>
-                        <h3 className="font-extrabold text-white text-xs sm:text-lg leading-tight">
-                          Tarihin Top 50 Dizisi
-                        </h3>
-                        <p className="mt-0.5 sm:mt-1 text-[9.5px] sm:text-xs font-medium text-white/50 line-clamp-1 sm:line-clamp-2">
-                          Tüm zamanların en iyi 50 başyapıtı
-                        </p>
-                      </div>
-
-                      {/* Compact Fanned 3-Poster Mini Deck (Yelpaze Görünümü) */}
-                      <div className="relative z-10 mt-2 sm:mt-4 flex h-14 sm:h-20 items-center justify-center">
-                        <div className="absolute left-1/2 -translate-x-1/2 -rotate-[14deg] -translate-x-4 h-11 w-7 sm:h-16 sm:w-11 rounded-md border border-white/20 bg-[#141414] overflow-hidden shadow-md group-hover:-rotate-[18deg] group-hover:-translate-x-5 transition-transform">
-                          <img src="https://image.tmdb.org/t/p/w185/u3bZgnGQ9T01sWNhyveQz0wH0Hl.jpg" alt="Game of Thrones" className="h-full w-full object-cover" />
-                        </div>
-                        <div className="absolute left-1/2 -translate-x-1/2 rotate-[14deg] translate-x-4 h-11 w-7 sm:h-16 sm:w-11 rounded-md border border-white/20 bg-[#141414] overflow-hidden shadow-md group-hover:rotate-[18deg] group-hover:translate-x-5 transition-transform">
-                          <img src="https://image.tmdb.org/t/p/w185/ggFHVNu6YYI5L9pCfOacjizRGt.jpg" alt="The Wire" className="h-full w-full object-cover" />
-                        </div>
-                        <div className="relative z-10 h-13 w-8 sm:h-18 sm:w-12 scale-105 rounded-md border border-[#C91520]/80 bg-[#141414] overflow-hidden shadow-xl group-hover:scale-110 transition-transform">
-                          <img src="https://image.tmdb.org/t/p/w185/rTc7ZXdroqjkKivFPvCPX0Ru7uw.jpg" alt="The Sopranos" className="h-full w-full object-cover" />
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">
-                      Bu Hafta Popüler Listeler
-                    </p>
+                <div>
+                  <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">
+                    Bu Hafta Popüler Listeler
+                  </p>
                     {popularLists.length === 0 ? (
                       <p className="text-sm text-white/30">Bu hafta henüz popüler liste yok.</p>
                     ) : (
@@ -541,7 +457,6 @@ export default function Search() {
                       </div>
                     )}
                   </div>
-                </>
               )}
 
               <div>
