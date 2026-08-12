@@ -238,17 +238,17 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
             />
           </div>
           <div className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 relative -mt-14 sm:-mt-16 md:-mt-20 lg:-mt-24 z-10">
-            <div className="flex flex-col md:flex-row items-center md:items-end gap-md">
-              <div className="w-28 h-28 md:w-36 md:h-36 rounded-full border-4 border-[#0A0A0A] overflow-hidden bg-[#141414] shrink-0 flex items-center justify-center">
+            <div className="flex flex-col md:flex-row items-center md:items-end gap-2 sm:gap-3 md:gap-md">
+              <div className="w-[5.5rem] h-[5.5rem] sm:w-24 sm:h-24 md:w-[8.5rem] md:h-[8.5rem] lg:w-36 lg:h-36 rounded-full border-[3px] sm:border-4 border-[#0A0A0A] overflow-hidden bg-[#141414] shrink-0 flex items-center justify-center">
                 {profile.avatar_url
                   ? <img alt={displayName} className="w-full h-full object-cover" src={profile.avatar_url} />
-                  : <span className="material-symbols-outlined text-white/20 text-5xl">person</span>
+                  : <span className="material-symbols-outlined text-white/20 text-[2.5rem] sm:text-5xl md:text-[3.25rem]">person</span>
                 }
               </div>
-              <div className="text-center md:text-left flex-1 mb-2">
-                <h1 className="text-2xl md:text-3xl font-bold text-white">{displayName}</h1>
-                <p className="text-sm text-white/35 mt-0.5">@{profile.username}</p>
-                {profile.bio && <p className="text-sm text-white/55 mt-2 max-w-xl">{profile.bio}</p>}
+              <div className="text-center md:text-left flex-1 mb-2 min-w-0">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">{displayName}</h1>
+                {profile.username && <p className="text-sm text-white/30 mt-1">@{profile.username}</p>}
+                {profile.bio && <p className="text-sm text-white/50 mt-2 max-w-xl">{profile.bio}</p>}
               </div>
               {!isOwnProfile && (
                 <div className="pb-2 flex items-center justify-center gap-2">
