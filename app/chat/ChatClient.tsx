@@ -62,6 +62,32 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [modalSearchQuery, setModalSearchQuery] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareSearchQuery, setShareSearchQuery] = useState('');
+  const [shareSearchResults, setShareSearchResults] = useState<any[]>([]);
+  const [shareSearchLoading, setShareSearchLoading] = useState(false);
+
+  const handleShareShow = async (showItem: { id: number; name: string; poster_path: string | null; vote_average: number }) => {
+    if (!selectedUserId) return;
+    const content = `[SHOW_SHARE:${showItem.id}:${showItem.name}:${showItem.poster_path || 'null'}:${showItem.vote_average || 0}]`;
+    setShowShareModal(false);
+    setShareSearchQuery('');
+
+    try {
+      const { data: newMsg, error } = await supabase
+        .from('direct_messages')
+        .insert({
+          sender_id: currentUser.id,
+          receiver_id: selectedUserId,
+          content,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (newMsg) setMessages((prev) => [...prev, newMsg]);
+    } catch {}
+  };
 
   // Beğeni State'leri
   const [likedMessages, setLikedMessages] = useState<Record<string, boolean>>({});
@@ -787,9 +813,35 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                                 </div>
                               )}
 
-                              <p className="text-[13.5px] font-normal leading-[1.4] whitespace-pre-wrap break-words text-white">
-                                {msg.content}
-                              </p>
+                              {msg.content.startsWith('[SHOW_SHARE:') ? (() => {
+                                const parts = msg.content.split(':');
+                                const showId = parts[1];
+                                const showName = parts[2];
+                                const posterPath = parts[3];
+                                const voteAvg = parts[4] || '0';
+                                return (
+                                  <div className="rounded-xl overflow-hidden bg-black/40 border border-white/10 p-2.5 flex gap-3 items-center max-w-xs shadow-lg my-1">
+                                    <img
+                                      src={posterPath && posterPath !== 'null' ? `https://image.tmdb.org/t/p/w185${posterPath}` : 'https://placehold.co/185x278/141414/555?text=No+Poster'}
+                                      alt={showName}
+                                      className="w-11 h-16 object-cover rounded-lg shrink-0 border border-white/10"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <span className="text-[9.5px] font-bold uppercase tracking-wider text-[#C91520] block">🍿 Dizi Önerisi</span>
+                                      <p className="font-bold text-xs text-white truncate mt-0.5">{showName}</p>
+                                      {voteAvg !== '0' && <span className="text-[10.5px] text-amber-400 font-bold block mt-0.5">★ {parseFloat(voteAvg).toFixed(1)}</span>}
+                                      <Link href={`/show/${showId}`} className="mt-1.5 inline-flex items-center gap-1 text-[10.5px] text-white/90 hover:text-white bg-white/10 hover:bg-white/20 px-2 py-0.5 rounded-full font-bold transition-colors">
+                                        <span>Diziye Git</span>
+                                        <span className="material-symbols-outlined text-[10px]">arrow_forward</span>
+                                      </Link>
+                                    </div>
+                                  </div>
+                                );
+                              })() : (
+                                <p className="text-[13.5px] font-normal leading-[1.4] whitespace-pre-wrap break-words text-white">
+                                  {msg.content}
+                                </p>
+                              )}
                               <span
                                 className={`text-[9.5px] self-end mt-1 font-medium ${
                                   isMe ? 'text-white/75' : 'text-white/40'
@@ -823,7 +875,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                     className="bg-white/[0.02] border border-white/[0.06] rounded-full py-1.5 px-3 flex items-center gap-2 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.2)]"
                   >
                     {/* Emoji Picker Butonu ve Listesi */}
-                    <div className="relative flex items-center">
+                    <div className="relative flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => setShowEmojiPicker((prev) => !prev)}
@@ -831,6 +883,16 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                         title="Emoji Ekle"
                       >
                         <span className="material-symbols-outlined text-lg">sentiment_satisfied</span>
+                      </button>
+
+                      {/* Dizi Paylaş Butonu */}
+                      <button
+                        type="button"
+                        onClick={() => setShowShareModal(true)}
+                        className="w-7 h-7 rounded-full hover:bg-white/[0.04] flex items-center justify-center transition-colors text-white/30 hover:text-[#C91520]"
+                        title="Dizi Öner / Paylaş"
+                      >
+                        <span className="material-symbols-outlined text-lg">local_activity</span>
                       </button>
 
                       {showEmojiPicker && (
@@ -1017,6 +1079,78 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                     </button>
                   );
                 })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🍿 DİZİ PAYLAŞ MODALI */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={() => setShowShareModal(false)} />
+          
+          <div className="relative bg-[#101014] border border-white/10 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl z-10 flex flex-col max-h-[80vh]">
+            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-black/40">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#C91520]">local_activity</span>
+                <h3 className="text-sm font-bold text-white">Sohbette Dizi Paylaş</h3>
+              </div>
+              <button onClick={() => setShowShareModal(false)} className="text-white/40 hover:text-white">
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+
+            <div className="p-3 border-b border-white/10 bg-black/20">
+              <input
+                type="text"
+                placeholder="Dizi adı yazıp arayın..."
+                value={shareSearchQuery}
+                onChange={async (e) => {
+                  const val = e.target.value;
+                  setShareSearchQuery(val);
+                  if (val.trim().length > 1) {
+                    setShareSearchLoading(true);
+                    try {
+                      const res = await fetch(`/api/tmdb/search?q=${encodeURIComponent(val)}`);
+                      const data = await res.json();
+                      setShareSearchResults(data.results || []);
+                    } catch {}
+                    setShareSearchLoading(false);
+                  } else {
+                    setShareSearchResults([]);
+                  }
+                }}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#C91520]"
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {shareSearchLoading ? (
+                <p className="text-xs text-white/30 text-center py-6">Diziler aranıyor...</p>
+              ) : shareSearchResults.length > 0 ? (
+                shareSearchResults.map((showItem: any) => (
+                  <button
+                    key={showItem.id}
+                    onClick={() => handleShareShow(showItem)}
+                    className="w-full flex items-center gap-3 p-2 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/20 transition-all text-left group"
+                  >
+                    <img
+                      src={showItem.poster_path ? `https://image.tmdb.org/t/p/w185${showItem.poster_path}` : 'https://placehold.co/185x278/141414/555?text=Yok'}
+                      alt=""
+                      className="w-10 h-14 object-cover rounded-lg shrink-0 border border-white/10"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <span className="font-bold text-xs text-white group-hover:text-[#C91520] truncate block">{showItem.name}</span>
+                      <span className="text-[10px] text-amber-400 font-semibold block mt-0.5">★ {typeof showItem.vote_average === 'number' ? showItem.vote_average.toFixed(1) : '-'}</span>
+                    </div>
+                    <span className="text-xs text-white/40 group-hover:text-white font-bold bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
+                      Gönder
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <p className="text-xs text-white/30 text-center py-8">Paylaşmak istediğiniz dizinin adını yukarı yazın.</p>
               )}
             </div>
           </div>

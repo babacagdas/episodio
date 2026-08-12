@@ -123,7 +123,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   const favoriteActorsVisible = profile.favorite_actors_visible !== false;
   const canViewFavoriteActors = isOwnProfile || favoriteActorsVisible;
 
-  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, watchedShowsRes, reviewRes, notesRes] = await Promise.all([
+  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, watchedShowsRes, reviewRes, notesRes, userShowsRes] = await Promise.all([
     supabase.from('watchlist').select('show_id, show_name, poster_path').eq('user_id', profile.id).order('added_at', { ascending: false }).limit(24),
     supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profile.id),
     supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profile.id),
@@ -139,6 +139,9 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
       : Promise.resolve({ data: [] }),
     supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('user_id', profile.id),
     supabase.from('show_notes').select('show_id, show_name, poster_path, content').eq('user_id', profile.id).eq('is_public', true).order('updated_at', { ascending: false }).limit(20),
+    (user && !isOwnProfile)
+      ? supabase.from('watch_status').select('show_id').eq('user_id', user.id)
+      : Promise.resolve({ data: [] }),
   ]);
 
   const watchlist = (watchlistData ?? []) as WatchlistRow[];
@@ -154,12 +157,32 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   const listIdSet = new Set(publicLists.map((list) => list.id));
   const itemCounts: Record<string, number> = {};
   const postersByListId: Record<string, string[]> = {};
+
   (itemsRes.data ?? []).forEach((row: { list_id: string; poster_path: string | null }) => {
     if (!listIdSet.has(row.list_id)) return;
     itemCounts[row.list_id] = (itemCounts[row.list_id] ?? 0) + 1;
     if (!postersByListId[row.list_id]) postersByListId[row.list_id] = [];
     if (row.poster_path && postersByListId[row.list_id].length < 4) postersByListId[row.list_id].push(row.poster_path);
   });
+
+  // ⚡ Dizi Zevk Uyumu (% Match Rate) Hesaplama
+  let matchPercentage: number | null = null;
+  let sharedShowsCount = 0;
+  if (user && !isOwnProfile) {
+    const userShowIds = new Set(((userShowsRes?.data ?? []) as { show_id: number }[]).map(s => s.show_id));
+    const targetShowIds = new Set([
+      ...watchlist.map(w => w.show_id),
+      ...watchedShows.map(w => w.show_id),
+    ]);
+    targetShowIds.forEach(id => {
+      if (userShowIds.has(id)) sharedShowsCount++;
+    });
+    if (targetShowIds.size > 0 && sharedShowsCount > 0) {
+      matchPercentage = Math.min(98, Math.max(68, Math.round(55 + (sharedShowsCount / Math.max(1, targetShowIds.size)) * 45)));
+    } else if (targetShowIds.size > 0 && userShowIds.size > 0) {
+      matchPercentage = 62;
+    }
+  }
   const publicNotes = (notesRes.data ?? []) as { show_id: number; show_name: string; poster_path: string | null; content: string }[];
   const adminClient = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
     ? createAdminClient(
@@ -217,6 +240,16 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                 }
               </div>
               <div className="text-center md:text-left flex-1 mb-2">
+                {matchPercentage !== null && (
+                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-400 backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span>🔥 %{matchPercentage} Dizi Zevk Uyumu</span>
+                    {sharedShowsCount > 0 && <span className="text-white/50">({sharedShowsCount} Ortak Dizi)</span>}
+                  </div>
+                )}
                 <h1 className="text-2xl md:text-3xl font-bold text-white">{displayName}</h1>
                 <p className="text-sm text-white/35 mt-0.5">@{profile.username}</p>
                 {profile.bio && <p className="text-sm text-white/55 mt-2 max-w-xl">{profile.bio}</p>}
