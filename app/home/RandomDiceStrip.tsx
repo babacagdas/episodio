@@ -41,6 +41,11 @@ export default function RandomDiceStrip() {
         <span className="text-base sm:text-lg font-black uppercase tracking-wider text-white transition-colors group-hover:text-[#D4A017]">
           Bugün Ne İzlesem?
         </span>
+
+        {/* Yanıp Sönen Sarı Renkle Minik Tıkla Yazısı */}
+        <span className="mt-1 text-[11px] sm:text-xs font-extrabold tracking-widest text-amber-400 animate-pulse uppercase">
+          (Tıkla)
+        </span>
       </section>
 
       {/* İnteraktif 3D Zar Modalı */}
