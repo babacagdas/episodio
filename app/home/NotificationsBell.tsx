@@ -162,7 +162,7 @@ export default function NotificationsBell() {
       >
         <span
           className="material-symbols-outlined text-[25px] text-white/90 hover:text-white transition-colors"
-          style={{ fontVariationSettings: "'wght' 300, 'opsz' 24" }}
+          style={{ fontVariationSettings: "'wght' 600, 'opsz' 24" }}
         >
           notifications
         </span>

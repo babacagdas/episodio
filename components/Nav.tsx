@@ -34,7 +34,7 @@ export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
             >
               <span
                 className="material-symbols-outlined text-[25px] text-white/90 hover:text-white transition-colors"
-                style={{ fontVariationSettings: "'wght' 300, 'opsz' 24" }}
+                style={{ fontVariationSettings: "'wght' 600, 'opsz' 24" }}
               >
                 add
               </span>
@@ -53,7 +53,7 @@ export function MobileHeader({ rightElement }: { rightElement?: ReactNode }) {
               <Link href="/notifications" aria-label="Bildirimler" className="flex h-9 w-9 items-center justify-center text-white/90 hover:text-white transition-colors hover:bg-white/5 rounded-full">
                 <span
                   className="material-symbols-outlined text-[25px]"
-                  style={{ fontVariationSettings: "'wght' 300, 'opsz' 24" }}
+                  style={{ fontVariationSettings: "'wght' 600, 'opsz' 24" }}
                 >
                   notifications
                 </span>

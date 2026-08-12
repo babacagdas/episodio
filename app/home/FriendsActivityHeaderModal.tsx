@@ -261,20 +261,25 @@ export default function FriendsActivityHeaderModal() {
 
   return (
     <div className="relative">
-      {/* İçi Boş Kalp İkonu Butonu */}
+      {/* İçi Boş Kalp İkonu Butonu (Daha Kalın Çizgili ve Tombul Kalp) */}
       <button
         type="button"
         onClick={handleOpenToggle}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full border border-transparent bg-transparent text-white transition-colors hover:bg-white/5 active:scale-95"
+        className="group relative flex h-9 w-9 items-center justify-center rounded-full border border-transparent bg-transparent text-white transition-colors hover:bg-white/5 active:scale-95"
         title="Arkadaş Aktiviteleri"
         aria-label="Arkadaş Aktiviteleri"
       >
-        <span
-          className="material-symbols-outlined text-[25px] text-white/90 hover:text-white transition-colors"
-          style={{ fontVariationSettings: "'wght' 300, 'opsz' 24" }}
+        <svg
+          viewBox="0 0 24 24"
+          className="h-[21px] w-[21px] text-white/90 transition-colors group-hover:text-white"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.25"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          favorite_border
-        </span>
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.72-8.72 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+        </svg>
         {hasUnread && !open && (
           <span className="absolute bottom-1 right-1 h-2 w-2 rounded-full bg-[#C91520] ring-2 ring-black" />
         )}
