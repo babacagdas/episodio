@@ -269,19 +269,14 @@ export default function FriendsActivityHeaderModal() {
         title="Arkadaş Aktiviteleri"
         aria-label="Arkadaş Aktiviteleri"
       >
-        <svg
-          viewBox="0 0 24 24"
-          className="h-[22px] w-[22px] text-white/90 transition-colors group-hover:text-white overflow-visible"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.1"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        <span
+          className="material-symbols-outlined text-[25px] text-white/90 group-hover:text-white transition-colors"
+          style={{ fontVariationSettings: "'wght' 550, 'opsz' 24" }}
         >
-          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-        </svg>
+          favorite_border
+        </span>
         {hasUnread && !open && (
-          <span className="absolute bottom-1 right-2 h-2 w-2 rounded-full bg-[#C91520] ring-2 ring-black" />
+          <span className="absolute bottom-1 right-1.5 h-2 w-2 rounded-full bg-[#C91520] ring-2 ring-black" />
         )}
       </button>
 
