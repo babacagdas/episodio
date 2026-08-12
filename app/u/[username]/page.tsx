@@ -293,78 +293,46 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
 
             return (
               <>
-                {/* Mobil: İzlendi / İzleme Süresi / Yorum */}
-                <div className="grid grid-cols-3 gap-4 md:hidden">
+                {/* Mobil: İzlendi / Süre / Yorum / Uyum */}
+                <div className={`grid ${matchPercentage !== null ? 'grid-cols-4' : 'grid-cols-3'} gap-2 md:hidden`}>
                   {[
                     { val: watchedStatValue, label: 'İzlendi' },
-                    { val: watchTimeStatValue, label: 'İzleme Süresi' },
+                    { val: watchTimeStatValue, label: 'Süre' },
                     { val: reviewCount, label: 'Yorum' },
+                    ...(matchPercentage !== null
+                      ? [{ val: `%${matchPercentage}`, label: 'Uyum' }]
+                      : []),
                   ].map(({ val, label }) => (
                     <div key={label} className="text-center">
-                      <span className="block text-base sm:text-2xl font-bold text-white">{val}</span>
+                      <span className="block text-base sm:text-xl font-bold text-white">{val}</span>
                       <span className="text-[9px] sm:text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Mobil: Dizi Zevk Uyumu Çerçevesi */}
-                {matchPercentage !== null && (
-                  <div className="mt-3 flex justify-center md:hidden">
-                    <div className="inline-flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.035] px-3.5 py-1.5 backdrop-blur-md shadow-md">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#C91520]/15 text-[#C91520] border border-[#C91520]/25">
-                        <span className="material-symbols-outlined text-[14px]">tune</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-                        <span className="text-white/50 text-[11px]">Zevk Uyumu:</span>
-                        <span className="text-emerald-400 font-black">%{matchPercentage}</span>
-                        {sharedShowsCount > 0 && (
-                          <span className="text-[10px] font-semibold text-white/40 ml-1">({sharedShowsCount} Ortak Dizi)</span>
-                        )}
-                      </div>
+                {/* Masaüstü: İstatistik Banner'ı (İzlendi | Yorum | İzleme Süresi | Dizi Uyumu) */}
+                <div className="hidden md:flex items-center gap-8">
+                  <FollowListsModal
+                    profileId={profile.id}
+                    currentUserId={user?.id ?? null}
+                    followersCount={followers}
+                    followingCount={following}
+                    order="following-first"
+                  />
+                  <div className="w-px h-8 bg-white/10" />
+                  {[
+                    { val: watchedStatValue, label: 'İzlendi' },
+                    { val: reviewCount, label: 'Yorum' },
+                    { val: watchTimeStatValue, label: 'İzleme Süresi' },
+                    ...(matchPercentage !== null
+                      ? [{ val: `%${matchPercentage}`, label: 'Dizi Uyumu' }]
+                      : []),
+                  ].map(({ val, label }) => (
+                    <div key={label} className="text-center">
+                      <span className="block text-2xl font-bold text-white">{val}</span>
+                      <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
                     </div>
-                  </div>
-                )}
-
-                {/* Masaüstü: İstatistik Banner'ı ve Yorumun Sağında Şık Uyum Göstergesi */}
-                <div className="hidden md:flex items-center justify-between w-full">
-                  <div className="flex items-center gap-8">
-                    <FollowListsModal
-                      profileId={profile.id}
-                      currentUserId={user?.id ?? null}
-                      followersCount={followers}
-                      followingCount={following}
-                      order="following-first"
-                    />
-                    <div className="w-px h-8 bg-white/10" />
-                    {[
-                      { val: watchedStatValue, label: 'İzlendi' },
-                      { val: reviewCount, label: 'Yorum' },
-                      { val: watchTimeStatValue, label: 'İzleme Süresi' },
-                    ].map(({ val, label }) => (
-                      <div key={label} className="text-center">
-                        <span className="block text-2xl font-bold text-white">{val}</span>
-                        <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Dizi Zevk Uyumu Göstergesi (Yorumun ve İzleme Süresinin sağında boşluklu, şık zarif çerçeveli) */}
-                  {matchPercentage !== null && (
-                    <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-2 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.3)] shrink-0 ml-12">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#C91520]/15 text-[#C91520] border border-[#C91520]/25">
-                        <span className="material-symbols-outlined text-[16px]">tune</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-1.5 text-xs font-extrabold text-white">
-                          <span className="text-white/50 text-[11px] font-semibold">Dizi Zevk Uyumu:</span>
-                          <span className="text-emerald-400 font-black text-sm">%{matchPercentage}</span>
-                        </div>
-                        {sharedShowsCount > 0 && (
-                          <span className="text-[10px] font-semibold text-white/40">{sharedShowsCount} Ortak Dizi</span>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  ))}
                 </div>
               </>
             );
