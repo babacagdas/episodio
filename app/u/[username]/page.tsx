@@ -123,7 +123,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   const favoriteActorsVisible = profile.favorite_actors_visible !== false;
   const canViewFavoriteActors = isOwnProfile || favoriteActorsVisible;
 
-  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, watchedShowsRes, reviewRes, notesRes, userShowsRes] = await Promise.all([
+  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, watchedShowsRes, reviewRes, notesRes, userShowsRes, userWatchlistRes, targetShowsRes, targetWatchlistRes] = await Promise.all([
     supabase.from('watchlist').select('show_id, show_name, poster_path').eq('user_id', profile.id).order('added_at', { ascending: false }).limit(24),
     supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profile.id),
     supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profile.id),
@@ -141,6 +141,15 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     supabase.from('show_notes').select('show_id, show_name, poster_path, content').eq('user_id', profile.id).eq('is_public', true).order('updated_at', { ascending: false }).limit(20),
     (user && !isOwnProfile)
       ? supabase.from('watch_status').select('show_id').eq('user_id', user.id)
+      : Promise.resolve({ data: [] }),
+    (user && !isOwnProfile)
+      ? supabase.from('watchlist').select('show_id').eq('user_id', user.id)
+      : Promise.resolve({ data: [] }),
+    (user && !isOwnProfile)
+      ? supabase.from('watch_status').select('show_id').eq('user_id', profile.id)
+      : Promise.resolve({ data: [] }),
+    (user && !isOwnProfile)
+      ? supabase.from('watchlist').select('show_id').eq('user_id', profile.id)
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -165,18 +174,23 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     if (row.poster_path && postersByListId[row.list_id].length < 4) postersByListId[row.list_id].push(row.poster_path);
   });
 
-  // ⚡ Dizi Zevk Uyumu (% Match Rate) Hesaplama
+  // ⚡ Dizi Zevk Uyumu (% Match Rate) - Sınırsız Tam Kapsamlı Hesaplama
   let matchPercentage: number | null = null;
   let sharedShowsCount = 0;
   if (user && !isOwnProfile) {
-    const userShowIds = new Set(((userShowsRes?.data ?? []) as { show_id: number }[]).map(s => s.show_id));
-    const targetShowIds = new Set([
-      ...watchlist.map(w => w.show_id),
-      ...watchedShows.map(w => w.show_id),
+    const userShowIds = new Set([
+      ...((userShowsRes?.data ?? []) as { show_id: number }[]).map(s => s.show_id),
+      ...((userWatchlistRes?.data ?? []) as { show_id: number }[]).map(s => s.show_id),
     ]);
+    const targetShowIds = new Set([
+      ...((targetShowsRes?.data ?? []) as { show_id: number }[]).map(s => s.show_id),
+      ...((targetWatchlistRes?.data ?? []) as { show_id: number }[]).map(s => s.show_id),
+    ]);
+
     targetShowIds.forEach(id => {
       if (userShowIds.has(id)) sharedShowsCount++;
     });
+
     if (targetShowIds.size > 0 && sharedShowsCount > 0) {
       matchPercentage = Math.min(98, Math.max(68, Math.round(55 + (sharedShowsCount / Math.max(1, targetShowIds.size)) * 45)));
     } else if (targetShowIds.size > 0 && userShowIds.size > 0) {
