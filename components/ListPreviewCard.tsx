@@ -35,6 +35,7 @@ export default function ListPreviewCard({
   return (
     <Link
       href={`/list/${id}`}
+      prefetch={true}
       className={`relative overflow-hidden rounded-xl bg-transparent border border-white/[0.05] aspect-[16/12] flex flex-col justify-between p-3 sm:p-4 group cursor-pointer shadow-md transition-all duration-300 hover:-translate-y-0.5 hover:border-white/[0.14] hover:bg-transparent hover:shadow-[0_16px_40px_rgba(0,0,0,0.3)] ${className} select-none`}
     >
       {/* Background Poster backdrop with dark overlay */}

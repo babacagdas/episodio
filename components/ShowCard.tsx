@@ -13,6 +13,7 @@ export default function ShowCard({ show, rank }: { show: Show; rank?: number }) 
   return (
     <Link
       href={`/show/${show.id}`}
+      prefetch={true}
       className="group relative block aspect-[2/3] w-full overflow-hidden rounded-xl border border-white/[0.06] bg-[#111] shadow-md transition-colors duration-200 hover:border-white/20"
     >
       {/* Poster Image (Stationary on Hover) */}

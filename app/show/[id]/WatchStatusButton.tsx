@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 type Status = 'watching' | 'completed' | 'dropped' | 'plan_to_watch' | null;
@@ -20,6 +20,7 @@ export default function WatchStatusButton({ showId, showName, posterPath }: {
   const [status, setStatus] = useState<Status>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const prevStatusRef = useRef<Status>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -31,32 +32,50 @@ export default function WatchStatusButton({ showId, showName, posterPath }: {
         .eq('user_id', data.user.id)
         .eq('show_id', showId)
         .maybeSingle();
-      setStatus((row?.status as Status) ?? null);
+      const current = (row?.status as Status) ?? null;
+      setStatus(current);
+      prevStatusRef.current = current;
       setLoading(false);
     });
   }, [showId]);
 
   async function setWatchStatus(newStatus: Status) {
-    const supabase = createClient();
-    const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) { window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`; return; }
-
-    if (newStatus === status) {
-      await supabase.from('watch_status').delete()
-        .eq('user_id', authData.user.id).eq('show_id', showId);
-      setStatus(null);
-    } else {
-      await supabase.from('watch_status').upsert({
-        user_id: authData.user.id,
-        show_id: showId,
-        show_name: showName,
-        poster_path: posterPath,
-        status: newStatus,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,show_id' });
-      setStatus(newStatus);
-    }
+    // ⚡ OPTIMISTIC UI: 0ms anında durum güncellemesi ve menü kapanışı
+    const targetStatus = newStatus === status ? null : newStatus;
+    const previous = status;
+    
+    setStatus(targetStatus);
     setOpen(false);
+
+    try {
+      const supabase = createClient();
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) {
+        setStatus(previous);
+        window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+        return;
+      }
+
+      if (targetStatus === null) {
+        const { error } = await supabase.from('watch_status').delete()
+          .eq('user_id', authData.user.id).eq('show_id', showId);
+        if (error) setStatus(previous);
+        else prevStatusRef.current = null;
+      } else {
+        const { error } = await supabase.from('watch_status').upsert({
+          user_id: authData.user.id,
+          show_id: showId,
+          show_name: showName,
+          poster_path: posterPath,
+          status: targetStatus,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,show_id' });
+        if (error) setStatus(previous);
+        else prevStatusRef.current = targetStatus;
+      }
+    } catch {
+      setStatus(previous);
+    }
   }
 
   const current = OPTIONS.find(o => o.value === status);
@@ -66,7 +85,7 @@ export default function WatchStatusButton({ showId, showName, posterPath }: {
       <button
         onClick={() => setOpen(prev => !prev)}
         disabled={loading}
-        className={`px-4 py-2 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 border backdrop-blur-md ${
+        className={`px-4 py-2 text-xs font-semibold rounded-full transition-all flex items-center gap-1.5 border backdrop-blur-md active:scale-95 ${
           current
             ? `${current.color}`
             : 'bg-white/[0.08] hover:bg-white/[0.14] border-white/10 text-white'
@@ -82,7 +101,7 @@ export default function WatchStatusButton({ showId, showName, posterPath }: {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full mt-2 z-50 bg-[#0A0A0D] border border-white/10 rounded-2xl p-1.5 shadow-2xl min-w-[170px] backdrop-blur-xl space-y-0.5">
+          <div className="absolute left-0 top-full mt-2 z-50 bg-[#0A0A0D] border border-white/10 rounded-2xl p-1.5 shadow-2xl min-w-[170px] backdrop-blur-xl space-y-0.5 animate-in fade-in zoom-in-95 duration-100">
             {OPTIONS.map(opt => (
               <button
                 key={opt.value}
