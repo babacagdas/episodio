@@ -24,6 +24,8 @@ export default async function ProfilePage() {
     followingRes,
     watchedRes,
     reviewRes,
+    epDiscussionsRes,
+    epRepliesRes,
     watchlistRes,
   ] = await Promise.all([
     supabase
@@ -35,6 +37,8 @@ export default async function ProfilePage() {
     supabase.from('follows').select('following_id', { count: 'exact', head: true }).eq('follower_id', user.id),
     supabase.from('watch_status').select('show_id', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'completed'),
     supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+    supabase.from('episode_discussions').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+    supabase.from('episode_comment_replies').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
     supabase.from('watchlist').select('show_id', { count: 'exact', head: true }).eq('user_id', user.id),
   ]);
 
@@ -49,11 +53,13 @@ export default async function ProfilePage() {
     favorite_actors_visible: p?.favorite_actors_visible !== false,
   };
 
+  const totalReviewsCount = (reviewRes.count ?? 0) + (epDiscussionsRes.count ?? 0) + (epRepliesRes.count ?? 0);
+
   const initialStats = {
     followersCount: followersRes.count ?? 0,
     followingCount: followingRes.count ?? 0,
     watchedCount: watchedRes.count ?? 0,
-    reviewCount: reviewRes.count ?? 0,
+    reviewCount: totalReviewsCount,
     watchlistCount: watchlistRes.count ?? 0,
   };
 

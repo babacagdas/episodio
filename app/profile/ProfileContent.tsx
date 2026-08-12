@@ -174,6 +174,8 @@ export default function ProfileContent({
         followingRes,
         watchedRes,
         reviewRes,
+        epDiscussionsRes,
+        epRepliesRes,
         watchlistRes,
       ] = await Promise.all([
         supabase.from('profiles').select('username, full_name, bio, avatar_url, activity_visible, cover_show_id, favorite_actors_visible').eq('id', userId).maybeSingle(),
@@ -181,6 +183,8 @@ export default function ProfileContent({
         supabase.from('follows').select('following_id', { count: 'exact', head: true }).eq('follower_id', userId),
         supabase.from('watch_status').select('show_id', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'completed'),
         supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+        supabase.from('episode_discussions').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+        supabase.from('episode_comment_replies').select('id', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('watchlist').select('show_id', { count: 'exact', head: true }).eq('user_id', userId),
       ]);
 
@@ -219,7 +223,7 @@ export default function ProfileContent({
       setFollowersCount(followersRes.count ?? 0);
       setFollowingCount(followingRes.count ?? 0);
       setWatchedCount(watchedRes.count ?? 0);
-      setReviewCount(reviewRes.count ?? 0);
+      setReviewCount((reviewRes.count ?? 0) + (epDiscussionsRes.count ?? 0) + (epRepliesRes.count ?? 0));
       setListCount(watchlistRes.count ?? 0);
       setStatsLoading(false);
     });

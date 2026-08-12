@@ -123,7 +123,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   const favoriteActorsVisible = profile.favorite_actors_visible !== false;
   const canViewFavoriteActors = isOwnProfile || favoriteActorsVisible;
 
-  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, watchedShowsRes, reviewRes, notesRes, userShowsRes, targetShowsRes] = await Promise.all([
+  const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, watchedShowsRes, reviewRes, epDiscussionsRes, epRepliesRes, notesRes, userShowsRes, targetShowsRes] = await Promise.all([
     supabase.from('watchlist').select('show_id, show_name, poster_path').eq('user_id', profile.id).order('added_at', { ascending: false }).limit(24),
     supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', profile.id),
     supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', profile.id),
@@ -137,7 +137,9 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     canViewWatched
       ? supabase.from('watch_status').select('show_id, show_name, poster_path').eq('user_id', profile.id).eq('status', 'completed').order('updated_at', { ascending: false }).limit(12)
       : Promise.resolve({ data: [] }),
-    supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('user_id', profile.id),
+    supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('user_id', profile.id),
+    supabase.from('episode_discussions').select('id', { count: 'exact', head: true }).eq('user_id', profile.id),
+    supabase.from('episode_comment_replies').select('id', { count: 'exact', head: true }).eq('user_id', profile.id),
     supabase.from('show_notes').select('show_id, show_name, poster_path, content').eq('user_id', profile.id).eq('is_public', true).order('updated_at', { ascending: false }).limit(20),
     (user && !isOwnProfile)
       ? supabase.from('watch_status').select('show_id').eq('user_id', user.id).eq('status', 'completed')
@@ -153,7 +155,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   const watchedCount = canViewWatched ? watchedRes.count ?? 0 : 0;
   const watchedStatValue: number | string = canViewWatched ? watchedCount : 'Gizli';
   const watchedShows = (watchedShowsRes.data ?? []) as WatchlistRow[];
-  const reviewCount = reviewRes.count ?? 0;
+  const reviewCount = (reviewRes.count ?? 0) + (epDiscussionsRes.count ?? 0) + (epRepliesRes.count ?? 0);
   const isFollowing = !!relationRes.data;
   const displayName = profile.full_name || profile.username || 'Kullanıcı';
   const publicLists = (listsRes.data ?? []) as PublicListRow[];
