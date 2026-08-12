@@ -9,7 +9,6 @@ import { useLists } from '@/lib/useLists';
 import ListPreviewCard from '@/components/ListPreviewCard';
 import ShowCard from '@/components/ShowCard';
 import { CardSkeleton } from '@/components/Skeletons';
-import HomeFeatureBanners from '@/app/home/HomeFeatureBanners';
 import FollowListsModal from '@/app/u/[username]/FollowListsModal';
 import type { User } from '@supabase/supabase-js';
 
@@ -1130,11 +1129,6 @@ export default function ProfileContent({
             </>
           );
         })()}
-      </section>
-
-      {/* Dizi & Oyuncu Eşleştirici Kartları (Mobilde & PC'de Yelpaze Kartlar) */}
-      <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-6">
-        <HomeFeatureBanners />
       </section>
 
       {/* Tabs */}
