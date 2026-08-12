@@ -1034,7 +1034,7 @@ export default function ProfileContent({
             </div>
             <div className="text-center md:text-left flex-1 mb-2 min-w-0">
               <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">{displayName}</h2>
-              {profile.username && <p className="text-sm text-white/30 mt-1">@{profile.username}</p>}
+              {profile.username && <p className="text-sm sm:text-base font-medium text-white/75 mt-1 drop-shadow-sm">@{profile.username}</p>}
               {profile.bio && <p className="text-sm text-white/50 mt-2 max-w-md">{profile.bio}</p>}
             </div>
             <div className="hidden">
