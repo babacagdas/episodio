@@ -275,7 +275,7 @@ export function BottomNav() {
                   />
                 </div>
               ) : (
-                <span className={`relative flex items-center justify-center transition-colors duration-200 ${active ? 'text-[#C91520] font-bold' : 'text-white/40 hover:text-white/75'}`}>
+                <span className={`relative flex items-center justify-center transition-all duration-200 ${active ? 'text-white font-black scale-110 drop-shadow-[0_0_10px_rgba(255,255,255,0.65)]' : 'text-white/35 hover:text-white/75'}`}>
                   <span
                     className="material-symbols-outlined text-[23px]"
                     style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
@@ -283,7 +283,7 @@ export function BottomNav() {
                     {icon}
                   </span>
                   {isChat && unreadCount > 0 && (
-                    <span className="absolute top-0.5 right-0.5 h-2 w-2 rounded-full bg-[#C91520] ring-2 ring-[#0A0A0E]" />
+                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-[#C91520] ring-2 ring-[#0A0A0E]" />
                   )}
                 </span>
               )}
