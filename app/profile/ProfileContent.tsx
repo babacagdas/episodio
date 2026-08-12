@@ -141,10 +141,27 @@ export default function ProfileContent() {
   useEffect(() => {
     const supabase = createClient();
     let cancelled = false;
-    let statsTimer: number | null = null;
-    const loadStats = async (userId: string) => {
+
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) {
+        setStatsLoading(false);
+        return;
+      }
+      if (cancelled) return;
+      setUser(data.user);
+      const userId = data.user.id;
+
+      // ⚡ OPTIMIZED: Tüm profil verisi ve 5 istatistik sayaci TEK PARALEL PAKETTE (0ms gecikmeyle) cekilir
       setStatsLoading(true);
-      const [followersRes, followingRes, watchedRes, reviewRes, watchlistRes] = await Promise.all([
+      const [
+        profileRes,
+        followersRes,
+        followingRes,
+        watchedRes,
+        reviewRes,
+        watchlistRes,
+      ] = await Promise.all([
+        supabase.from('profiles').select('username, full_name, bio, avatar_url, activity_visible, cover_show_id, favorite_actors_visible').eq('id', userId).maybeSingle(),
         supabase.from('follows').select('follower_id', { count: 'exact', head: true }).eq('following_id', userId),
         supabase.from('follows').select('following_id', { count: 'exact', head: true }).eq('follower_id', userId),
         supabase.from('watch_status').select('show_id', { count: 'exact', head: true }).eq('user_id', userId).eq('status', 'completed'),
@@ -153,32 +170,20 @@ export default function ProfileContent() {
       ]);
 
       if (cancelled) return;
-      setFollowersCount(followersRes.count ?? 0);
-      setFollowingCount(followingRes.count ?? 0);
-      setWatchedCount(watchedRes.count ?? 0);
-      setReviewCount(reviewRes.count ?? 0);
-      setListCount(watchlistRes.count ?? 0);
-      setStatsLoading(false);
-    };
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) {
-        setStatsLoading(false);
-        return;
-      }
-      if (cancelled) return;
-      setUser(data.user);
-      const { data: p } = await supabase
-        .from('profiles')
-        .select('username, full_name, bio, avatar_url, activity_visible, cover_show_id')
-        .eq('id', data.user.id)
-        .single();
-      if (cancelled) return;
+
+      const p = profileRes.data as any;
       if (p) {
         setProfile({
-          ...p,
+          username: p.username ?? '',
+          full_name: p.full_name ?? '',
+          bio: p.bio ?? '',
+          avatar_url: p.avatar_url ?? '',
           activity_visible: p.activity_visible ?? true,
           cover_show_id: p.cover_show_id ?? null,
         });
+        const visible = p.favorite_actors_visible !== false;
+        setFavoriteActorsVisible(visible);
+        setFavoriteActorsVisibilityColumnAvailable(true);
       } else {
         const initial: Profile = {
           username: data.user.email?.split('@')[0] ?? '',
@@ -188,40 +193,21 @@ export default function ProfileContent() {
           activity_visible: true,
           cover_show_id: null,
         };
-        await supabase.from('profiles').insert({ id: data.user.id, ...initial });
+        await supabase.from('profiles').insert({ id: userId, ...initial });
         if (cancelled) return;
         setProfile(initial);
       }
 
-      const localFavoriteVisibility = window.localStorage.getItem(`episodio:favoriteActorsVisible:${data.user.id}`);
-      if (localFavoriteVisibility !== null) {
-        setFavoriteActorsVisible(localFavoriteVisibility === 'true');
-      }
-
-      const { data: favoriteVisibilityData, error: favoriteVisibilityError } = await supabase
-        .from('profiles')
-        .select('favorite_actors_visible')
-        .eq('id', data.user.id)
-        .maybeSingle();
-
-      if (!cancelled && !favoriteVisibilityError && favoriteVisibilityData && 'favorite_actors_visible' in favoriteVisibilityData) {
-        const visible = (favoriteVisibilityData as { favorite_actors_visible?: boolean | null }).favorite_actors_visible !== false;
-        setFavoriteActorsVisible(visible);
-        setFavoriteActorsVisibilityColumnAvailable(true);
-        window.localStorage.setItem(`episodio:favoriteActorsVisible:${data.user.id}`, String(visible));
-      }
-
-      statsTimer = window.setTimeout(() => {
-        void loadStats(data.user.id);
-      }, 180);
-
-      // Notları yükle
-
-      // İzlediklerim
+      setFollowersCount(followersRes.count ?? 0);
+      setFollowingCount(followingRes.count ?? 0);
+      setWatchedCount(watchedRes.count ?? 0);
+      setReviewCount(reviewRes.count ?? 0);
+      setListCount(watchlistRes.count ?? 0);
+      setStatsLoading(false);
     });
+
     return () => {
       cancelled = true;
-      if (statsTimer) window.clearTimeout(statsTimer);
     };
   }, []);
 

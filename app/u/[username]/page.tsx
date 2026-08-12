@@ -25,6 +25,7 @@ interface Profile {
   avatar_url: string;
   activity_visible: boolean | null;
   cover_show_id?: number | null;
+  favorite_actors_visible?: boolean | null;
 }
 
 interface WatchlistRow {
@@ -58,7 +59,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   // Use safe step-by-step lookup instead of OR filter parsing.
   const { data: byUsername } = await supabase
     .from('profiles')
-    .select('id, username, full_name, bio, avatar_url, activity_visible, cover_show_id')
+    .select('id, username, full_name, bio, avatar_url, activity_visible, cover_show_id, favorite_actors_visible')
     .eq('username', loweredUsername)
     .maybeSingle();
   profileData = (byUsername as Profile | null) ?? null;
@@ -66,7 +67,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
   if (!profileData) {
     const { data: byId } = await supabase
       .from('profiles')
-      .select('id, username, full_name, bio, avatar_url, activity_visible, cover_show_id')
+      .select('id, username, full_name, bio, avatar_url, activity_visible, cover_show_id, favorite_actors_visible')
       .eq('id', normalizedUsername)
       .maybeSingle();
     profileData = (byId as Profile | null) ?? null;
@@ -81,7 +82,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     );
     const { data: adminByUsername } = await admin
       .from('profiles')
-      .select('id, username, full_name, bio, avatar_url, activity_visible, cover_show_id')
+      .select('id, username, full_name, bio, avatar_url, activity_visible, cover_show_id, favorite_actors_visible')
       .eq('username', loweredUsername)
       .maybeSingle();
     profileData = (adminByUsername as Profile | null) ?? null;
@@ -89,7 +90,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
     if (!profileData) {
       const { data: adminById } = await admin
         .from('profiles')
-        .select('id, username, full_name, bio, avatar_url, activity_visible, cover_show_id')
+        .select('id, username, full_name, bio, avatar_url, activity_visible, cover_show_id, favorite_actors_visible')
         .eq('id', normalizedUsername)
         .maybeSingle();
       profileData = (adminById as Profile | null) ?? null;
@@ -119,15 +120,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
 
   const isOwnProfile = user?.id === profile.id;
   const canViewWatched = isOwnProfile || profile.activity_visible !== false;
-  let favoriteActorsVisible = true;
-  const { data: favoriteVisibilityData, error: favoriteVisibilityError } = await supabase
-    .from('profiles')
-    .select('favorite_actors_visible')
-    .eq('id', profile.id)
-    .maybeSingle();
-  if (!favoriteVisibilityError && favoriteVisibilityData && 'favorite_actors_visible' in favoriteVisibilityData) {
-    favoriteActorsVisible = (favoriteVisibilityData as { favorite_actors_visible?: boolean | null }).favorite_actors_visible !== false;
-  }
+  const favoriteActorsVisible = profile.favorite_actors_visible !== false;
   const canViewFavoriteActors = isOwnProfile || favoriteActorsVisible;
 
   const [{ data: watchlistData }, followersRes, followingRes, relationRes, listsRes, itemsRes, likesRes, watchedRes, watchedShowsRes, reviewRes, notesRes] = await Promise.all([
