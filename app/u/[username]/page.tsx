@@ -240,16 +240,6 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                 }
               </div>
               <div className="text-center md:text-left flex-1 mb-2">
-                {matchPercentage !== null && (
-                  <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-400 backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span>🔥 %{matchPercentage} Dizi Zevk Uyumu</span>
-                    {sharedShowsCount > 0 && <span className="text-white/50">({sharedShowsCount} Ortak Dizi)</span>}
-                  </div>
-                )}
                 <h1 className="text-2xl md:text-3xl font-bold text-white">{displayName}</h1>
                 <p className="text-sm text-white/35 mt-0.5">@{profile.username}</p>
                 {profile.bio && <p className="text-sm text-white/55 mt-2 max-w-xl">{profile.bio}</p>}
@@ -284,7 +274,7 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
         </section>
 
         <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-6">
-          {/* Mobil: Listede/İzlendi/Yorum (profilimle aynı) */}
+          {/* Mobil: Listede/İzlendi/Yorum */}
           <div className="grid grid-cols-3 gap-4 md:hidden">
             {[
               { val: watchlist.length, label: 'Listede' },
@@ -297,25 +287,65 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
               </div>
             ))}
           </div>
-          <div className="hidden md:flex items-center gap-8">
-            <FollowListsModal
-              profileId={profile.id}
-              currentUserId={user?.id ?? null}
-              followersCount={followers}
-              followingCount={following}
-              order="following-first"
-            />
-            <div className="w-px h-8 bg-white/10" />
-            {[
-              { val: watchedStatValue, label: 'İzlendi' },
-              { val: watchlist.length, label: 'Listede' },
-              { val: reviewCount, label: 'Yorum' },
-            ].map(({ val, label }) => (
-              <div key={label} className="text-center">
-                <span className="block text-2xl font-bold text-white">{val}</span>
-                <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
+
+          {/* Mobil: Dizi Zevk Uyumu Çerçevesi */}
+          {matchPercentage !== null && (
+            <div className="mt-3 flex justify-center md:hidden">
+              <div className="inline-flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.035] px-3.5 py-1.5 backdrop-blur-md shadow-md">
+                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-[#C91520]/15 text-[#C91520] border border-[#C91520]/25">
+                  <span className="material-symbols-outlined text-[14px]">tune</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                  <span className="text-white/50 text-[11px]">Zevk Uyumu:</span>
+                  <span className="text-emerald-400 font-black">%{matchPercentage}</span>
+                  {sharedShowsCount > 0 && (
+                    <span className="text-[10px] font-semibold text-white/40 ml-1">({sharedShowsCount} Ortak Dizi)</span>
+                  )}
+                </div>
               </div>
-            ))}
+            </div>
+          )}
+
+          {/* Masaüstü: İstatistik Banner'ı ve Yorumun Sağında Şık Uyum Göstergesi */}
+          <div className="hidden md:flex items-center justify-between w-full">
+            <div className="flex items-center gap-8">
+              <FollowListsModal
+                profileId={profile.id}
+                currentUserId={user?.id ?? null}
+                followersCount={followers}
+                followingCount={following}
+                order="following-first"
+              />
+              <div className="w-px h-8 bg-white/10" />
+              {[
+                { val: watchedStatValue, label: 'İzlendi' },
+                { val: watchlist.length, label: 'Listede' },
+                { val: reviewCount, label: 'Yorum' },
+              ].map(({ val, label }) => (
+                <div key={label} className="text-center">
+                  <span className="block text-2xl font-bold text-white">{val}</span>
+                  <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Dizi Zevk Uyumu Göstergesi (Yorumun sağında boşluklu, şık zarif çerçeveli) */}
+            {matchPercentage !== null && (
+              <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-2 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.3)] shrink-0 ml-12">
+                <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#C91520]/15 text-[#C91520] border border-[#C91520]/25">
+                  <span className="material-symbols-outlined text-[16px]">tune</span>
+                </div>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-1.5 text-xs font-extrabold text-white">
+                    <span className="text-white/50 text-[11px] font-semibold">Dizi Zevk Uyumu:</span>
+                    <span className="text-emerald-400 font-black text-sm">%{matchPercentage}</span>
+                  </div>
+                  {sharedShowsCount > 0 && (
+                    <span className="text-[10px] font-semibold text-white/40">{sharedShowsCount} Ortak Dizi</span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
