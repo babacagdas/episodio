@@ -73,36 +73,52 @@ async function compressAvatar(file: File): Promise<File> {
   }
 }
 
-export default function ProfileContent() {
+interface ProfileContentProps {
+  initialUser?: User | null;
+  initialProfile?: Profile & { favorite_actors_visible?: boolean };
+  initialStats?: {
+    followersCount: number;
+    followingCount: number;
+    watchedCount: number;
+    reviewCount: number;
+    watchlistCount: number;
+  };
+}
+
+export default function ProfileContent({
+  initialUser = null,
+  initialProfile = undefined,
+  initialStats = undefined,
+}: ProfileContentProps) {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
   const initialTab = tabParam === 'lists' || tabParam === 'watched' || tabParam === 'actors'
     ? tabParam
     : 'watchlist';
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(initialUser);
   const [profile, setProfile] = useState<Profile>({
-    username: '',
-    full_name: '',
-    bio: '',
-    avatar_url: '',
-    activity_visible: true,
-    cover_show_id: null,
+    username: initialProfile?.username ?? '',
+    full_name: initialProfile?.full_name ?? '',
+    bio: initialProfile?.bio ?? '',
+    avatar_url: initialProfile?.avatar_url ?? '',
+    activity_visible: initialProfile?.activity_visible ?? true,
+    cover_show_id: initialProfile?.cover_show_id ?? null,
   });
   const [activeTab, setActiveTab] = useState<'watchlist' | 'watched' | 'lists' | 'actors'>(initialTab);
   const [watchedSubStatus, setWatchedSubStatus] = useState<'completed' | 'watching' | 'dropped' | 'plan_to_watch'>('completed');
-  const [listCount, setListCount] = useState(0);
+  const [listCount, setListCount] = useState(initialStats?.watchlistCount ?? 0);
   const { watchlist, loading } = useWatchlist(!!user && activeTab === 'watchlist');
   const { lists, sharedLists, likedLists, countsByListId, postersByListId, likesByListId, creatorsByListId, createList, loading: listsLoading, error: listsError } = useLists(!!user && activeTab === 'lists');
   const [listsSubTab, setListsSubTab] = useState<'mine' | 'shared'>('mine');
   const [editOpen, setEditOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [form, setForm] = useState<Profile>({
-    username: '',
-    full_name: '',
-    bio: '',
-    avatar_url: '',
-    activity_visible: true,
-    cover_show_id: null,
+    username: initialProfile?.username ?? '',
+    full_name: initialProfile?.full_name ?? '',
+    bio: initialProfile?.bio ?? '',
+    avatar_url: initialProfile?.avatar_url ?? '',
+    activity_visible: initialProfile?.activity_visible ?? true,
+    cover_show_id: initialProfile?.cover_show_id ?? null,
   });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -124,19 +140,19 @@ export default function ProfileContent() {
   const [coverSearchLoading, setCoverSearchLoading] = useState(false);
   const [coverBackdropPath, setCoverBackdropPath] = useState<string | null>(null);
   const coverSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
-  const [watchedCount, setWatchedCount] = useState(0);
-  const [reviewCount, setReviewCount] = useState(0);
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [followersCount, setFollowersCount] = useState(initialStats?.followersCount ?? 0);
+  const [followingCount, setFollowingCount] = useState(initialStats?.followingCount ?? 0);
+  const [watchedCount, setWatchedCount] = useState(initialStats?.watchedCount ?? 0);
+  const [reviewCount, setReviewCount] = useState(initialStats?.reviewCount ?? 0);
+  const [statsLoading, setStatsLoading] = useState(!initialProfile);
   const [favoriteActors, setFavoriteActors] = useState<{ actor_id: number; actor_name: string; actor_profile_path: string | null }[]>([]);
   const [favoriteActorsLoaded, setFavoriteActorsLoaded] = useState(false);
   const [watchedShows, setWatchedShows] = useState<{ show_id: number; show_name: string; poster_path: string | null }[]>([]);
   const [watchedLoading, setWatchedLoading] = useState(false);
   const [watchedLoadingMore, setWatchedLoadingMore] = useState(false);
   const [watchedLoaded, setWatchedLoaded] = useState(false);
-  const [favoriteActorsVisible, setFavoriteActorsVisible] = useState(true);
-  const [favoriteActorsVisibilityColumnAvailable, setFavoriteActorsVisibilityColumnAvailable] = useState(false);
+  const [favoriteActorsVisible, setFavoriteActorsVisible] = useState(initialProfile?.favorite_actors_visible ?? true);
+  const [favoriteActorsVisibilityColumnAvailable, setFavoriteActorsVisibilityColumnAvailable] = useState(true);
 
   useEffect(() => {
     const supabase = createClient();
