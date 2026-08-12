@@ -1032,28 +1032,6 @@ export default function ProfileContent({
               <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">{displayName}</h2>
               {profile.username && <p className="text-sm text-white/30 mt-1">@{profile.username}</p>}
               {profile.bio && <p className="text-sm text-white/50 mt-2 max-w-md">{profile.bio}</p>}
-              
-              {/* ⚡ Toplam Dizi İzleme Süresi ve Tür Analizi Rozeti */}
-              {watchedCount > 0 && (
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-white/80 backdrop-blur-md">
-                    <span className="material-symbols-outlined text-[14px] text-[#C91520]">schedule</span>
-                    <span>
-                      {(() => {
-                        const totalMins = watchedCount * 12 * 45;
-                        const days = Math.floor(totalMins / (24 * 60));
-                        const hours = Math.floor((totalMins % (24 * 60)) / 60);
-                        if (days > 0) return `${days} Gün ${hours} Saat Dizi İzledi`;
-                        return `${hours || 1} Saat Dizi İzledi`;
-                      })()}
-                    </span>
-                  </div>
-                  <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold text-white/60 backdrop-blur-md">
-                    <span className="material-symbols-outlined text-[14px] text-amber-400">pie_chart</span>
-                    <span>Drama %45 • Bilim Kurgu %30 • Aksiyon %25</span>
-                  </div>
-                </div>
-              )}
             </div>
             <div className="hidden">
               <button
@@ -1096,41 +1074,57 @@ export default function ProfileContent({
 
       {/* Stats */}
       <section className="max-w-[1200px] mx-auto px-margin-mobile md:px-12 mt-2 md:mt-6">
-        <div className="grid grid-cols-3 gap-2.5 md:hidden">
-          {[
-            { val: statsLoading ? '...' : listCount, label: 'Listede' },
-            { val: statsLoading ? '...' : watchedCount, label: 'İzlendi' },
-            { val: statsLoading ? '...' : reviewCount, label: 'Yorum' },
-          ].map(({ val, label }) => (
-            <div key={label} className="text-center">
-              <span className="block text-base font-bold text-white">{val}</span>
-              <span className="text-[9px] text-white/30 uppercase tracking-wide">{label}</span>
-            </div>
-          ))}
-        </div>
+        {(() => {
+          const formattedWatchTime = (() => {
+            if (statsLoading) return '...';
+            if (!watchedCount) return '0 Sa';
+            const totalMins = watchedCount * 12 * 45;
+            const days = Math.floor(totalMins / (24 * 60));
+            const hours = Math.floor((totalMins % (24 * 60)) / 60);
+            if (days > 0) return `${days}G ${hours}S`;
+            return `${hours || 1} Saat`;
+          })();
 
-        <div className="hidden md:flex items-center gap-8">
-          {user && (
-            <FollowListsModal
-              profileId={user.id}
-              currentUserId={user.id}
-              followersCount={followersCount}
-              followingCount={followingCount}
-              order="following-first"
-            />
-          )}
-          <div className="w-px h-8 bg-white/10" />
-          {[
-            { val: statsLoading ? '...' : watchedCount, label: 'İzlendi' },
-            { val: statsLoading ? '...' : listCount, label: 'Listede' },
-            { val: statsLoading ? '...' : reviewCount, label: 'Yorum' },
-          ].map(({ val, label }) => (
-            <div key={label} className="text-center">
-              <span className="block text-2xl font-bold text-white">{val}</span>
-              <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
-            </div>
-          ))}
-        </div>
+          return (
+            <>
+              <div className="grid grid-cols-3 gap-2.5 md:hidden">
+                {[
+                  { val: statsLoading ? '...' : watchedCount, label: 'İzlendi' },
+                  { val: formattedWatchTime, label: 'İzleme Süresi' },
+                  { val: statsLoading ? '...' : reviewCount, label: 'Yorum' },
+                ].map(({ val, label }) => (
+                  <div key={label} className="text-center">
+                    <span className="block text-base font-bold text-white">{val}</span>
+                    <span className="text-[9px] text-white/30 uppercase tracking-wide">{label}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="hidden md:flex items-center gap-8">
+                {user && (
+                  <FollowListsModal
+                    profileId={user.id}
+                    currentUserId={user.id}
+                    followersCount={followersCount}
+                    followingCount={followingCount}
+                    order="following-first"
+                  />
+                )}
+                <div className="w-px h-8 bg-white/10" />
+                {[
+                  { val: statsLoading ? '...' : watchedCount, label: 'İzlendi' },
+                  { val: formattedWatchTime, label: 'İzleme Süresi' },
+                  { val: statsLoading ? '...' : reviewCount, label: 'Yorum' },
+                ].map(({ val, label }) => (
+                  <div key={label} className="text-center">
+                    <span className="block text-2xl font-bold text-white">{val}</span>
+                    <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          );
+        })()}
       </section>
 
       {/* Tabs */}
