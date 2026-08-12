@@ -90,6 +90,7 @@ export default function Search() {
   const [activeFilters, setActiveFilters] = useState<AppliedFilters | null>(null);
   const [filteredShows, setFilteredShows] = useState<Show[]>([]);
   const [filterError, setFilterError] = useState<string | null>(null);
+  const [topPresetCount, setTopPresetCount] = useState<number | null>(null);
 
   useEffect(() => {
     fetch(`/api/trending`)
@@ -244,8 +245,32 @@ export default function Search() {
     }
   }, []);
 
+  const handleApplyTopPreset = useCallback(async (count: 10 | 50) => {
+    setFilterApplying(true);
+    setFilterError(null);
+    setTopPresetCount(count);
+    try {
+      const res = await fetch(`/api/shows/filter?minRating=8.0`);
+      const data: unknown = await res.json().catch(() => null);
+      if (Array.isArray(data) && data.length > 0) {
+        const sorted = [...(data as Show[])].sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0)).slice(0, count);
+        setFilteredShows(sorted);
+        setActiveFilters({ category: null, year: null, provider: null });
+      } else {
+        setFilteredShows(trending.slice(0, count));
+        setActiveFilters({ category: null, year: null, provider: null });
+      }
+    } catch {
+      setFilteredShows(trending.slice(0, count));
+      setActiveFilters({ category: null, year: null, provider: null });
+    } finally {
+      setFilterApplying(false);
+    }
+  }, [trending]);
+
   const clearDiscoverFilter = useCallback(() => {
     setActiveFilters(null);
+    setTopPresetCount(null);
     setFilteredShows([]);
     setFilterError(null);
   }, []);
@@ -258,45 +283,44 @@ export default function Search() {
 
     const supabase = createClient();
     const isFollowing = !!followingMap[profile.id];
+    const nextFollowing = !isFollowing;
 
-    if (isFollowing) {
-      const { error } = await supabase
-        .from('follows')
-        .delete()
-        .eq('follower_id', currentUserId)
-        .eq('following_id', profile.id);
-      
-      if (!error) {
-        setFollowingMap((prev) => ({ ...prev, [profile.id]: false }));
-      }
+    setFollowingMap((prev) => ({ ...prev, [profile.id]: nextFollowing }));
+
+    if (nextFollowing) {
+      const { error } = await supabase.from('follows').insert({ follower_id: currentUserId, following_id: profile.id });
+      if (error) setFollowingMap((prev) => ({ ...prev, [profile.id]: isFollowing }));
     } else {
-      const { error } = await supabase.from('follows').insert({
-        follower_id: currentUserId,
-        following_id: profile.id,
-      });
+      const { error } = await supabase.from('follows').delete().eq('follower_id', currentUserId).eq('following_id', profile.id);
+      if (error) setFollowingMap((prev) => ({ ...prev, [profile.id]: isFollowing }));
+    }
 
-      if (!error) {
-        setFollowingMap((prev) => ({ ...prev, [profile.id]: true }));
-        const { data: actorProfile } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('id', currentUserId)
-          .single();
-        
-        const actorUsername = actorProfile?.username ?? null;
-        await supabase.from('notifications').insert({
-          user_id: profile.id,
-          actor_id: currentUserId,
-          type: 'follow',
-          message: actorUsername ? `@${actorUsername} seni takip etmeye başladı.` : 'Seni takip etmeye başladı.',
-          link: actorUsername ? `/u/${actorUsername}` : `/u/${currentUserId}`,
-        });
-      }
+    if (nextFollowing && profile.id !== currentUserId) {
+      const { data: actorProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', currentUserId)
+        .maybeSingle();
+
+      const actorUsername = actorProfile?.username ?? null;
+      await supabase.from('user_notifications').insert({
+        user_id: profile.id,
+        actor_id: currentUserId,
+        type: 'follow',
+        message: actorUsername ? `@${actorUsername} seni takip etmeye başladı.` : 'Seni takip etmeye başladı.',
+        link: actorUsername ? `/u/${actorUsername}` : `/u/${currentUserId}`,
+      });
     }
   }, [currentUserId, followingMap]);
 
-  const displayed = query.trim() ? results : (activeFilters ? filteredShows : trending);
-  const discoverShowsLabel = query.trim() ? 'Diziler' : activeFilters ? 'Filtreye uygun diziler' : 'Trend Diziler';
+  const displayed = query.trim() ? results : ((activeFilters || topPresetCount) ? filteredShows : trending);
+  const discoverShowsLabel = query.trim()
+    ? 'Diziler'
+    : topPresetCount
+    ? `Tarihin En İyi ${topPresetCount} Dizisi`
+    : activeFilters
+    ? 'Filtreye uygun diziler'
+    : 'Trend Diziler';
 
   return (
     <div className="font-body-md min-h-screen antialiased flex flex-col pb-24 md:pb-0 pt-[60px] md:pt-0 overflow-x-hidden">
@@ -408,31 +432,116 @@ export default function Search() {
               )}
 
               {!query.trim() && (
-                <div>
-                  <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">
-                    Bu Hafta Popüler Listeler
-                  </p>
-                  {popularLists.length === 0 ? (
-                    <p className="text-sm text-white/30">Bu hafta henüz popüler liste yok.</p>
-                  ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {popularLists.slice(0, 8).map((list) => (
-                        <ListPreviewCard
-                          key={list.id}
-                          id={list.id}
-                          name={list.name}
-                          description={list.description}
-                          visibility={list.visibility}
-                          posters={list.posters}
-                          itemCount={list.itemCount}
-                          likeCount={list.likeCount}
-                          creatorName={list.creatorName}
-                          creatorAvatar={list.creatorAvatar}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <>
+                  {/* 🏆 Top 10 & 🍿 Top 50 Tarihin En İyi Dizileri Banners (Mobilde Kare & Yan Yana) */}
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-4 mb-6">
+                    {/* Card 1: Tarihin Top 10 Dizisi */}
+                    <button
+                      type="button"
+                      onClick={() => handleApplyTopPreset(10)}
+                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#D4A017]/30 bg-gradient-to-br from-[#1c170b] via-[#121214] to-[#0A0A0C] p-3.5 sm:p-5 text-left shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition-all duration-300 hover:border-[#D4A017]/60 hover:bg-[#1a1710] hover:shadow-[0_15px_40px_rgba(212,160,23,0.15)] active:scale-[0.98] aspect-[1/1] sm:aspect-auto"
+                    >
+                      {/* Golden Ambient Glow */}
+                      <div className="pointer-events-none absolute -right-6 -top-6 h-24 sm:h-32 w-24 sm:w-32 rounded-full bg-[#D4A017]/15 blur-2xl transition-opacity group-hover:opacity-100" />
+
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between gap-1 mb-1.5 sm:mb-2">
+                          <span className="rounded-full bg-[#D4A017]/15 px-2 py-0.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#D4A017] border border-[#D4A017]/30">
+                            🏆 TOP 10
+                          </span>
+                          <span className="material-symbols-outlined text-xs sm:text-base text-[#D4A017] transition-transform group-hover:translate-x-0.5">
+                            arrow_forward
+                          </span>
+                        </div>
+                        <h3 className="font-extrabold text-white text-xs sm:text-lg leading-tight">
+                          Tarihin Top 10 Dizisi
+                        </h3>
+                        <p className="mt-0.5 sm:mt-1 text-[9.5px] sm:text-xs font-medium text-white/50 line-clamp-1 sm:line-clamp-2">
+                          En yüksek puanlı efsane başyapıtlar
+                        </p>
+                      </div>
+
+                      {/* Compact Fanned 3-Poster Mini Deck (Yelpaze Görünümü) */}
+                      <div className="relative z-10 mt-2 sm:mt-4 flex h-14 sm:h-20 items-center justify-center">
+                        <div className="absolute left-1/2 -translate-x-1/2 -rotate-[14deg] -translate-x-4 h-11 w-7 sm:h-16 sm:w-11 rounded-md border border-white/20 bg-[#141414] overflow-hidden shadow-md group-hover:-rotate-[18deg] group-hover:-translate-x-5 transition-transform">
+                          <img src="https://image.tmdb.org/t/p/w185/vUUqzWa2LnHIVqkaKVlVGkVcZIW.jpg" alt="Peaky Blinders" className="h-full w-full object-cover" />
+                        </div>
+                        <div className="absolute left-1/2 -translate-x-1/2 rotate-[14deg] translate-x-4 h-11 w-7 sm:h-16 sm:w-11 rounded-md border border-white/20 bg-[#141414] overflow-hidden shadow-md group-hover:rotate-[18deg] group-hover:translate-x-5 transition-transform">
+                          <img src="https://image.tmdb.org/t/p/w185/rTc7ZXdroqjkKivFPvCPX0Ru7uw.jpg" alt="The Sopranos" className="h-full w-full object-cover" />
+                        </div>
+                        <div className="relative z-10 h-13 w-8 sm:h-18 sm:w-12 scale-105 rounded-md border border-[#D4A017]/80 bg-[#141414] overflow-hidden shadow-xl group-hover:scale-110 transition-transform">
+                          <img src="https://image.tmdb.org/t/p/w185/anFx9aTOOYqgS3v7x3R84Kz67ly.jpg" alt="Breaking Bad" className="h-full w-full object-cover" />
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Card 2: Tarihin Top 50 Dizisi */}
+                    <button
+                      type="button"
+                      onClick={() => handleApplyTopPreset(50)}
+                      className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[#C91520]/30 bg-gradient-to-br from-[#210a0e] via-[#121214] to-[#0A0A0C] p-3.5 sm:p-5 text-left shadow-[0_10px_30px_rgba(0,0,0,0.35)] transition-all duration-300 hover:border-[#C91520]/60 hover:bg-[#220d11] hover:shadow-[0_15px_40px_rgba(201,21,32,0.15)] active:scale-[0.98] aspect-[1/1] sm:aspect-auto"
+                    >
+                      {/* Crimson Ambient Glow */}
+                      <div className="pointer-events-none absolute -right-6 -top-6 h-24 sm:h-32 w-24 sm:w-32 rounded-full bg-[#C91520]/15 blur-2xl transition-opacity group-hover:opacity-100" />
+
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between gap-1 mb-1.5 sm:mb-2">
+                          <span className="rounded-full bg-[#C91520]/15 px-2 py-0.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#C91520] border border-[#C91520]/30">
+                            🍿 TOP 50
+                          </span>
+                          <span className="material-symbols-outlined text-xs sm:text-base text-[#C91520] transition-transform group-hover:translate-x-0.5">
+                            arrow_forward
+                          </span>
+                        </div>
+                        <h3 className="font-extrabold text-white text-xs sm:text-lg leading-tight">
+                          Tarihin Top 50 Dizisi
+                        </h3>
+                        <p className="mt-0.5 sm:mt-1 text-[9.5px] sm:text-xs font-medium text-white/50 line-clamp-1 sm:line-clamp-2">
+                          Tüm zamanların en iyi 50 başyapıtı
+                        </p>
+                      </div>
+
+                      {/* Compact Fanned 3-Poster Mini Deck (Yelpaze Görünümü) */}
+                      <div className="relative z-10 mt-2 sm:mt-4 flex h-14 sm:h-20 items-center justify-center">
+                        <div className="absolute left-1/2 -translate-x-1/2 -rotate-[14deg] -translate-x-4 h-11 w-7 sm:h-16 sm:w-11 rounded-md border border-white/20 bg-[#141414] overflow-hidden shadow-md group-hover:-rotate-[18deg] group-hover:-translate-x-5 transition-transform">
+                          <img src="https://image.tmdb.org/t/p/w185/u3bZgnGQ9T01sWNhyveQz0wH0Hl.jpg" alt="Game of Thrones" className="h-full w-full object-cover" />
+                        </div>
+                        <div className="absolute left-1/2 -translate-x-1/2 rotate-[14deg] translate-x-4 h-11 w-7 sm:h-16 sm:w-11 rounded-md border border-white/20 bg-[#141414] overflow-hidden shadow-md group-hover:rotate-[18deg] group-hover:translate-x-5 transition-transform">
+                          <img src="https://image.tmdb.org/t/p/w185/ggFHVNu6YYI5L9pCfOacjizRGt.jpg" alt="The Wire" className="h-full w-full object-cover" />
+                        </div>
+                        <div className="relative z-10 h-13 w-8 sm:h-18 sm:w-12 scale-105 rounded-md border border-[#C91520]/80 bg-[#141414] overflow-hidden shadow-xl group-hover:scale-110 transition-transform">
+                          <img src="https://image.tmdb.org/t/p/w185/rTc7ZXdroqjkKivFPvCPX0Ru7uw.jpg" alt="The Sopranos" className="h-full w-full object-cover" />
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">
+                      Bu Hafta Popüler Listeler
+                    </p>
+                    {popularLists.length === 0 ? (
+                      <p className="text-sm text-white/30">Bu hafta henüz popüler liste yok.</p>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {popularLists.slice(0, 8).map((list) => (
+                          <ListPreviewCard
+                            key={list.id}
+                            id={list.id}
+                            name={list.name}
+                            description={list.description}
+                            visibility={list.visibility}
+                            posters={list.posters}
+                            itemCount={list.itemCount}
+                            likeCount={list.likeCount}
+                            creatorName={list.creatorName}
+                            creatorAvatar={list.creatorAvatar}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
 
               <div>
