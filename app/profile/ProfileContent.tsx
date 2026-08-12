@@ -148,7 +148,6 @@ export default function ProfileContent() {
         return;
       }
       if (cancelled) return;
-      setUser(data.user);
       const userId = data.user.id;
 
       // ⚡ OPTIMIZED: Tüm profil verisi ve 5 istatistik sayaci TEK PARALEL PAKETTE (0ms gecikmeyle) cekilir
@@ -170,6 +169,9 @@ export default function ProfileContent() {
       ]);
 
       if (cancelled) return;
+
+      // ⚡ SYNC STATE: setUser ve setProfile ayni anda eszamanli guncellenir (ilk nick parlamasi engellendi)
+      setUser(data.user);
 
       const p = profileRes.data as any;
       if (p) {
@@ -323,7 +325,7 @@ export default function ProfileContent() {
 
   const coverImageUrl = coverBackdropPath ? `${TMDB_BACKDROP}${coverBackdropPath}` : null;
 
-  const displayName = profile.full_name || profile.username || user?.email?.split('@')[0] || 'Kullanıcı';
+  const displayName = profile.full_name || profile.username || 'Kullanıcı';
   const avatar = avatarPreview || profile.avatar_url || null;
 
   function openEdit() {
