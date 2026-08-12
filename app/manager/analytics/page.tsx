@@ -71,11 +71,13 @@ export default async function WeeklyAnalyticsPage() {
     }
   }
 
-  const [profilesRes, listsRes, reviewsRes, notesRes, watchRes] = await Promise.all([
+  const [profilesRes, listsRes, reviewsRes, notesRes, epDiscussionsRes, epRepliesRes, watchRes] = await Promise.all([
     db.from('profiles').select('id, username, full_name, avatar_url, created_at').order('created_at', { ascending: false }),
     db.from('lists').select('id, name, visibility, user_id, created_at').order('created_at', { ascending: false }),
     db.from('reviews').select('id, user_id, show_id, rating, content, created_at').order('created_at', { ascending: false }),
     db.from('show_notes').select('id, user_id, show_id, show_name, content, is_public, updated_at, created_at').order('updated_at', { ascending: false }),
+    db.from('episode_discussions').select('id, user_id, show_id, season_number, episode_number, content, created_at').order('created_at', { ascending: false }),
+    db.from('episode_comment_replies').select('id, user_id, comment_id, content, created_at').order('created_at', { ascending: false }),
     db.from('watch_status').select('id, updated_at, created_at').order('updated_at', { ascending: false }),
   ]);
 
@@ -101,10 +103,13 @@ export default async function WeeklyAnalyticsPage() {
 
   profilesList.forEach((p: any) => {
     const existing = userMap.get(p.id);
+    const updatedUsername = (p.username && p.username.trim()) ? p.username : (existing?.username || null);
+    const updatedName = (p.full_name && p.full_name.trim()) ? p.full_name : (existing?.name || 'Kullanıcı');
+
     userMap.set(p.id, {
       id: p.id,
-      name: p.full_name || p.username || existing?.name || 'Kullanıcı',
-      username: p.username || existing?.username || null,
+      name: updatedName,
+      username: updatedUsername,
       email: existing?.email ?? null,
       avatar_url: p.avatar_url || existing?.avatar_url || null,
       created_at: p.created_at || existing?.created_at || null,
@@ -208,7 +213,43 @@ export default async function WeeklyAnalyticsPage() {
     });
   });
 
-  // 5. Group Watch Count
+  // 5. Group Episode Discussions
+  (epDiscussionsRes.data ?? []).forEach((d: any) => {
+    const rawDate = d.created_at ? new Date(d.created_at) : now;
+    const dateObj = isNaN(rawDate.getTime()) ? now : rawDate;
+    const week = getOrCreateWeek(dateObj);
+    const userInfo = userMap.get(d.user_id);
+    const dateStr = dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+
+    week.reviews.push({
+      id: d.id,
+      content: d.content,
+      rating: null,
+      reviewer: userInfo?.username || userInfo?.name || 'Kullanıcı',
+      showName: `S${d.season_number || 1}E${d.episode_number || 1} Bölüm Yorumu`,
+      date: dateStr,
+    });
+  });
+
+  // 6. Group Episode Replies
+  (epRepliesRes.data ?? []).forEach((rp: any) => {
+    const rawDate = rp.created_at ? new Date(rp.created_at) : now;
+    const dateObj = isNaN(rawDate.getTime()) ? now : rawDate;
+    const week = getOrCreateWeek(dateObj);
+    const userInfo = userMap.get(rp.user_id);
+    const dateStr = dateObj.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+
+    week.reviews.push({
+      id: rp.id,
+      content: rp.content,
+      rating: null,
+      reviewer: userInfo?.username || userInfo?.name || 'Kullanıcı',
+      showName: 'Yorum Yanıtı',
+      date: dateStr,
+    });
+  });
+
+  // 7. Group Watch Count
   watchList.forEach((w: any) => {
     const rawDate = w.updated_at || w.created_at ? new Date(w.updated_at || w.created_at) : now;
     const d = isNaN(rawDate.getTime()) ? now : rawDate;

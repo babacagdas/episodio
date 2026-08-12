@@ -7,6 +7,7 @@ import { createAdminClient, isAdminEmail } from '@/lib/supabase/admin';
 import ManagerPinAuth from './ManagerPinAuth';
 import ManagerUserList from './ManagerUserList';
 import AnnouncementForm from './AnnouncementForm';
+import ManagerDailyFeed, { DailyUserFeedItem, DailyListFeedItem, DailyCommentFeedItem } from './ManagerDailyFeed';
 
 export const dynamic = 'force-dynamic';
 
@@ -199,7 +200,7 @@ export default async function ManagerDashboardPage() {
   const epDiscussions = (epDiscussionsRes.data ?? []) as EpisodeDiscussionRow[];
   const epReplies = (epRepliesRes.data ?? []) as EpisodeReplyRow[];
 
-  // Auth Users + Profiles Tablosunu Birleştirme
+  // Auth Users + Profiles Tablosunu Birleştirme (Mevcut kullanıcı adları öncelikli)
   const userMap = new Map<string, UserItem>();
 
   authUsersList.forEach((u) => {
@@ -216,14 +217,17 @@ export default async function ManagerDashboardPage() {
 
   profilesList.forEach((p: any) => {
     const existing = userMap.get(p.id);
+    const updatedUsername = (p.username && p.username.trim()) ? p.username : (existing?.username || null);
+    const updatedFullName = (p.full_name && p.full_name.trim()) ? p.full_name : (existing?.full_name || null);
+
     userMap.set(p.id, {
       id: p.id,
       email: existing?.email ?? null,
-      username: p.username || existing?.username || null,
-      full_name: p.full_name || existing?.full_name || null,
+      username: updatedUsername,
+      full_name: updatedFullName,
       avatar_url: p.avatar_url || existing?.avatar_url || null,
       created_at: p.created_at || existing?.created_at || null,
-      is_banned: p.is_banned !== undefined ? !!p.is_banned : existing?.is_banned || false,
+      is_banned: p.is_banned !== undefined ? !!p.is_banned : (existing?.is_banned || false),
     });
   });
 
@@ -252,11 +256,82 @@ export default async function ManagerDashboardPage() {
     epDiscussions.filter((d) => d.created_at && d.created_at >= last24h).length +
     epReplies.filter((rp) => rp.created_at && rp.created_at >= last24h).length;
 
+  // SON 24 SAAT DETAYLI İÇERİK FEED'LERİ
+  const dailyUsersFeed: DailyUserFeedItem[] = allUsers
+    .filter((u) => u.created_at && u.created_at >= last24h)
+    .map((u) => ({
+      id: u.id,
+      name: u.full_name || u.username || u.email || 'Kullanıcı',
+      username: u.username || null,
+      email: u.email || null,
+      avatar_url: u.avatar_url || null,
+      created_at: u.created_at || '',
+    }));
+
+  const dailyListsFeed: DailyListFeedItem[] = lists
+    .filter((l) => l.created_at && l.created_at >= last24h)
+    .map((l) => {
+      const author = userMap.get(l.user_id);
+      return {
+        id: l.id,
+        name: l.name,
+        visibility: l.visibility,
+        creatorName: author?.username || author?.full_name || 'Kullanıcı',
+        created_at: l.created_at || '',
+      };
+    });
+
+  const dailyCommentsFeed: DailyCommentFeedItem[] = [
+    ...reviews.filter((r) => r.created_at && r.created_at >= last24h).map((r) => {
+      const author = userMap.get(r.user_id);
+      return {
+        id: `r-${r.id}`,
+        type: 'review' as const,
+        authorName: author?.username || author?.full_name || 'Kullanıcı',
+        content: r.content,
+        rating: r.rating,
+        created_at: r.created_at || '',
+      };
+    }),
+    ...notes.filter((n) => n.updated_at && n.updated_at >= last24h).map((n) => {
+      const author = userMap.get(n.user_id);
+      return {
+        id: `n-${n.id || Math.random()}`,
+        type: 'note' as const,
+        authorName: author?.username || author?.full_name || 'Kullanıcı',
+        content: n.content,
+        titleInfo: n.show_name,
+        created_at: n.updated_at || '',
+      };
+    }),
+    ...epDiscussions.filter((d) => d.created_at && d.created_at >= last24h).map((d) => {
+      const author = userMap.get(d.user_id);
+      return {
+        id: `d-${d.id}`,
+        type: 'discussion' as const,
+        authorName: author?.username || author?.full_name || 'Kullanıcı',
+        content: d.content,
+        titleInfo: `S${d.season_number || 1}E${d.episode_number || 1}`,
+        created_at: d.created_at || '',
+      };
+    }),
+    ...epReplies.filter((rp) => rp.created_at && rp.created_at >= last24h).map((rp) => {
+      const author = userMap.get(rp.user_id);
+      return {
+        id: `rp-${rp.id}`,
+        type: 'reply' as const,
+        authorName: author?.username || author?.full_name || 'Kullanıcı',
+        content: rp.content,
+        created_at: rp.created_at || '',
+      };
+    }),
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
   return (
     <ManagerPinAuth adminEmail={user.email || ''}>
       <div className="min-h-screen bg-[#070709] text-[#F4F6FA] select-none pb-20">
         
-        {/* Header: Logo + Haftalık Analiz Butonu */}
+        {/* Header: Logo + Haftalık Analiz Butonu (Parlamasız Temiz Buton) */}
         <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0A0A0E]/90 backdrop-blur-2xl px-4 md:px-10 py-4">
           <div className="mx-auto flex max-w-7xl items-center justify-between">
             <div className="flex items-center">
@@ -265,7 +340,7 @@ export default async function ManagerDashboardPage() {
 
             <Link
               href="/manager/analytics"
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-[#C91520]/15 hover:bg-[#C91520]/25 px-4 py-1.5 text-xs font-bold text-white transition-all active:scale-95 shadow-[0_0_20px_rgba(201,21,32,0.25)]"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 px-4 py-1.5 text-xs font-bold text-white/90 hover:text-white transition-all active:scale-95"
             >
               <span className="material-symbols-outlined text-base text-[#C91520]">analytics</span>
               <span>Haftalık Analiz</span>
@@ -291,7 +366,7 @@ export default async function ManagerDashboardPage() {
             <StatCard label="Yazılan Tüm Yorumlar & Notlar" value={totalReviewCount} icon="rate_review" />
           </section>
 
-          {/* 2. GÜNLÜK İSTATİSTİK BANNER'I (SON 24 SAAT - OTOMATİK TARİHLİ) */}
+          {/* 2. GÜNLÜK İSTATİSTİK BANNER'I VE 24S CANLI İÇERİK AKIŞI */}
           <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-[#141018] via-[#12121C] to-[#0A0A10] p-6 shadow-2xl">
             <div className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full bg-[#C91520]/10 blur-3xl" />
             
@@ -335,6 +410,13 @@ export default async function ManagerDashboardPage() {
                 <span className="material-symbols-outlined text-2xl text-purple-400/40">add_comment</span>
               </div>
             </div>
+
+            {/* ⚡ Son 24 Saatin Detaylı Canlı İçerik Akışı (Açıklamalı & Filtreli) */}
+            <ManagerDailyFeed
+              users={dailyUsersFeed}
+              lists={dailyListsFeed}
+              comments={dailyCommentsFeed}
+            />
           </section>
 
           {/* 3. Sitede Canlı Duyuru / Banner Yönetimi */}
