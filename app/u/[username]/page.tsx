@@ -293,46 +293,61 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
 
             return (
               <>
-                {/* Mobil: İzlendi / Süre / Yorum / Uyum */}
-                <div className={`grid ${matchPercentage !== null ? 'grid-cols-4' : 'grid-cols-3'} gap-2 md:hidden`}>
+                {/* Mobil: İzlendi / İzleme Süresi / Yorum */}
+                <div className="grid grid-cols-3 gap-4 md:hidden">
                   {[
                     { val: watchedStatValue, label: 'İzlendi' },
-                    { val: watchTimeStatValue, label: 'Süre' },
+                    { val: watchTimeStatValue, label: 'İzleme Süresi' },
                     { val: reviewCount, label: 'Yorum' },
-                    ...(matchPercentage !== null
-                      ? [{ val: `%${matchPercentage}`, label: 'Uyum' }]
-                      : []),
                   ].map(({ val, label }) => (
                     <div key={label} className="text-center">
-                      <span className="block text-base sm:text-xl font-bold text-white">{val}</span>
-                      <span className="text-[9px] sm:text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
+                      <span className="block text-base sm:text-2xl font-bold text-white">{val}</span>
+                      <span className="text-[10px] sm:text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Masaüstü: İstatistik Banner'ı (İzlendi | Yorum | İzleme Süresi | Dizi Uyumu) */}
-                <div className="hidden md:flex items-center gap-8">
-                  <FollowListsModal
-                    profileId={profile.id}
-                    currentUserId={user?.id ?? null}
-                    followersCount={followers}
-                    followingCount={following}
-                    order="following-first"
-                  />
-                  <div className="w-px h-8 bg-white/10" />
-                  {[
-                    { val: watchedStatValue, label: 'İzlendi' },
-                    { val: reviewCount, label: 'Yorum' },
-                    { val: watchTimeStatValue, label: 'İzleme Süresi' },
-                    ...(matchPercentage !== null
-                      ? [{ val: `%${matchPercentage}`, label: 'Dizi Uyumu' }]
-                      : []),
-                  ].map(({ val, label }) => (
-                    <div key={label} className="text-center">
-                      <span className="block text-2xl font-bold text-white">{val}</span>
-                      <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
+                {/* Mobil: Sade Dizi Zevk Uyumu Yazısı (Çerçevesiz, İkonsuz) */}
+                {matchPercentage !== null && (
+                  <div className="mt-3 text-center text-xs font-bold text-emerald-400 md:hidden">
+                    %{matchPercentage} Dizi Zevk Uyumu
+                    {sharedShowsCount > 0 && (
+                      <span className="text-[11px] font-semibold text-white/40 ml-1.5">({sharedShowsCount} Ortak Dizi)</span>
+                    )}
+                  </div>
+                )}
+
+                {/* Masaüstü: İstatistik Banner'ı ve Sağında Sade Dizi Zevk Uyumu Yazısı (Çerçevesiz, İkonsuz) */}
+                <div className="hidden md:flex items-center justify-between w-full">
+                  <div className="flex items-center gap-8">
+                    <FollowListsModal
+                      profileId={profile.id}
+                      currentUserId={user?.id ?? null}
+                      followersCount={followers}
+                      followingCount={following}
+                      order="following-first"
+                    />
+                    <div className="w-px h-8 bg-white/10" />
+                    {[
+                      { val: watchedStatValue, label: 'İzlendi' },
+                      { val: reviewCount, label: 'Yorum' },
+                      { val: watchTimeStatValue, label: 'İzleme Süresi' },
+                    ].map(({ val, label }) => (
+                      <div key={label} className="text-center">
+                        <span className="block text-2xl font-bold text-white">{val}</span>
+                        <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {matchPercentage !== null && (
+                    <div className="text-sm font-bold text-emerald-400 ml-12 shrink-0">
+                      %{matchPercentage} Dizi Zevk Uyumu
+                      {sharedShowsCount > 0 && (
+                        <span className="text-xs font-semibold text-white/40 ml-1.5">({sharedShowsCount} Ortak Dizi)</span>
+                      )}
                     </div>
-                  ))}
+                  )}
                 </div>
               </>
             );
