@@ -420,9 +420,9 @@ export default function Search() {
           </div>
         </div>
 
-        {/* Son Aramalarım (Recent Searches Chips) */}
+        {/* Son Aramalarım (Recent Searches Chips - Masaüstü Ekranlarda) */}
         {!query.trim() && recentSearches.length > 0 && (
-          <div className="mx-auto w-full max-w-4xl flex items-center gap-2 flex-wrap -mt-5">
+          <div className="hidden md:flex mx-auto w-full max-w-4xl items-center gap-2 flex-wrap -mt-5">
             <span className="text-[11px] font-bold text-white/35 uppercase tracking-wider shrink-0">Son Aramalar:</span>
             {recentSearches.map((term) => (
               <button
