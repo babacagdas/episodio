@@ -33,6 +33,8 @@ interface EpisodeReply {
 
 interface Props {
   showId: number;
+  showName?: string;
+  posterPath?: string | null;
   seasonNumber: number;
   episodeNumber: number;
 }
@@ -58,7 +60,7 @@ function buildSpoilerContent(content: string, isSpoiler: boolean) {
   return isSpoiler ? `${SPOILER_PREFIX} ${content}` : content;
 }
 
-export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber }: Props) {
+export default function EpisodeDiscussion({ showId, showName, posterPath, seasonNumber, episodeNumber }: Props) {
   const [comments, setComments] = useState<EpisodeComment[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [rating, setRating] = useState(0);
@@ -214,10 +216,24 @@ export default function EpisodeDiscussion({ showId, seasonNumber, episodeNumber 
 
       // Yorum yapıldığında izleme durumunu 'watching' olarak güncelle
       try {
+        let realName = showName;
+        let realPoster = posterPath;
+        if (!realName) {
+          const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+          if (apiKey) {
+            const res = await fetch(`https://api.themoviedb.org/3/tv/${showId}?api_key=${apiKey}&language=tr-TR`).catch(() => null);
+            if (res && res.ok) {
+              const tmdb = await res.json();
+              realName = tmdb.name;
+              realPoster = tmdb.poster_path;
+            }
+          }
+        }
         await supabase.from('watch_status').upsert({
           user_id: userId,
           show_id: showId,
-          show_name: `Show #${showId}`,
+          show_name: realName || `Dizi #${showId}`,
+          poster_path: realPoster || null,
           status: 'watching',
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id,show_id' });

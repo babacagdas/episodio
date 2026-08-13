@@ -128,10 +128,18 @@ export default function FriendsActivityHeaderModal() {
     ]);
 
     const showNameMap: Record<number, { name: string; poster: string | null }> = {};
-    (statusRes.data ?? []).forEach((s: any) => { showNameMap[s.show_id] = { name: s.show_name, poster: s.poster_path }; });
+    (statusRes.data ?? []).forEach((s: any) => {
+      if (s.show_name && !s.show_name.startsWith('Show #') && !s.show_name.startsWith('Dizi #')) {
+        showNameMap[s.show_id] = { name: s.show_name, poster: s.poster_path };
+      }
+    });
 
-    const reviewShowIds = (reviewsRes.data ?? []).map((r: any) => r.show_id);
-    const missingIds = reviewShowIds.filter((id: number) => !showNameMap[id]);
+    const allShowIds = Array.from(new Set([
+      ...(reviewsRes.data ?? []).map((r: any) => r.show_id),
+      ...(statusRes.data ?? []).map((s: any) => s.show_id),
+    ]));
+
+    const missingIds = allShowIds.filter((id: number) => !showNameMap[id]);
     
     if (missingIds.length > 0) {
       const [{ data: wsRows }, { data: wlRows }] = await Promise.all([
@@ -139,15 +147,19 @@ export default function FriendsActivityHeaderModal() {
         supabase.from('watchlist').select('show_id, show_name, poster_path').in('show_id', missingIds).limit(50),
       ]);
       (wsRows ?? []).forEach((w: any) => {
-        if (!showNameMap[w.show_id]) showNameMap[w.show_id] = { name: w.show_name, poster: w.poster_path };
+        if (w.show_name && !w.show_name.startsWith('Show #') && !w.show_name.startsWith('Dizi #') && !showNameMap[w.show_id]) {
+          showNameMap[w.show_id] = { name: w.show_name, poster: w.poster_path };
+        }
       });
       (wlRows ?? []).forEach((w: any) => {
-        if (!showNameMap[w.show_id]) showNameMap[w.show_id] = { name: w.show_name, poster: w.poster_path };
+        if (w.show_name && !w.show_name.startsWith('Show #') && !w.show_name.startsWith('Dizi #') && !showNameMap[w.show_id]) {
+          showNameMap[w.show_id] = { name: w.show_name, poster: w.poster_path };
+        }
       });
     }
 
-    // TMDB Fallback if still missing name
-    const stillMissingIds = missingIds.filter((id: number) => !showNameMap[id] || showNameMap[id].name.startsWith('Dizi #'));
+    // TMDB Fallback if still missing name or has Show # / Dizi #
+    const stillMissingIds = allShowIds.filter((id: number) => !showNameMap[id] || showNameMap[id].name.startsWith('Dizi #') || showNameMap[id].name.startsWith('Show #'));
     if (stillMissingIds.length > 0) {
       const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY || process.env.TMDB_API_KEY;
       if (apiKey) {

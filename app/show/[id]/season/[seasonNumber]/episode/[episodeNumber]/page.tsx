@@ -75,6 +75,8 @@ export default async function EpisodePage({
           )}
           <EpisodeDiscussion
             showId={show.id}
+            showName={show.name}
+            posterPath={show.poster_path}
             seasonNumber={Number(seasonNumber)}
             episodeNumber={Number(episodeNumber)}
           />

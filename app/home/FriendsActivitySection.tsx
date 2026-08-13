@@ -93,43 +93,54 @@ export default function FriendsActivitySection({ compact = false }: { compact?: 
     ]);
 
     const showNameMap: Record<number, { name: string; poster: string | null }> = {};
-    (statusRes.data ?? []).forEach((s: any) => { showNameMap[s.show_id] = { name: s.show_name, poster: s.poster_path }; });
+    (statusRes.data ?? []).forEach((s: any) => {
+      if (s.show_name && !s.show_name.startsWith('Show #') && !s.show_name.startsWith('Dizi #')) {
+        showNameMap[s.show_id] = { name: s.show_name, poster: s.poster_path };
+      }
+    });
 
-    // Review'lardaki show_id'ler için isim al
-    const reviewShowIds = (reviewsRes.data ?? []).map((r: any) => r.show_id);
-    const missingIds = reviewShowIds.filter((id: number) => !showNameMap[id]);
+    const allShowIds = Array.from(new Set([
+      ...(reviewsRes.data ?? []).map((r: any) => r.show_id),
+      ...(statusRes.data ?? []).map((s: any) => s.show_id),
+    ]));
+
+    const missingIds = allShowIds.filter((id: number) => !showNameMap[id]);
     if (missingIds.length > 0) {
       const [{ data: wsRows }, { data: wlRows }] = await Promise.all([
         supabase.from('watch_status').select('show_id, show_name, poster_path').in('show_id', missingIds).limit(50),
         supabase.from('watchlist').select('show_id, show_name, poster_path').in('show_id', missingIds).limit(50),
       ]);
       (wsRows ?? []).forEach((w: any) => {
-        if (!showNameMap[w.show_id]) showNameMap[w.show_id] = { name: w.show_name, poster: w.poster_path };
+        if (w.show_name && !w.show_name.startsWith('Show #') && !w.show_name.startsWith('Dizi #') && !showNameMap[w.show_id]) {
+          showNameMap[w.show_id] = { name: w.show_name, poster: w.poster_path };
+        }
       });
       (wlRows ?? []).forEach((w: any) => {
-        if (!showNameMap[w.show_id]) showNameMap[w.show_id] = { name: w.show_name, poster: w.poster_path };
-      });
-
-      const stillMissingIds = missingIds.filter((id: number) => !showNameMap[id] || showNameMap[id].name.startsWith('Dizi #'));
-      if (stillMissingIds.length > 0) {
-        const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY || process.env.TMDB_API_KEY;
-        if (apiKey) {
-          await Promise.all(
-            stillMissingIds.map(async (sid) => {
-              try {
-                const res = await fetch(`https://api.themoviedb.org/3/tv/${sid}?api_key=${apiKey}&language=tr-TR`);
-                if (res.ok) {
-                  const data = await res.json();
-                  if (data.name) {
-                    showNameMap[sid] = { name: data.name, poster: data.poster_path };
-                  }
-                }
-              } catch {
-                // ignore
-              }
-            })
-          );
+        if (w.show_name && !w.show_name.startsWith('Show #') && !w.show_name.startsWith('Dizi #') && !showNameMap[w.show_id]) {
+          showNameMap[w.show_id] = { name: w.show_name, poster: w.poster_path };
         }
+      });
+    }
+
+    const stillMissingIds = allShowIds.filter((id: number) => !showNameMap[id] || showNameMap[id].name.startsWith('Dizi #') || showNameMap[id].name.startsWith('Show #'));
+    if (stillMissingIds.length > 0) {
+      const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY || process.env.TMDB_API_KEY;
+      if (apiKey) {
+        await Promise.all(
+          stillMissingIds.map(async (sid) => {
+            try {
+              const res = await fetch(`https://api.themoviedb.org/3/tv/${sid}?api_key=${apiKey}&language=tr-TR`);
+              if (res.ok) {
+                const data = await res.json();
+                if (data.name) {
+                  showNameMap[sid] = { name: data.name, poster: data.poster_path };
+                }
+              }
+            } catch {
+              // ignore
+            }
+          })
+        );
       }
     }
 
