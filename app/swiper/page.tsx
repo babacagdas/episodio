@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { BottomNav } from '@/components/Nav';
+import BackButton from '@/components/BackButton';
 import { useWatchlist, WatchlistItem } from '@/lib/useWatchlist';
 import { CardSkeleton } from '@/components/Skeletons';
 
@@ -200,9 +201,9 @@ export default function SwiperPage() {
 
       {/* Üst Bar (Mobil) */}
       <header className="bg-[#0A0A0A]/90 backdrop-blur-xl flex justify-between items-center w-full px-6 py-4 pt-[calc(1rem+env(safe-area-inset-top))] fixed top-0 left-0 right-0 z-50 border-b border-white/5 md:hidden">
-        <Link href="/home" className="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-white hover:bg-white/10 transition-all">
+        <BackButton className="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-white hover:bg-white/10 transition-all">
           <span className="material-symbols-outlined text-lg">arrow_back</span>
-        </Link>
+        </BackButton>
         <span className="font-bold text-sm text-white tracking-tight">Dizi Eşleştirici</span>
         <Link href="/actor-match" className="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.05] flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all" title="Oyuncu Eşleştirici">
           <span className="material-symbols-outlined text-lg">person_search</span>

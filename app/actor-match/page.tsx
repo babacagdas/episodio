@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { BottomNav } from '@/components/Nav';
+import BackButton from '@/components/BackButton';
 import { createClient } from '@/lib/supabase/client';
 
 interface Actor {
@@ -186,9 +187,9 @@ export default function ActorMatchPage() {
       <Sidebar />
 
       <header className="bg-[#0A0A0A]/90 backdrop-blur-xl flex justify-between items-center w-full px-6 py-4 pt-[calc(1rem+env(safe-area-inset-top))] fixed top-0 left-0 right-0 z-50 border-b border-white/5 md:hidden">
-        <Link href="/home" className="w-9 h-9 flex items-center justify-center text-white hover:text-white/75 transition-all">
+        <BackButton className="w-9 h-9 flex items-center justify-center text-white hover:text-white/75 transition-all">
           <span className="material-symbols-outlined text-lg">arrow_back</span>
-        </Link>
+        </BackButton>
         <span className="font-bold text-sm text-white tracking-tight">Oyuncu Eşleştirici</span>
         <Link href="/swiper" className="w-9 h-9 flex items-center justify-center text-white/70 hover:text-white transition-all" title="Dizi Eşleştirici">
           <span className="material-symbols-outlined text-lg">style</span>

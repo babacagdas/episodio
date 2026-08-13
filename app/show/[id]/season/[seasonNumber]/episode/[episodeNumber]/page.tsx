@@ -3,6 +3,7 @@ import Sidebar from '@/components/Sidebar';
 import { BottomNav } from '@/components/Nav';
 import { getSeasonEpisodes, getShowDetail } from '@/lib/tmdb';
 import EpisodeDiscussion from './EpisodeDiscussion';
+import BackButton from '@/components/BackButton';
 
 const BACKDROP_BASE = 'https://image.tmdb.org/t/p/original';
 const STILL_BASE = 'https://image.tmdb.org/t/p/w780';
@@ -41,9 +42,7 @@ export default async function EpisodePage({
       <Sidebar />
 
       <div className="md:hidden fixed top-4 left-4 z-50">
-        <Link href={`/show/${id}`} className="w-10 h-10 rounded-full bg-[#1A1A1A]/70 backdrop-blur-md flex items-center justify-center border border-white/10 text-white">
-          <span className="material-symbols-outlined">arrow_back</span>
-        </Link>
+        <BackButton iconOnly fallbackHref={`/show/${id}`} />
       </div>
 
       <main className="md:ml-[200px] md:w-[calc(100%-200px)] w-full overflow-x-hidden">
