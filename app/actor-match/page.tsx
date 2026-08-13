@@ -84,16 +84,28 @@ export default function ActorMatchPage() {
     void loadActors(page, swipedIdsRef.current);
   }, [loadActors, page, userId]);
 
+  // Arka planda sıradaki 5 oyuncunun fotoğrafını belleğe yükle (0ms gecikme)
+  useEffect(() => {
+    if (actors.length === 0) return;
+    const nextFive = actors.slice(currentIndex + 1, currentIndex + 6);
+    nextFive.forEach((actor) => {
+      if (actor.profile_path) {
+        const img = new Image();
+        img.src = `${PROFILE_BASE}${actor.profile_path}`;
+      }
+    });
+  }, [actors, currentIndex]);
+
   const activeActor = actors[currentIndex];
 
-  const swipe = useCallback(async (direction: 'left' | 'right') => {
+  const swipe = useCallback((direction: 'left' | 'right') => {
     if (!activeActor || !userId || swipeDirection) return;
 
     setSwipeDirection(direction);
-    await new Promise((resolve) => setTimeout(resolve, 300));
 
+    // Arka planda takılmadan kaydet (Optimistic UI)
     const supabase = createClient();
-    await supabase.from('actor_swipes').upsert(
+    void supabase.from('actor_swipes').upsert(
       {
         user_id: userId,
         actor_id: activeActor.id,
@@ -107,14 +119,17 @@ export default function ActorMatchPage() {
     const nextSwipedIds = new Set(swipedIdsRef.current);
     nextSwipedIds.add(activeActor.id);
     swipedIdsRef.current = nextSwipedIds;
-    setDragX(0);
-    setDragY(0);
-    setSwipeDirection(null);
-    setCurrentIndex((prev) => prev + 1);
 
-    if (currentIndex >= actors.length - 5) {
-      setPage((prev) => prev + 1);
-    }
+    setTimeout(() => {
+      setDragX(0);
+      setDragY(0);
+      setSwipeDirection(null);
+      setCurrentIndex((prev) => prev + 1);
+
+      if (currentIndex >= actors.length - 5) {
+        setPage((prev) => prev + 1);
+      }
+    }, 280);
   }, [activeActor, actors.length, currentIndex, swipeDirection, userId]);
 
   const fetchMoreActors = useCallback(() => {

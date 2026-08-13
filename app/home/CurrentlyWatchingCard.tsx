@@ -159,60 +159,74 @@ export default async function CurrentlyWatchingCard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {watchingList.map((show) => {
             const posterUrl = show.poster_path ? `${POSTER_BASE}${show.poster_path}` : null;
+            const nextEpisodeNum = show.episodeNum + 1;
+            const nextEpisodeHref = `/show/${show.show_id}/season/${show.seasonNum}/episode/${nextEpisodeNum}`;
 
             return (
-              <Link
+              <div
                 key={show.show_id}
-                href={show.linkHref}
-                className="group relative flex items-center gap-3.5 p-2.5 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/20 transition-all duration-300 select-none overflow-hidden"
+                className="group relative flex flex-col justify-between p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/20 transition-all duration-300 select-none overflow-hidden"
               >
-                {/* Sol: Dikey Dizi Afişi */}
-                <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-xl bg-white/5 border border-white/10 shadow-md">
-                  {posterUrl ? (
-                    <img
-                      src={posterUrl}
-                      alt={show.show_name}
-                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-white/20">
-                      <span className="material-symbols-outlined text-xl">movie</span>
+                <div className="flex items-center gap-3.5">
+                  {/* Sol: Dikey Dizi Afişi */}
+                  <Link href={show.linkHref} className="relative h-20 w-14 shrink-0 overflow-hidden rounded-xl bg-white/5 border border-white/10 shadow-md block">
+                    {posterUrl ? (
+                      <img
+                        src={posterUrl}
+                        alt={show.show_name}
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-white/20">
+                        <span className="material-symbols-outlined text-xl">movie</span>
+                      </div>
+                    )}
+                  </Link>
+
+                  {/* Sağ: Dizi Bilgileri */}
+                  <div className="flex flex-col justify-center min-w-0 flex-1 pr-1">
+                    <Link href={`/show/${show.show_id}`} className="block">
+                      <h3 className="text-xs sm:text-sm font-black text-white truncate uppercase tracking-tight group-hover:text-[#D4A017] transition-colors">
+                        {show.show_name}
+                      </h3>
+                    </Link>
+                    
+                    {/* Dinamik Sezon & Son İzlenen Bölüm */}
+                    <p className="text-[11px] font-bold text-white/50 mt-0.5">
+                      {show.hasComment ? `Son İzlenen: S${show.seasonNum}:B${show.episodeNum}` : `${show.seasonNum}. Sezon`}
+                    </p>
+
+                    {/* İlerleme Çubuğu */}
+                    <div className="w-full h-1 bg-white/10 rounded-full mt-2 overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#C91520] to-[#D4A017] rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, show.episodeNum * 12)}%` }}
+                      />
                     </div>
-                  )}
-                  {/* Yorumla & Puanla Overlay */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-center p-1">
-                    <span className="material-symbols-outlined text-amber-400 text-base font-bold">
-                      rate_review
-                    </span>
                   </div>
                 </div>
 
-                {/* Sağ: Dizi Bilgileri & Yorumla Puanla */}
-                <div className="flex flex-col justify-center min-w-0 flex-1 pr-1">
-                  <h3 className="text-xs sm:text-sm font-black text-white truncate uppercase tracking-tight group-hover:text-[#D4A017] transition-colors">
-                    {show.show_name}
-                  </h3>
-                  
-                  {/* Dinamik Sezon & Bölüm */}
-                  <p className="text-[11px] font-bold text-white/50 mt-0.5">
-                    {show.seasonNum}. Sezon &bull; {show.episodeNum}. Bölüm
-                  </p>
+                {/* Hızlı Sonraki Bölüm & Yorumla Butonları */}
+                <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between gap-2">
+                  <Link
+                    href={nextEpisodeHref}
+                    className="flex-1 inline-flex items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-[#C91520]/80 to-[#C91520] hover:from-[#E50914] hover:to-[#E50914] px-2.5 py-1.5 text-[11px] font-bold text-white shadow-sm transition-all active:scale-[0.98]"
+                    title={`S${show.seasonNum}:B${nextEpisodeNum} bölümünü izle/yorumla`}
+                  >
+                    <span>Sonraki Bölüm (B{nextEpisodeNum})</span>
+                    <span className="material-symbols-outlined text-[13px]">play_arrow</span>
+                  </Link>
 
-                  <span className="mt-2 inline-flex items-center gap-1 text-[10.5px] font-bold text-[#D4A017] group-hover:text-white transition-colors">
-                    <span className="material-symbols-outlined text-[13px]">rate_review</span>
-                    <span>Yorumla ve Puanla</span>
-                  </span>
-
-                  {/* İlerleme Çubuğu */}
-                  <div className="w-full h-1 bg-white/10 rounded-full mt-1.5 overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#C91520] to-[#D4A017] rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, show.episodeNum * 12)}%` }}
-                    />
-                  </div>
+                  <Link
+                    href={show.linkHref}
+                    className="inline-flex items-center justify-center h-7 w-7 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 transition-colors"
+                    title="Bölüm Yorumları"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">chat_bubble_outline</span>
+                  </Link>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>

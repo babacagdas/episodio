@@ -91,6 +91,19 @@ export default function Search() {
   const [filteredShows, setFilteredShows] = useState<Show[]>([]);
   const [filterError, setFilterError] = useState<string | null>(null);
   const [topPresetCount, setTopPresetCount] = useState<number | null>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('episodio_recent_searches');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setRecentSearches(parsed.slice(0, 6));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   useEffect(() => {
     fetch(`/api/trending`)
@@ -185,12 +198,39 @@ export default function Search() {
 
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const addRecentSearch = useCallback((term: string) => {
+    const trimmed = term.trim();
+    if (!trimmed || trimmed.length < 2) return;
+    setRecentSearches((prev) => {
+      const filtered = prev.filter((item) => item.toLowerCase() !== trimmed.toLowerCase());
+      const updated = [trimmed, ...filtered].slice(0, 6);
+      try {
+        localStorage.setItem('episodio_recent_searches', JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
+  }, []);
+
+  const clearRecentSearches = useCallback(() => {
+    setRecentSearches([]);
+    try {
+      localStorage.removeItem('episodio_recent_searches');
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const handleSearch = useCallback((q: string) => {
     setQuery(q);
     if (!q.trim()) {
       setResults([]);
       setProfiles([]);
       return;
+    }
+    if (q.trim().length >= 3) {
+      addRecentSearch(q.trim());
     }
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     setLoading(true);
@@ -208,7 +248,7 @@ export default function Search() {
         setLoading(false);
       }
     }, 350);
-  }, []);
+  }, [addRecentSearch]);
 
   const applyDiscoverFilters = useCallback(async (f: AppliedFilters) => {
     setFilterApplying(true);
@@ -358,10 +398,10 @@ export default function Search() {
             <button
               type="button"
               onClick={() => setFilterPanelOpen(true)}
-              className="h-9 inline-flex items-center justify-center gap-2 border-b border-[#C91520]/75 bg-transparent px-1 text-sm font-semibold text-white transition-colors hover:border-[#C91520] hover:text-white/80"
+              className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-xs font-semibold text-white/80 hover:text-white transition-all flex items-center gap-2 shadow-sm"
             >
-              <span className="material-symbols-outlined text-[18px] text-[#D4A017]">tune</span>
-              <span>Filtre</span>
+              <span className="material-symbols-outlined text-[16px]">tune</span>
+              <span>Gelişmiş Filtrele</span>
             </button>
 
             <button
@@ -374,6 +414,32 @@ export default function Search() {
             </button>
           </div>
         </div>
+
+        {/* Son Aramalarım (Recent Searches Chips) */}
+        {!query.trim() && recentSearches.length > 0 && (
+          <div className="mx-auto w-full max-w-4xl flex items-center gap-2 flex-wrap -mt-5">
+            <span className="text-[11px] font-bold text-white/35 uppercase tracking-wider shrink-0">Son Aramalar:</span>
+            {recentSearches.map((term) => (
+              <button
+                key={term}
+                type="button"
+                onClick={() => handleSearch(term)}
+                className="px-3 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-semibold text-white/80 hover:text-white transition-all flex items-center gap-1.5 active:scale-[0.98]"
+              >
+                <span className="material-symbols-outlined text-[13px] text-white/40">history</span>
+                <span>{term}</span>
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={clearRecentSearches}
+              className="text-[11px] font-medium text-white/30 hover:text-red-400 transition-colors ml-1"
+            >
+              Temizle
+            </button>
+          </div>
+        )}
+
         {filterError && (
           <p className="text-xs text-[#C91520] max-w-4xl -mt-4">{filterError}</p>
         )}

@@ -66,17 +66,27 @@ export default function SwiperPage() {
     }
   }, [loadingWatchlist, page, loadShows]);
 
+  // Arka planda sıradaki 5 posteri önceden belleğe yükle (0ms gecikme için Image Preloading)
+  useEffect(() => {
+    if (shows.length === 0) return;
+    const nextFive = shows.slice(currentIndex + 1, currentIndex + 6);
+    nextFive.forEach((show) => {
+      if (show.poster_path) {
+        const img = new Image();
+        img.src = `${POSTER_BASE}${show.poster_path}`;
+      }
+    });
+  }, [shows, currentIndex]);
+
   const activeShow = shows[currentIndex];
 
-  // Sağa/Sola Fırlatma Efekti ve İşlemi
-  const swipe = useCallback(async (direction: 'left' | 'right') => {
-    if (!activeShow) return;
+  // Sağa/Sola Fırlatma Efekti ve İşlemi (Optimistic UI - 0ms Gecikme)
+  const swipe = useCallback((direction: 'left' | 'right') => {
+    if (!activeShow || swipeDirection) return;
 
     setSwipeDirection(direction);
 
-    // Animasyon süresi kadar bekle
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
+    // Sağ kaydırmada arka planda takılmadan ekle
     if (direction === 'right') {
       const watchlistItem: WatchlistItem = {
         id: activeShow.id,
@@ -85,19 +95,21 @@ export default function SwiperPage() {
         vote_average: activeShow.vote_average,
         first_air_date: activeShow.first_air_date,
       };
-      await toggle(watchlistItem);
+      toggle(watchlistItem).catch(() => {});
     }
 
-    setDragX(0);
-    setDragY(0);
-    setSwipeDirection(null);
-    setCurrentIndex((prev) => prev + 1);
+    setTimeout(() => {
+      setDragX(0);
+      setDragY(0);
+      setSwipeDirection(null);
+      setCurrentIndex((prev) => prev + 1);
 
-    // Eğer destede az kart kaldıysa bir sonraki popüler sayfasını çek
-    if (currentIndex >= shows.length - 5) {
-      setPage((p) => p + 1);
-    }
-  }, [activeShow, toggle, currentIndex, shows.length]);
+      // Eğer destede az kart kaldıysa bir sonraki popüler sayfasını çek
+      if (currentIndex >= shows.length - 5) {
+        setPage((p) => p + 1);
+      }
+    }, 280);
+  }, [activeShow, toggle, currentIndex, shows.length, swipeDirection]);
 
   // Sürükleme Olayları (Mouse & Touch)
   const handleStart = (clientX: number, clientY: number) => {

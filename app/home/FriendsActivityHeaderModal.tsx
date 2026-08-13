@@ -47,22 +47,23 @@ export default function FriendsActivityHeaderModal() {
     };
   }, [open]);
 
-  // Sayfa açıldığında arka planda aktiviteleri kontrol et (Yeni bildirim noktası için)
+  // Sayfa açıldığında arka planda aktiviteleri kontrol et ve Realtime canlı dinleyiciyi başlat
   useEffect(() => {
-    const checkUnread = async () => {
+    let channel: any = null;
+    const checkUnreadAndSetupRealtime = async () => {
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
         const { data: follows } = await supabase.from('follows').select('following_id').eq('follower_id', user.id);
-        const followingIds = (follows ?? []).map((f: any) => f.following_id);
-        if (followingIds.length === 0) return;
+        const followingIds = new Set((follows ?? []).map((f: any) => f.following_id));
+        if (followingIds.size === 0) return;
 
         const { data: statusRes } = await supabase
           .from('watch_status')
           .select('updated_at')
-          .in('user_id', followingIds)
+          .in('user_id', Array.from(followingIds))
           .order('updated_at', { ascending: false })
           .limit(1);
 
@@ -73,11 +74,34 @@ export default function FriendsActivityHeaderModal() {
             setHasUnread(true);
           }
         }
+
+        // Realtime Canlı Aktivite Dinleyicisi
+        channel = supabase
+          .channel('realtime-friends-activity')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'watch_status' }, (payload: any) => {
+            if (payload?.new && followingIds.has(payload.new.user_id)) {
+              setHasUnread(true);
+            }
+          })
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reviews' }, (payload: any) => {
+            if (payload?.new && followingIds.has(payload.new.user_id)) {
+              setHasUnread(true);
+            }
+          })
+          .subscribe();
       } catch {
         // ignore
       }
     };
-    checkUnread();
+
+    checkUnreadAndSetupRealtime();
+
+    return () => {
+      if (channel) {
+        const supabase = createClient();
+        supabase.removeChannel(channel);
+      }
+    };
   }, []);
 
   const loadActivities = useCallback(async () => {
