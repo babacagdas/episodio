@@ -9,6 +9,16 @@ import MentionMenu, { type MentionUser } from '@/components/MentionMenu';
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 const STILL_BASE = 'https://image.tmdb.org/t/p/w300';
 
+interface ReviewReply {
+  id: string;
+  review_id: string;
+  user_id: string;
+  content: string;
+  isSpoiler?: boolean;
+  created_at: string;
+  profile?: { username: string; full_name: string; avatar_url: string };
+}
+
 interface Review {
   id: string;
   user_id: string;
@@ -20,6 +30,7 @@ interface Review {
   likeCount: number;
   likedByMe: boolean;
   profiles?: { username: string; full_name: string; avatar_url: string };
+  replies?: ReviewReply[];
 }
 
 interface Props {
@@ -64,6 +75,12 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
   const [userId, setUserId] = useState<string | null>(null);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+
+  // Review Replies State
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [replySpoiler, setReplySpoiler] = useState(false);
+  const [replySubmitting, setReplySubmitting] = useState(false);
 
   // Notes
   const [noteContent, setNoteContent] = useState('');
@@ -159,6 +176,7 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
     const ids = (data ?? []).map((r: any) => r.id);
     let likesMap: Record<string, number> = {};
     let myLikes: Set<string> = new Set();
+    let repliesMap: Record<string, ReviewReply[]> = {};
 
     if (ids.length > 0) {
       const { data: likes } = await supabase.from('review_likes').select('review_id, user_id').in('review_id', ids);
@@ -166,19 +184,118 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
         likesMap[l.review_id] = (likesMap[l.review_id] ?? 0) + 1;
         if (l.user_id === me) myLikes.add(l.review_id);
       });
+
+      try {
+        const { data: repliesData } = await supabase
+          .from('review_replies')
+          .select('*')
+          .in('review_id', ids)
+          .order('created_at', { ascending: true });
+
+        if (repliesData && repliesData.length > 0) {
+          const replyUserIds = Array.from(new Set(repliesData.map((r: any) => r.user_id)));
+          const { data: replyProfiles } = await supabase
+            .from('profiles')
+            .select('id, username, full_name, avatar_url')
+            .in('id', replyUserIds);
+
+          const replyProfileMap: Record<string, any> = {};
+          (replyProfiles ?? []).forEach((p: any) => {
+            replyProfileMap[p.id] = { username: p.username ?? '', full_name: p.full_name ?? '', avatar_url: p.avatar_url ?? '' };
+          });
+
+          repliesData.forEach((r: any) => {
+            if (!repliesMap[r.review_id]) repliesMap[r.review_id] = [];
+            const parsedReply = parseSpoiler(r.content ?? '');
+            repliesMap[r.review_id].push({
+              ...r,
+              content: parsedReply.content,
+              isSpoiler: parsedReply.isSpoiler,
+              profile: replyProfileMap[r.user_id] ?? undefined,
+            });
+          });
+        }
+      } catch {
+        // ignore if table not present yet
+      }
     }
 
     setReviews((data ?? []).map((r: any) => {
       const parsed = parseSpoiler(r.content ?? '');
       return {
-      ...r,
-      content: parsed.content,
-      isSpoiler: parsed.isSpoiler,
-      profiles: profileMap[r.user_id] ?? undefined,
-      likeCount: likesMap[r.id] ?? 0,
-      likedByMe: myLikes.has(r.id),
-    };}));
+        ...r,
+        content: parsed.content,
+        isSpoiler: parsed.isSpoiler,
+        profiles: profileMap[r.user_id] ?? undefined,
+        likeCount: likesMap[r.id] ?? 0,
+        likedByMe: myLikes.has(r.id),
+        replies: repliesMap[r.id] ?? [],
+      };
+    }));
     setReviewsLoaded(true);
+  }
+
+  async function submitReply(reviewId: string) {
+    if (!userId || !replyContent.trim()) return;
+    setReplySubmitting(true);
+    const supabase = createClient();
+    const payload = buildSpoilerContent(replyContent.trim(), replySpoiler);
+    
+    try {
+      const { data, error } = await supabase
+        .from('review_replies')
+        .insert({ review_id: reviewId, user_id: userId, content: payload })
+        .select('*')
+        .single();
+
+      if (!error && data) {
+        const { data: p } = await supabase.from('profiles').select('username, full_name, avatar_url').eq('id', userId).single();
+        const parsed = parseSpoiler(data.content ?? '');
+        const replyItem: ReviewReply = {
+          ...data,
+          content: parsed.content,
+          isSpoiler: parsed.isSpoiler,
+          profile: p ?? undefined,
+        };
+
+        setReviews((prev) =>
+          prev.map((r) =>
+            r.id === reviewId ? { ...r, replies: [...(r.replies ?? []), replyItem] } : r
+          )
+        );
+
+        const targetReview = reviews.find((r) => r.id === reviewId);
+        if (targetReview && targetReview.user_id !== userId) {
+          await supabase.from('notifications').insert({
+            user_id: targetReview.user_id,
+            actor_id: userId,
+            type: 'mention',
+            message: 'Dizi yorumuna yanıt yazdı.',
+            link: `/show/${showId}`,
+          });
+        }
+
+        setReplyContent('');
+        setReplyingTo(null);
+        setReplySpoiler(false);
+      }
+    } catch {
+      // fallback
+    }
+    setReplySubmitting(false);
+  }
+
+  async function deleteReply(reviewId: string, replyId: string) {
+    if (!userId) return;
+    const supabase = createClient();
+    const { error } = await supabase.from('review_replies').delete().eq('id', replyId).eq('user_id', userId);
+    if (!error) {
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === reviewId ? { ...r, replies: (r.replies ?? []).filter((rep) => rep.id !== replyId) } : r
+        )
+      );
+    }
   }
 
   async function loadNote() {
@@ -512,6 +629,20 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                           <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: r.likedByMe ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
                           {r.likeCount > 0 && r.likeCount}
                         </button>
+                        <button
+                          onClick={() => {
+                            if (replyingTo === r.id) {
+                              setReplyingTo(null);
+                            } else {
+                              setReplyingTo(r.id);
+                              setReplyContent(username ? `@${username} ` : '');
+                            }
+                          }}
+                          className="text-[11px] font-semibold text-white/30 hover:text-white transition-colors flex items-center gap-1"
+                        >
+                          <span className="material-symbols-outlined text-xs">reply</span>
+                          <span>Yanıtla</span>
+                        </button>
                         {r.user_id === userId && (
                           <button
                             type="button"
@@ -522,6 +653,74 @@ export default function ShowTabs({ showId, episodesBySeason, similar, poster, se
                           </button>
                         )}
                       </div>
+
+                      {/* Yanıt Yazma Alanı */}
+                      {replyingTo === r.id && (
+                        <div className="mt-2.5 ml-2 p-3 bg-white/[0.03] border border-white/10 rounded-2xl space-y-2">
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={replyContent}
+                              onChange={(e) => setReplyContent(e.target.value)}
+                              placeholder="Yanıtınızı yazın..."
+                              className="flex-1 bg-white/5 border border-white/10 rounded-full px-3.5 py-1.5 text-xs text-white placeholder-white/30 focus:outline-none focus:border-white/30"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') { e.preventDefault(); submitReply(r.id); }
+                              }}
+                            />
+                            <button
+                              onClick={() => submitReply(r.id)}
+                              disabled={replySubmitting || !replyContent.trim()}
+                              className="px-3 py-1.5 bg-[#C91520] text-white text-xs font-semibold rounded-full hover:bg-[#A8121B] transition-all disabled:opacity-40"
+                            >
+                              Yanıtla
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Yanıtlar Listesi */}
+                      {r.replies && r.replies.length > 0 && (
+                        <div className="mt-3 space-y-2.5 pl-3 border-l-2 border-white/10">
+                          {r.replies.map((reply) => {
+                            const rName = reply.profile?.full_name || reply.profile?.username || 'Kullanıcı';
+                            const rUsername = reply.profile?.username;
+                            const rPath = `/u/${rUsername ?? reply.user_id}`;
+
+                            return (
+                              <div key={reply.id} className="flex gap-2.5 items-start">
+                                <Link href={rPath} className="w-7 h-7 rounded-full bg-[#1A1A1A] border border-white/10 shrink-0 overflow-hidden flex items-center justify-center">
+                                  {reply.profile?.avatar_url ? (
+                                    <img src={reply.profile.avatar_url} alt={rName} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="material-symbols-outlined text-white/20 text-xs">person</span>
+                                  )}
+                                </Link>
+                                <div className="flex-1 min-w-0">
+                                  <div className="bg-white/[0.03] rounded-xl px-3 py-2">
+                                    <Link href={rPath} className="text-xs font-semibold text-white hover:text-white/80 transition-colors block mb-0.5">
+                                      {rName}
+                                    </Link>
+                                    <p className="text-xs text-white/75 leading-relaxed">{reply.content}</p>
+                                  </div>
+                                  <div className="flex items-center gap-3 mt-1 px-1">
+                                    <span className="text-[10px] text-white/25">{timeAgo(reply.created_at)}</span>
+                                    {reply.user_id === userId && (
+                                      <button
+                                        type="button"
+                                        onClick={() => deleteReply(r.id, reply.id)}
+                                        className="text-[10px] font-semibold text-white/30 hover:text-[#C91520] transition-colors"
+                                      >
+                                        Sil
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

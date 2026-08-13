@@ -929,7 +929,7 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                     <button
                       type="submit"
                       disabled={!inputMessage.trim()}
-                      className={`p-1.5 mr-3.5 sm:mr-4 shrink-0 transition-all duration-200 active:scale-90 ${
+                      className={`p-1.5 shrink-0 transition-all duration-200 active:scale-90 ${
                         inputMessage.trim()
                           ? 'text-[#C91520] hover:text-[#E50914] cursor-pointer opacity-100'
                           : 'text-white/20 cursor-not-allowed opacity-30'
