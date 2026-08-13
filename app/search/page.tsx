@@ -202,7 +202,12 @@ export default function Search() {
     const trimmed = term.trim();
     if (!trimmed || trimmed.length < 2) return;
     setRecentSearches((prev) => {
-      const filtered = prev.filter((item) => item.toLowerCase() !== trimmed.toLowerCase());
+      const lower = trimmed.toLowerCase();
+      // Filter out exact matches AND prefix/substring matches (e.g. 'dex' when adding 'dexter')
+      const filtered = prev.filter((item) => {
+        const itemLower = item.toLowerCase();
+        return itemLower !== lower && !lower.startsWith(itemLower) && !itemLower.startsWith(lower);
+      });
       const updated = [trimmed, ...filtered].slice(0, 6);
       try {
         localStorage.setItem('episodio_recent_searches', JSON.stringify(updated));
@@ -229,9 +234,6 @@ export default function Search() {
       setProfiles([]);
       return;
     }
-    if (q.trim().length >= 3) {
-      addRecentSearch(q.trim());
-    }
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     setLoading(true);
     searchTimerRef.current = setTimeout(async () => {
@@ -244,10 +246,13 @@ export default function Search() {
         const profileResults: UserSearchProfile[] = await profileRes.json();
         setResults(shows);
         setProfiles(profileResults);
+        if (q.trim().length >= 2) {
+          addRecentSearch(q.trim());
+        }
       } finally {
         setLoading(false);
       }
-    }, 350);
+    }, 500);
   }, [addRecentSearch]);
 
   const applyDiscoverFilters = useCallback(async (f: AppliedFilters) => {
@@ -398,10 +403,10 @@ export default function Search() {
             <button
               type="button"
               onClick={() => setFilterPanelOpen(true)}
-              className="px-4 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/10 text-xs font-semibold text-white/80 hover:text-white transition-all flex items-center gap-2 shadow-sm"
+              className="h-9 inline-flex items-center justify-center gap-1.5 border-b border-[#C91520]/75 bg-transparent px-1 text-xs font-bold text-white transition-colors hover:border-[#C91520] hover:text-white/80 cursor-pointer select-none"
             >
-              <span className="material-symbols-outlined text-[16px]">tune</span>
-              <span>Gelişmiş Filtrele</span>
+              <span className="material-symbols-outlined text-[17px] text-[#D4A017]">tune</span>
+              <span>Filtre</span>
             </button>
 
             <button
