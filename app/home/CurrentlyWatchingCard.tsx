@@ -51,25 +51,72 @@ export default async function CurrentlyWatchingCard() {
         }
       }
 
-      watchingList = rows.map((row) => {
-        const comment = commentMap[row.show_id];
-        const seasonNum = comment ? comment.season : 1;
-        const episodeNum = comment ? comment.episode : 1;
-        const hasComment = !!comment;
-        const linkHref = comment
-          ? `/show/${row.show_id}/season/${seasonNum}/episode/${episodeNum}`
-          : `/show/${row.show_id}`;
+      watchingList = await Promise.all(
+        rows.map(async (row) => {
+          let resolvedName = row.show_name;
+          let resolvedPoster = row.poster_path;
 
-        return {
-          show_id: row.show_id,
-          show_name: row.show_name,
-          poster_path: row.poster_path,
-          seasonNum,
-          episodeNum,
-          hasComment,
-          linkHref,
-        };
-      });
+          if (!resolvedName || resolvedName.startsWith('Show #') || resolvedName.startsWith('Dizi #')) {
+            // 1. Try watchlist
+            const { data: wlRow } = await supabase
+              .from('watchlist')
+              .select('show_name, poster_path')
+              .eq('user_id', user.id)
+              .eq('show_id', row.show_id)
+              .maybeSingle();
+
+            if (wlRow?.show_name && !wlRow.show_name.startsWith('Show #') && !wlRow.show_name.startsWith('Dizi #')) {
+              resolvedName = wlRow.show_name;
+              if (wlRow.poster_path) resolvedPoster = wlRow.poster_path;
+            } else {
+              // 2. Try TMDB API
+              const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY || process.env.TMDB_API_KEY;
+              if (apiKey) {
+                try {
+                  const res = await fetch(`https://api.themoviedb.org/3/tv/${row.show_id}?api_key=${apiKey}&language=tr-TR`);
+                  if (res.ok) {
+                    const tmdb = await res.json();
+                    if (tmdb.name) {
+                      resolvedName = tmdb.name;
+                      if (tmdb.poster_path) resolvedPoster = tmdb.poster_path;
+                    }
+                  }
+                } catch {
+                  // ignore
+                }
+              }
+            }
+
+            // Permanently repair bad watch_status row in database
+            if (resolvedName && !resolvedName.startsWith('Show #') && !resolvedName.startsWith('Dizi #')) {
+              supabase
+                .from('watch_status')
+                .update({ show_name: resolvedName, poster_path: resolvedPoster })
+                .eq('user_id', user.id)
+                .eq('show_id', row.show_id)
+                .then(() => {});
+            }
+          }
+
+          const comment = commentMap[row.show_id];
+          const seasonNum = comment ? comment.season : 1;
+          const episodeNum = comment ? comment.episode : 1;
+          const hasComment = !!comment;
+          const linkHref = comment
+            ? `/show/${row.show_id}/season/${seasonNum}/episode/${episodeNum}`
+            : `/show/${row.show_id}`;
+
+          return {
+            show_id: row.show_id,
+            show_name: resolvedName || `Dizi #${row.show_id}`,
+            poster_path: resolvedPoster,
+            seasonNum,
+            episodeNum,
+            hasComment,
+            linkHref,
+          };
+        })
+      );
     }
   }
 
