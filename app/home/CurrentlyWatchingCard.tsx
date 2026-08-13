@@ -165,7 +165,7 @@ export default async function CurrentlyWatchingCard() {
             return (
               <div
                 key={show.show_id}
-                className="group relative flex flex-col justify-between p-3 rounded-2xl bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] hover:border-white/20 transition-all duration-300 select-none overflow-hidden"
+                className="relative flex flex-col justify-between p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06] select-none overflow-hidden"
               >
                 <div className="flex items-center gap-3.5">
                   {/* Sol: Dikey Dizi Afişi */}
@@ -174,7 +174,7 @@ export default async function CurrentlyWatchingCard() {
                       <img
                         src={posterUrl}
                         alt={show.show_name}
-                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="h-full w-full object-cover"
                         loading="lazy"
                       />
                     ) : (
@@ -187,7 +187,7 @@ export default async function CurrentlyWatchingCard() {
                   {/* Sağ: Dizi Bilgileri */}
                   <div className="flex flex-col justify-center min-w-0 flex-1 pr-1">
                     <Link href={`/show/${show.show_id}`} className="block">
-                      <h3 className="text-xs sm:text-sm font-black text-white truncate uppercase tracking-tight group-hover:text-[#D4A017] transition-colors">
+                      <h3 className="text-xs sm:text-sm font-black text-white truncate uppercase tracking-tight hover:text-[#D4A017] transition-colors">
                         {show.show_name}
                       </h3>
                     </Link>
@@ -207,11 +207,11 @@ export default async function CurrentlyWatchingCard() {
                   </div>
                 </div>
 
-                {/* Hızlı Sonraki Bölüm & Yorumla Butonları (Kibar & Opaklığı Azaltılmış) */}
+                {/* Hızlı Sonraki Bölüm & Yorumla Butonları (Çerçevesiz & Hoversız Kart) */}
                 <div className="mt-2.5 pt-2 border-t border-white/[0.05] flex items-center justify-between gap-2">
                   <Link
                     href={nextEpisodeHref}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-[#C91520]/80 text-[10px] sm:text-[10.5px] font-semibold text-white/70 hover:text-white border border-white/10 transition-all active:scale-[0.98]"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-[#C91520]/80 text-[10px] sm:text-[10.5px] font-semibold text-white/70 hover:text-white transition-all active:scale-[0.98]"
                     title={`S${show.seasonNum}:B${nextEpisodeNum} bölümüne git`}
                   >
                     <span className="material-symbols-outlined text-[12px] text-[#D4A017]">play_arrow</span>
