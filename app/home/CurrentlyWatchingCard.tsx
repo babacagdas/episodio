@@ -207,23 +207,24 @@ export default async function CurrentlyWatchingCard() {
                   </div>
                 </div>
 
-                {/* Hızlı Sonraki Bölüm & Yorumla Butonları */}
-                <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center justify-between gap-2">
+                {/* Hızlı Sonraki Bölüm & Yorumla Butonları (Kibar & Opaklığı Azaltılmış) */}
+                <div className="mt-2.5 pt-2 border-t border-white/[0.05] flex items-center justify-between gap-2">
                   <Link
                     href={nextEpisodeHref}
-                    className="flex-1 inline-flex items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-[#C91520]/80 to-[#C91520] hover:from-[#E50914] hover:to-[#E50914] px-2.5 py-1.5 text-[11px] font-bold text-white shadow-sm transition-all active:scale-[0.98]"
-                    title={`S${show.seasonNum}:B${nextEpisodeNum} bölümünü izle/yorumla`}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-[#C91520]/80 text-[10px] sm:text-[10.5px] font-semibold text-white/70 hover:text-white border border-white/10 transition-all active:scale-[0.98]"
+                    title={`S${show.seasonNum}:B${nextEpisodeNum} bölümüne git`}
                   >
-                    <span>Sonraki Bölüm (B{nextEpisodeNum})</span>
-                    <span className="material-symbols-outlined text-[13px]">play_arrow</span>
+                    <span className="material-symbols-outlined text-[12px] text-[#D4A017]">play_arrow</span>
+                    <span>Bölüm {nextEpisodeNum}</span>
                   </Link>
 
                   <Link
                     href={show.linkHref}
-                    className="inline-flex items-center justify-center h-7 w-7 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 transition-colors"
+                    className="inline-flex items-center gap-1 text-[10px] sm:text-[10.5px] font-medium text-white/40 hover:text-white transition-colors"
                     title="Bölüm Yorumları"
                   >
-                    <span className="material-symbols-outlined text-[14px]">chat_bubble_outline</span>
+                    <span className="material-symbols-outlined text-[13px]">chat_bubble_outline</span>
+                    <span>Yorumlar</span>
                   </Link>
                 </div>
               </div>
