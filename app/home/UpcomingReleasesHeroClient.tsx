@@ -173,7 +173,7 @@ export default function UpcomingReleasesHeroClient({ shows = [] }: UpcomingRelea
 
               <Link
                 href="/search"
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11.5px] font-bold text-white backdrop-blur-md transition-all duration-200 hover:bg-white/20 active:scale-95"
+                className="inline-flex items-center gap-1.5 bg-transparent px-3 py-1.5 text-[11.5px] font-bold text-white/60 hover:text-white transition-colors active:scale-95 cursor-pointer select-none"
               >
                 <span className="material-symbols-outlined text-[14px]">search</span>
                 <span>Tüm Diziler</span>

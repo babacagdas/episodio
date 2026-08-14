@@ -207,14 +207,14 @@ export default async function CurrentlyWatchingCard() {
                   </div>
                 </div>
 
-                {/* Hızlı Sonraki Bölüm & Yorumla Butonları (Çerçevesiz & Hoversız Kart) */}
+                {/* Hızlı Sonraki Bölüm & Yorumla Butonları (Sade & Çerçevesiz & Beyaz Hover) */}
                 <div className="mt-2.5 pt-2 border-t border-white/[0.05] flex items-center justify-between gap-2">
                   <Link
                     href={nextEpisodeHref}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/[0.05] hover:bg-[#C91520]/80 text-[10px] sm:text-[10.5px] font-semibold text-white/70 hover:text-white transition-all active:scale-[0.98]"
+                    className="inline-flex items-center gap-1 text-[10px] sm:text-[10.5px] font-medium text-white/40 hover:text-white transition-colors"
                     title={`S${show.seasonNum}:B${nextEpisodeNum} bölümüne git`}
                   >
-                    <span className="material-symbols-outlined text-[12px] text-[#D4A017]">play_arrow</span>
+                    <span className="material-symbols-outlined text-[13px]">play_arrow</span>
                     <span>Bölüm {nextEpisodeNum}</span>
                   </Link>
 

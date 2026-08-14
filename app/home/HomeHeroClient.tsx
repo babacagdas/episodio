@@ -114,15 +114,8 @@ export default function HomeHeroClient({ shows = [] }: HomeHeroClientProps) {
         {/* Foreground Content */}
         <div className="relative z-30 flex h-full flex-col justify-end p-6 sm:p-8 md:p-10">
           
-          {/* Center Details */}
-          <div className="mt-auto max-w-2xl">
-            {/* Tag / Kicker */}
-            <div className="mb-4 sm:mb-5 flex items-center gap-2">
-              <span className="text-[13px] sm:text-[14px] font-black tracking-widest uppercase">
-                <span className="text-[#C91520]">HAFTANIN</span>{' '}
-                <span className="text-white">ÖNE ÇIKANI</span>
-              </span>
-            </div>
+          {/* Left Content Area */}
+          <div className="relative z-10 max-w-2xl flex flex-col justify-end h-full">
 
             {/* Show Title */}
             <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl md:text-6xl drop-shadow-xl leading-none">
@@ -150,7 +143,7 @@ export default function HomeHeroClient({ shows = [] }: HomeHeroClientProps) {
 
               <Link
                 href="/search"
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11.5px] font-bold text-white backdrop-blur-md transition-all duration-200 hover:bg-white/20 active:scale-95"
+                className="inline-flex items-center gap-1.5 bg-transparent px-3 py-1.5 text-[11.5px] font-bold text-white/60 hover:text-white transition-colors active:scale-95 cursor-pointer select-none"
               >
                 <span className="material-symbols-outlined text-[14px]">search</span>
                 <span>Tüm Diziler</span>
