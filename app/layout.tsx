@@ -12,12 +12,15 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL('https://episodio.com.tr'),
   manifest: '/manifest.webmanifest',
+  alternates: {
+    canonical: 'https://episodio.com.tr',
+  },
   title: {
     default: 'Episodio | Dizi Takip ve Sosyal Ağ Platformu',
     template: '%s | Episodio',
   },
   description: 'Favori dizilerinizi takip edin, özel izleme listeleri oluşturun, arkadaşlarınızla mesajlaşın ve dizi severlerle sosyal bir ağda etkileşime geçin.',
-  keywords: ['dizi takip', 'sosyal ağ', 'episodio', 'dizi takibi', 'dizi izleme listesi', 'dizi takvimi', 'dizi mesajlaşma', 'dizi sosyalleşme'],
+  keywords: ['episodio', 'episodio dizi', 'dizi takip', 'sosyal ağ', 'dizi takibi', 'dizi izleme listesi', 'dizi takvimi', 'dizi mesajlaşma', 'dizi sosyalleşme'],
   authors: [{ name: 'Episodio' }],
   creator: 'Episodio',
   publisher: 'Episodio',
@@ -42,12 +45,43 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
   icons: {
     icon: '/icon.png',
     shortcut: '/favicon.ico',
     apple: '/icon.png',
   },
+};
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': 'https://episodio.com.tr/#website',
+      'url': 'https://episodio.com.tr',
+      'name': 'Episodio',
+      'description': 'Dizi Takip ve Sosyal Ağ Platformu',
+      'publisher': {
+        '@id': 'https://episodio.com.tr/#organization'
+      },
+      'inLanguage': 'tr-TR'
+    },
+    {
+      '@type': 'Organization',
+      '@id': 'https://episodio.com.tr/#organization',
+      'name': 'Episodio',
+      'url': 'https://episodio.com.tr',
+      'logo': 'https://episodio.com.tr/icon.png'
+    }
+  ]
 };
 
 import PushNotificationPrompt from '@/components/PushNotificationPrompt';
@@ -66,6 +100,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <link rel="apple-touch-startup-image" href="/apple-splash.png" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <style dangerouslySetInnerHTML={{ __html: `html,body{background-color:#000000 !important;color-scheme:dark;}*{scrollbar-width:none !important;-ms-overflow-style:none !important;}::-webkit-scrollbar{display:none !important;width:0 !important;height:0 !important;background:transparent !important;}` }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
