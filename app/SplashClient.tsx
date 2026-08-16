@@ -55,18 +55,14 @@ export default function SplashClient({ initialModal = null }: Props) {
 
     const timer = setTimeout(async () => {
       setUsernameChecking(true);
-      const supabase = createClient();
-      const { data } = await supabase
-        .from('profiles')
-        .select('id')
-        .ilike('username', cleanUsername)
-        .maybeSingle();
-
-      setUsernameChecking(false);
-      if (data) {
-        setUsernameAvailable(false);
-        setUsernameMessage(`❌ @${cleanUsername} kullanıcı adı başkası tarafından alınmış!`);
-      } else {
+      try {
+        const res = await fetch(`/api/check-username?username=${encodeURIComponent(cleanUsername)}`);
+        const result = await res.json();
+        setUsernameChecking(false);
+        setUsernameAvailable(result.available);
+        setUsernameMessage(result.message);
+      } catch {
+        setUsernameChecking(false);
         setUsernameAvailable(true);
         setUsernameMessage(`✅ @${cleanUsername} kullanılabilir.`);
       }
