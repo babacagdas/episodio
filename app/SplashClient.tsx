@@ -5,10 +5,14 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
-export default function SplashClient() {
+interface Props {
+  initialModal?: 'signin' | 'signup' | null;
+}
+
+export default function SplashClient({ initialModal = null }: Props) {
   const router = useRouter();
-  const [showSignInModal, setShowSignInModal] = useState(false);
-  const [showSignUpModal, setShowSignUpModal] = useState(false);
+  const [showSignInModal, setShowSignInModal] = useState(initialModal === 'signin');
+  const [showSignUpModal, setShowSignUpModal] = useState(initialModal === 'signup');
 
   // Sign In Form State
   const [signInEmail, setSignInEmail] = useState('');
