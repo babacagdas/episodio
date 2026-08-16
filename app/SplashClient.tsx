@@ -77,10 +77,10 @@ export default function SplashClient() {
         <div className="flex-1 w-full" />
 
         {/* Center Brand Area */}
-        <div className="flex flex-col items-center text-center max-w-sm w-full my-auto z-20">
+        <div className="flex flex-col items-center text-center max-w-md w-full my-auto z-20">
           <img
             alt="Episodio Logo"
-            className="w-[180px] sm:w-[220px] h-auto object-contain transition-transform duration-700 hover:scale-105 drop-shadow-[0_10px_25px_rgba(201,21,32,0.3)]"
+            className="w-[240px] sm:w-[320px] md:w-[380px] h-auto object-contain drop-shadow-[0_10px_25px_rgba(201,21,32,0.3)]"
             src="/logo.png"
           />
         </div>
