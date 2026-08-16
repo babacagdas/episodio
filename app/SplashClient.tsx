@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -8,52 +8,180 @@ import { createClient } from '@/lib/supabase/client';
 export default function SplashClient() {
   const router = useRouter();
   const [showSignInModal, setShowSignInModal] = useState(false);
+  const [showSignUpModal, setShowSignUpModal] = useState(false);
 
-  // Form State
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [info, setInfo] = useState('');
-  const [loading, setLoading] = useState(false);
+  // Sign In Form State
+  const [signInEmail, setSignInEmail] = useState('');
+  const [signInPassword, setSignInPassword] = useState('');
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [signInError, setSignInError] = useState('');
+  const [signInInfo, setSignInInfo] = useState('');
+  const [signInLoading, setSignInLoading] = useState(false);
+
+  // Sign Up Form State
+  const [signUpEmail, setSignUpEmail] = useState('');
+  const [signUpUsername, setSignUpUsername] = useState('');
+  const [signUpPassword, setSignUpPassword] = useState('');
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [signUpError, setSignUpError] = useState('');
+  const [signUpLoading, setSignUpLoading] = useState(false);
+  const [signUpSubmitted, setSignUpSubmitted] = useState(false);
+
+  // Username live check states
+  const [usernameChecking, setUsernameChecking] = useState(false);
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [usernameMessage, setUsernameMessage] = useState('');
+
+  const cleanUsername = signUpUsername.toLowerCase().trim().replace(/[^a-z0-9_]/g, '');
+
+  // Live username availability check
+  useEffect(() => {
+    if (!cleanUsername) {
+      setUsernameAvailable(null);
+      setUsernameMessage('');
+      return;
+    }
+
+    if (cleanUsername.length < 3) {
+      setUsernameAvailable(false);
+      setUsernameMessage('Kullanıcı adı en az 3 karakter olmalı.');
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setUsernameChecking(true);
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('username', cleanUsername)
+        .maybeSingle();
+
+      setUsernameChecking(false);
+      if (data) {
+        setUsernameAvailable(false);
+        setUsernameMessage(`❌ @${cleanUsername} kullanıcı adı başkası tarafından alınmış!`);
+      } else {
+        setUsernameAvailable(true);
+        setUsernameMessage(`✅ @${cleanUsername} kullanılabilir.`);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [cleanUsername]);
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
-    setInfo('');
-    setLoading(true);
+    setSignInError('');
+    setSignInInfo('');
+    setSignInLoading(true);
 
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email: signInEmail, password: signInPassword });
       if (error) {
-        setError('E-posta veya şifre hatalı.');
+        setSignInError('E-posta veya şifre hatalı.');
         return;
       }
       router.push('/home');
       router.refresh();
     } catch {
-      setError('Giriş yapılırken bir sorun oluştu. İnternet bağlantınızı kontrol edin.');
+      setSignInError('Giriş yapılırken bir sorun oluştu. İnternet bağlantınızı kontrol edin.');
     } finally {
-      setLoading(false);
+      setSignInLoading(false);
     }
   }
 
   async function handlePasswordReset() {
-    setError('');
-    setInfo('');
-    if (!email.trim()) {
-      setError('Şifre sıfırlama bağlantısı için e-posta adresinizi girin.');
+    setSignInError('');
+    setSignInInfo('');
+    if (!signInEmail.trim()) {
+      setSignInError('Şifre sıfırlama bağlantısı için e-posta adresinizi girin.');
       return;
     }
     const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    const { error } = await supabase.auth.resetPasswordForEmail(signInEmail.trim(), {
       redirectTo: `${location.origin}/signin`,
     });
     if (error) {
-      setError('Şifre sıfırlama e-postası gönderilemedi.');
+      setSignInError('Şifre sıfırlama e-postası gönderilemedi.');
     } else {
-      setInfo('Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.');
+      setSignInInfo('Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.');
+    }
+  }
+
+  async function handleSignUp(e: React.FormEvent) {
+    e.preventDefault();
+    setSignUpError('');
+
+    if (!cleanUsername || cleanUsername.length < 3) {
+      setSignUpError('Geçerli bir kullanıcı adı girin.');
+      return;
+    }
+    if (usernameAvailable === false) {
+      setSignUpError('Seçtiğiniz kullanıcı adı başkası tarafından kullanılıyor.');
+      return;
+    }
+    if (signUpPassword.length < 6) {
+      setSignUpError('Şifre en az 6 karakter olmalı.');
+      return;
+    }
+    if (!acceptedTerms) {
+      setSignUpError('Devam etmek için KVKK ve Gizlilik Politikası\'nı onaylamalısın.');
+      return;
+    }
+
+    setSignUpLoading(true);
+    try {
+      const supabase = createClient();
+      const cleanOrigin = location.origin.replace('//www.', '//');
+
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('username', cleanUsername)
+        .maybeSingle();
+
+      if (existing) {
+        setSignUpError('Bu kullanıcı adı az önce başkası tarafından alındı.');
+        return;
+      }
+
+      const { data: authData, error: signUpErr } = await supabase.auth.signUp({
+        email: signUpEmail,
+        password: signUpPassword,
+        options: {
+          emailRedirectTo: `${cleanOrigin}/auth/callback`,
+          data: {
+            preferred_username: cleanUsername,
+          },
+        },
+      });
+
+      if (signUpErr) {
+        setSignUpError(signUpErr.message);
+        return;
+      }
+
+      if (authData.user) {
+        await supabase.from('profiles').upsert(
+          {
+            id: authData.user.id,
+            username: cleanUsername,
+            full_name: cleanUsername,
+            avatar_url: '',
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        );
+      }
+
+      setSignUpSubmitted(true);
+    } catch {
+      setSignUpError('Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setSignUpLoading(false);
     }
   }
 
@@ -88,18 +216,24 @@ export default function SplashClient() {
         {/* Bottom Action Area (Compact & Elegant Buttons) */}
         <div className="flex-1 flex flex-col items-center justify-end w-full gap-2.5 pb-4 z-20">
           <button
-            onClick={() => setShowSignInModal(true)}
+            onClick={() => {
+              setShowSignUpModal(false);
+              setShowSignInModal(true);
+            }}
             className="w-full max-w-[170px] sm:max-w-[190px] bg-[#C91520] hover:bg-[#E21825] text-white font-bold text-xs py-2.5 px-5 rounded-full shadow-[0_4px_20px_rgba(201,21,32,0.4)] transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
           >
             <span>Giriş Yap</span>
           </button>
 
-          <Link
-            href="/signup"
-            className="w-full max-w-[170px] sm:max-w-[190px] bg-white/[0.04] text-white/90 border border-white/10 hover:border-white/20 font-bold text-xs py-2.5 px-5 rounded-full hover:bg-white/[0.08] transition-all flex items-center justify-center gap-1.5 backdrop-blur-md active:scale-95 text-center"
+          <button
+            onClick={() => {
+              setShowSignInModal(false);
+              setShowSignUpModal(true);
+            }}
+            className="w-full max-w-[170px] sm:max-w-[190px] bg-white/[0.04] text-white/90 border border-white/10 hover:border-white/20 font-bold text-xs py-2.5 px-5 rounded-full hover:bg-white/[0.08] transition-all flex items-center justify-center gap-1.5 backdrop-blur-md active:scale-95 cursor-pointer text-center"
           >
             <span>Hesap Oluştur</span>
-          </Link>
+          </button>
 
           <Link
             href="/search"
@@ -113,7 +247,7 @@ export default function SplashClient() {
 
       {/* Glassmorphic Bottom Sheet Sign In Modal */}
       {showSignInModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-md animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
           
           {/* Backdrop Click to Close */}
           <div className="absolute inset-0" onClick={() => setShowSignInModal(false)} />
@@ -139,16 +273,16 @@ export default function SplashClient() {
             </div>
 
             {/* Error / Info Alerts */}
-            {error && (
+            {signInError && (
               <div className="mb-4 p-3 rounded-xl bg-[#C91520]/15 border border-[#C91520]/30 text-xs text-red-200 flex items-center gap-2">
                 <span className="material-symbols-outlined text-base text-[#C91520]">error</span>
-                <span>{error}</span>
+                <span>{signInError}</span>
               </div>
             )}
-            {info && (
+            {signInInfo && (
               <div className="mb-4 p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-200 flex items-center gap-2">
                 <span className="material-symbols-outlined text-base text-emerald-400">info</span>
-                <span>{info}</span>
+                <span>{signInInfo}</span>
               </div>
             )}
 
@@ -165,8 +299,8 @@ export default function SplashClient() {
                   <input
                     type="email"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={signInEmail}
+                    onChange={(e) => setSignInEmail(e.target.value)}
                     placeholder="ornek@domain.com"
                     className="w-full bg-white/[0.04] border border-white/10 focus:border-[#C91520] text-white text-xs rounded-xl pl-10 pr-4 py-3 outline-none transition-all placeholder:text-white/20"
                   />
@@ -191,20 +325,20 @@ export default function SplashClient() {
                     lock
                   </span>
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showSignInPassword ? 'text' : 'password'}
                     required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={signInPassword}
+                    onChange={(e) => setSignInPassword(e.target.value)}
                     placeholder="••••••••"
                     className="w-full bg-white/[0.04] border border-white/10 focus:border-[#C91520] text-white text-xs rounded-xl pl-10 pr-10 py-3 outline-none transition-all placeholder:text-white/20"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowSignInPassword(!showSignInPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
                   >
                     <span className="material-symbols-outlined text-lg">
-                      {showPassword ? 'visibility_off' : 'visibility'}
+                      {showSignInPassword ? 'visibility_off' : 'visibility'}
                     </span>
                   </button>
                 </div>
@@ -212,10 +346,10 @@ export default function SplashClient() {
 
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full bg-[#C91520] hover:bg-[#E21825] text-white font-bold text-xs py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 mt-2"
+                disabled={signInLoading}
+                className="w-full bg-[#C91520] hover:bg-[#E21825] text-white font-bold text-xs py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 mt-2 cursor-pointer"
               >
-                {loading ? (
+                {signInLoading ? (
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
@@ -226,13 +360,207 @@ export default function SplashClient() {
               </button>
             </form>
 
-            {/* Modal Footer */}
+            {/* Modal Switcher Footer */}
             <div className="mt-5 pt-4 border-t border-white/5 text-center text-xs text-white/50">
               Hesabın yok mu?{' '}
-              <Link href="/signup" className="font-bold text-white hover:text-[#C91520] transition-colors underline ml-1">
-                Kayıt Ol
-              </Link>
+              <button
+                onClick={() => {
+                  setShowSignInModal(false);
+                  setShowSignUpModal(true);
+                }}
+                className="font-bold text-white hover:text-[#C91520] transition-colors underline ml-1 cursor-pointer"
+              >
+                Hesap Oluştur
+              </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Glassmorphic Bottom Sheet Sign Up Modal */}
+      {showSignUpModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
+          
+          {/* Backdrop Click to Close */}
+          <div className="absolute inset-0" onClick={() => setShowSignUpModal(false)} />
+
+          {/* Modal Card */}
+          <div className="relative w-full max-w-md bg-[#0D0D0E]/95 border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl backdrop-blur-xl z-10 animate-slideUp max-h-[90vh] overflow-y-auto">
+            
+            {/* Top Handle Indicator */}
+            <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-5 sm:hidden" />
+
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-lg font-extrabold text-white tracking-tight">Aramıza Katıl!</h3>
+                <p className="text-xs text-white/50">Dizilerini takip et, yorum yap ve sosyalleş.</p>
+              </div>
+              <button
+                onClick={() => setShowSignUpModal(false)}
+                className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+
+            {/* If Email Submitted */}
+            {signUpSubmitted ? (
+              <div className="py-6 flex flex-col items-center text-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-[#C91520]/15 border border-[#C91520]/30 flex items-center justify-center text-[#C91520] animate-pulse">
+                  <span className="material-symbols-outlined text-3xl">mark_email_unread</span>
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-white mb-1">E-postanızı Kontrol Edin</h4>
+                  <p className="text-xs text-white/60 leading-relaxed">
+                    Hesabınızı doğrulamak için <strong className="text-white">{signUpEmail}</strong> adresine gönderdiğimiz e-postadaki bağlantıya tıklayın.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setSignUpSubmitted(false);
+                    setShowSignUpModal(false);
+                    setShowSignInModal(true);
+                  }}
+                  className="w-full bg-[#C91520] text-white font-bold text-xs py-2.5 rounded-xl shadow-lg mt-2 cursor-pointer"
+                >
+                  Giriş Yap Ekranına Git
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* Error Alert */}
+                {signUpError && (
+                  <div className="mb-4 p-3 rounded-xl bg-[#C91520]/15 border border-[#C91520]/30 text-xs text-red-200 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-base text-[#C91520]">error</span>
+                    <span>{signUpError}</span>
+                  </div>
+                )}
+
+                {/* Sign Up Form */}
+                <form onSubmit={handleSignUp} className="space-y-3.5">
+                  {/* Username Field */}
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-white/50 mb-1">
+                      Kullanıcı Adı
+                    </label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 text-lg pointer-events-none">
+                        alternate_email
+                      </span>
+                      <input
+                        type="text"
+                        required
+                        value={signUpUsername}
+                        onChange={(e) => setSignUpUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
+                        placeholder="kullanici_adi"
+                        className="w-full bg-white/[0.04] border border-white/10 focus:border-[#C91520] text-white text-xs rounded-xl pl-10 pr-10 py-2.5 outline-none transition-all placeholder:text-white/20"
+                      />
+                      {usernameChecking && (
+                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      )}
+                    </div>
+                    {usernameMessage && (
+                      <p className={`text-[10.5px] mt-1 font-medium ${usernameAvailable ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {usernameMessage}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Email Field */}
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-white/50 mb-1">
+                      E-Posta Adresi
+                    </label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 text-lg pointer-events-none">
+                        mail
+                      </span>
+                      <input
+                        type="email"
+                        required
+                        value={signUpEmail}
+                        onChange={(e) => setSignUpEmail(e.target.value)}
+                        placeholder="ornek@domain.com"
+                        className="w-full bg-white/[0.04] border border-white/10 focus:border-[#C91520] text-white text-xs rounded-xl pl-10 pr-4 py-2.5 outline-none transition-all placeholder:text-white/20"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password Field */}
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-white/50 mb-1">
+                      Şifre
+                    </label>
+                    <div className="relative">
+                      <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 text-lg pointer-events-none">
+                        lock
+                      </span>
+                      <input
+                        type={showSignUpPassword ? 'text' : 'password'}
+                        required
+                        value={signUpPassword}
+                        onChange={(e) => setSignUpPassword(e.target.value)}
+                        placeholder="En az 6 karakter"
+                        className="w-full bg-white/[0.04] border border-white/10 focus:border-[#C91520] text-white text-xs rounded-xl pl-10 pr-10 py-2.5 outline-none transition-all placeholder:text-white/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-lg">
+                          {showSignUpPassword ? 'visibility_off' : 'visibility'}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Terms Checkbox */}
+                  <label className="flex items-start gap-2.5 pt-1 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      className="mt-0.5 rounded border-white/20 bg-white/5 text-[#C91520] focus:ring-0 cursor-pointer"
+                    />
+                    <span className="text-[11px] text-white/60 leading-tight">
+                      <Link href="/kvkk" target="_blank" className="text-white underline font-medium">KVKK</Link> ve{' '}
+                      <Link href="/privacy" target="_blank" className="text-white underline font-medium">Gizlilik Politikası</Link>'nı okudum, kabul ediyorum.
+                    </span>
+                  </label>
+
+                  <button
+                    type="submit"
+                    disabled={signUpLoading}
+                    className="w-full bg-[#C91520] hover:bg-[#E21825] text-white font-bold text-xs py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 mt-3 cursor-pointer"
+                  >
+                    {signUpLoading ? (
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <span>Hesap Oluştur</span>
+                        <span className="material-symbols-outlined text-sm">person_add</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* Modal Switcher Footer */}
+                <div className="mt-4 pt-3 border-t border-white/5 text-center text-xs text-white/50">
+                  Zaten hesabın var mı?{' '}
+                  <button
+                    onClick={() => {
+                      setShowSignUpModal(false);
+                      setShowSignInModal(true);
+                    }}
+                    className="font-bold text-white hover:text-[#C91520] transition-colors underline ml-1 cursor-pointer"
+                  >
+                    Giriş Yap
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
