@@ -404,7 +404,7 @@ export default function ProfileContent({
       const { data: existingUser } = await supabase
         .from('profiles')
         .select('id')
-        .eq('username', cleanUsername)
+        .ilike('username', cleanUsername)
         .neq('id', user.id)
         .maybeSingle();
 

@@ -30,7 +30,7 @@ async function ensureProfile(supabase: any) {
         const { data: taken } = await supabase
           .from('profiles')
           .select('id')
-          .eq('username', finalUsername)
+          .ilike('username', finalUsername)
           .neq('id', user.id)
           .maybeSingle();
 

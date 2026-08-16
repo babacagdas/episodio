@@ -43,7 +43,7 @@ export default function SignUp() {
       const { data } = await supabase
         .from('profiles')
         .select('id')
-        .eq('username', cleanUsername)
+        .ilike('username', cleanUsername)
         .maybeSingle();
 
       setUsernameChecking(false);
@@ -89,11 +89,11 @@ export default function SignUp() {
       const supabase = createClient();
       const cleanOrigin = location.origin.replace('//www.', '//');
       
-      // Final availability double-check
+      // Final availability double-check (case-insensitive)
       const { data: existing } = await supabase
         .from('profiles')
         .select('id')
-        .eq('username', cleanUsername)
+        .ilike('username', cleanUsername)
         .maybeSingle();
 
       if (existing) {
