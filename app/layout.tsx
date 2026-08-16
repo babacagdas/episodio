@@ -16,11 +16,11 @@ export const metadata: Metadata = {
     canonical: 'https://episodio.com.tr',
   },
   title: {
-    default: 'Episodio | Dizi Takip ve Sosyal Ağ Platformu',
+    default: 'Episodio | Dizi Severlerin Sosyal Ağı',
     template: '%s | Episodio',
   },
-  description: 'Favori dizilerinizi takip edin, özel izleme listeleri oluşturun, arkadaşlarınızla mesajlaşın ve dizi severlerle sosyal bir ağda etkileşime geçin.',
-  keywords: ['episodio', 'episodio dizi', 'dizi takip', 'sosyal ağ', 'dizi takibi', 'dizi izleme listesi', 'dizi takvimi', 'dizi mesajlaşma', 'dizi sosyalleşme'],
+  description: 'Episodio - Dizi severlerin 1 numaralı sosyal ağı! Favori dizilerinizi takip edin, bölüm yorumları ve incelemeler yazın, özel izleme listeleri oluşturun ve dizi severlerle anında sosyalleşin.',
+  keywords: ['episodio', 'episodio dizi', 'dizi severlerin sosyal ağı', 'dizi takip', 'dizi takip platformu', 'dizi izleme listesi', 'dizi takvimi', 'dizi yorumları', 'dizi rehberi', 'dizi sosyalleşme'],
   authors: [{ name: 'Episodio' }],
   creator: 'Episodio',
   publisher: 'Episodio',
@@ -33,14 +33,14 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'tr_TR',
     url: 'https://episodio.com.tr',
-    title: 'Episodio | Dizi Takip ve Sosyal Ağ Platformu',
-    description: 'Favori dizilerinizi takip edin, izleme listeleri oluşturun, arkadaşlarınızla sohbet edin ve dizi severlerle sosyal bir ağda buluşun.',
+    title: 'Episodio | Dizi Severlerin Sosyal Ağı',
+    description: 'Episodio - Dizi severlerin 1 numaralı sosyal ağı! Favori dizilerinizi takip edin, bölüm yorumları ve incelemeler yazın, özel izleme listeleri oluşturun ve dizi severlerle anında sosyalleşin.',
     siteName: 'Episodio',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Episodio | Dizi Takip ve Sosyal Ağ Platformu',
-    description: 'Favori dizilerinizi takip edin, izleme listeleri oluşturun, arkadaşlarınızla sohbet edin ve dizi severlerle sosyal bir ağda buluşun.',
+    title: 'Episodio | Dizi Severlerin Sosyal Ağı',
+    description: 'Episodio - Dizi severlerin 1 numaralı sosyal ağı! Favori dizilerinizi takip edin, bölüm yorumları ve incelemeler yazın, özel izleme listeleri oluşturun ve dizi severlerle anında sosyalleşin.',
   },
   robots: {
     index: true,
@@ -68,7 +68,7 @@ const jsonLd = {
       '@id': 'https://episodio.com.tr/#website',
       'url': 'https://episodio.com.tr',
       'name': 'Episodio',
-      'description': 'Dizi Takip ve Sosyal Ağ Platformu',
+      'description': 'Dizi Severlerin Sosyal Ağı',
       'publisher': {
         '@id': 'https://episodio.com.tr/#organization'
       },
