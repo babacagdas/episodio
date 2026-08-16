@@ -83,22 +83,6 @@ export default function SplashClient() {
             className="w-[180px] sm:w-[220px] h-auto object-contain transition-transform duration-700 hover:scale-105 drop-shadow-[0_10px_25px_rgba(201,21,32,0.3)]"
             src="/logo.png"
           />
-          <p className="mt-3 text-[11px] sm:text-[12px] font-bold tracking-[0.2em] uppercase text-white/50">
-            Dizi Severlerin Sosyal Ağı
-          </p>
-
-          {/* Micro Feature Badges */}
-          <div className="mt-6 flex items-center justify-center gap-2 flex-wrap">
-            <span className="px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-[10.5px] font-medium text-white/70 backdrop-blur-md">
-              🍿 Dizi Takibi
-            </span>
-            <span className="px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-[10.5px] font-medium text-white/70 backdrop-blur-md">
-              🎴 Dizi Eşleştirici
-            </span>
-            <span className="px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-[10.5px] font-medium text-white/70 backdrop-blur-md">
-              💬 Sosyal Ağ
-            </span>
-          </div>
         </div>
 
         {/* Bottom Action Area (Compact & Elegant Buttons) */}
