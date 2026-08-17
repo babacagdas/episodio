@@ -39,7 +39,6 @@ interface CalculatedStats {
   topShows: ShowDetail[];
   persona: {
     title: string;
-    emoji: string;
     desc: string;
   };
 }
@@ -84,13 +83,6 @@ const DEFAULT_SHOWS: ShowDetail[] = [
     rating: '9.0',
     runtime: 18 * 40,
   },
-  {
-    id: 82596,
-    name: 'Mindhunter',
-    poster: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop',
-    rating: '8.6',
-    runtime: 19 * 55,
-  },
 ];
 
 export default function WrappedClient({ user, initialWatchData }: Props) {
@@ -117,8 +109,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           topShows: DEFAULT_SHOWS,
           persona: {
             title: 'MARATON CANAVARI',
-            emoji: '🏃‍♂️',
-            desc: 'Sezonları aralıksız bitiren, dur durak bilmeyen gerçek bir sinefil!',
+            desc: 'Sezonları aralıksız bitiren, dur durak bilmeyen gerçek bir dizi tutkunu.',
           },
         });
         setLoading(false);
@@ -171,7 +162,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           })
         );
 
-        while (shows.length < 5) {
+        while (shows.length < 4) {
           shows.push(DEFAULT_SHOWS[shows.length % DEFAULT_SHOWS.length]);
         }
 
@@ -193,24 +184,21 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
         const topGenrePercent = totalGenreCount > 0 ? Math.min(94, Math.round((topGenreVal / totalGenreCount) * 100) + 28) : 84;
         const hours = Math.round(totalMins / 60) || 48;
 
-        // Persona
+        // Persona (Emoji kullanmadan sade ve profesyonel unvanlar)
         let persona = {
           title: 'MARATON CANAVARI',
-          emoji: '🏃‍♂️',
-          desc: 'Sezonları tek solukta bitiren, sürükleyici hikayelerin bağımlısı!',
+          desc: 'Sezonları tek solukta bitiren, sürükleyici hikayelerin bağımlısı.',
         };
 
         if (topGenreName.includes('BİLİM') || topGenreName.includes('GİZEM')) {
           persona = {
             title: 'BİLİMKURGU KAŞİFİ',
-            emoji: '🧠',
-            desc: 'Zihni zorlayan kurguları ve paralel evrenleri seven usta!',
+            desc: 'Zihni zorlayan kurguları ve paralel evrenleri seven usta izleyici.',
           };
         } else if (hours > 80) {
           persona = {
             title: 'DİZİ GURMESİ',
-            emoji: '🍷',
-            desc: 'Dizi evreninde yüzlerce saat harcamış, ince zevklere sahip tam bir otorite!',
+            desc: 'Dizi evreninde yüzlerce saat harcamış, ince zevklere sahip otorite.',
           };
         }
 
@@ -229,14 +217,13 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           totalHours: 142,
           totalMinutes: 8520,
           totalEpisodes: 184,
-          showCount: 5,
+          showCount: 4,
           topGenre: 'SUÇ & DRAMA',
           topGenrePercent: 86,
           topShows: DEFAULT_SHOWS,
           persona: {
             title: 'MARATON CANAVARI',
-            emoji: '🏃‍♂️',
-            desc: 'Tek oturuşta 5+ bölüm bitiren tutkulu dizi sever!',
+            desc: 'Tek oturuşta 5+ bölüm bitiren tutkulu dizi sever.',
           },
         });
       } finally {
@@ -297,11 +284,9 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
   if (loading || !stats) {
     return (
       <div className="fixed inset-0 z-50 bg-[#070707] text-white flex flex-col items-center justify-center gap-4">
-        <div className="w-16 h-16 rounded-full bg-[#C91520]/20 border border-[#C91520] flex items-center justify-center animate-pulse">
-          <span className="material-symbols-outlined text-3xl text-[#C91520]">movie</span>
-        </div>
-        <p className="text-xs font-black tracking-widest uppercase text-white/70 animate-pulse">
-          Wrapped 2026 Tasarlanıyor...
+        <div className="w-12 h-12 rounded-full border-2 border-[#C91520] border-t-transparent animate-spin" />
+        <p className="text-xs font-bold tracking-widest uppercase text-white/70">
+          2026 Dizi Karnen Hazırlanıyor...
         </p>
       </div>
     );
@@ -322,7 +307,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
       {/* 9:16 Story Frame Container */}
       <div className="relative w-full max-w-md h-full max-h-[100dvh] sm:max-h-[920px] bg-[#070707] sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between border border-white/10">
         
-        {/* Özel Üretilmiş Yüksek Çözünürlüklü Şablon Görseli (Template Background Image) */}
+        {/* Arka Plan Şablon Görseli */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
           <img
             key={currentSlide}
@@ -330,13 +315,12 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
             alt=""
             className="w-full h-full object-cover transition-opacity duration-700 ease-out"
           />
-          {/* Slayt 1 (Krem) için koyulaştırıcı gereksiz, diğer siyah slaytlar için şeffaf yumuşatıcı */}
           {currentSlide !== 1 && (
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] z-10" />
+            <div className="absolute inset-0 bg-black/35 backdrop-blur-[1px] z-10" />
           )}
         </div>
 
-        {/* Üst Kısım: İlerleme Çubukları & Başlık */}
+        {/* Üst Kısım: İlerleme Çubukları & SADECE GERÇEK LOGO (Etiket Kaldırıldı) */}
         <div className="relative z-40 p-4 pt-5 flex flex-col gap-3">
           <div className="flex items-center gap-1.5 w-full">
             {Array.from({ length: TOTAL_SLIDES }).map((_, idx) => (
@@ -355,12 +339,11 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className={`text-xs font-black tracking-widest ${currentSlide === 1 ? 'text-[#C91520]' : 'text-white'}`}>EPISODIO</span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#D4A017] bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-[#D4A017]/40 shadow-sm">
-                WRAPPED 2026
-              </span>
+            {/* Sol Üstte Gerçek Episodio Logosu (Yanındaki etiket tamamen kaldırıldı) */}
+            <div className="flex items-center">
+              <img src="/logo.png" alt="Episodio" className="h-6 w-auto object-contain drop-shadow-md" />
             </div>
+
             <button
               onClick={() => router.push('/home')}
               className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors backdrop-blur-md cursor-pointer ${
@@ -392,192 +375,183 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           />
         </div>
 
-        {/* SLİDE İÇERİKLERİ (Özel Görsel Şablon Üzerine Tipografi) */}
+        {/* SLİDE İÇERİKLERİ */}
         <div className="relative z-20 flex-1 flex flex-col justify-center px-6 py-4 overflow-hidden">
           
-          {/* SLİDE 0: Siyah & Kırmızı Keskin Geometrik Şablon ("264,960 DAKİKA") */}
+          {/* SLİDE 0: 1. SAYFA - Çerçevesiz, @ İşaretsiz Yumuşak İsim & Yumuşak Başlık & Emojisiz Şık İstatistik */}
           {currentSlide === 0 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] p-4">
-              <div className="relative z-10 pt-4">
-                <p className="text-xs font-black uppercase tracking-widest text-[#C91520] bg-black/60 px-3 py-1 rounded-full border border-[#C91520]/40 backdrop-blur-md">
-                  @{user.username}
-                </p>
-                <h3 className="text-xl font-black uppercase tracking-tight text-white mt-3 drop-shadow-lg">
-                  2026 DİZİ KARNEN HAZIR!
-                </h3>
-              </div>
-
-              {/* Dev Sayı Vurgusu */}
-              <div className="relative z-10 my-auto py-4 bg-black/70 p-6 rounded-3xl border border-white/10 backdrop-blur-md shadow-2xl w-full">
-                <span className="block text-5xl sm:text-6xl font-black text-[#C91520] tracking-tighter leading-none">
-                  {stats.totalMinutes.toLocaleString('tr-TR')}
-                </span>
-                <span className="block text-sm font-black uppercase tracking-widest text-white/80 mt-3">
-                  DAKİKA İZLEDİN ({stats.totalHours} SAAT)
-                </span>
-                <p className="text-xs text-white/60 font-semibold mt-2">
-                  Tam {stats.totalEpisodes} Bölüm Bitirdin! 🎬
-                </p>
-              </div>
-
-              <div className="relative z-10 w-full pt-4 flex items-center justify-between border-t border-white/20">
-                <span className="text-xs font-black text-white/70 tracking-widest uppercase">EPISODIO ISTATISTIK</span>
-                <span className="text-3xl font-black text-white tracking-tighter">2026</span>
-              </div>
-            </div>
-          )}
-
-          {/* SLİDE 1: Krem & Kırmızı Benekli Özel Şablon ("Meski pun ini bukan...") */}
-          {currentSlide === 1 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] text-[#070707] p-6">
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] p-2">
               
-              <div className="relative z-10 pt-4 text-left w-full">
-                <span className="text-xs font-black uppercase tracking-widest text-[#C91520] bg-[#C91520]/10 px-3 py-1 rounded-full border border-[#C91520]/30">DİZİ DNA'N</span>
-                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-[#070707] mt-3 leading-tight">
-                  SENİN DİZİ RUH EŞİN:
+              {/* Kullanıcı Adı (Çerçevesiz, @ işaretsiz, şık font) & Yumuşak Başlık */}
+              <div className="relative z-10 pt-2 space-y-2">
+                <span className="text-xl font-bold tracking-wide text-white drop-shadow-md">
+                  {user.username}
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white/95 leading-tight font-serif italic drop-shadow-lg">
+                  2026 Dizi Karnen Hazır
                 </h2>
               </div>
 
-              {/* Dev Tür Kartı */}
-              <div className="relative z-10 my-auto w-full p-6 rounded-3xl bg-[#070707] text-white shadow-2xl border border-black/20 text-center">
-                <span className="text-4xl sm:text-5xl font-black text-[#D4A017] tracking-tight block">
-                  %{stats.topGenrePercent}
+              {/* Emojisiz, Şık & Modern İstatistik Kartı */}
+              <div className="relative z-10 my-auto w-full p-6 rounded-3xl bg-black/65 border border-white/15 backdrop-blur-md shadow-2xl text-center space-y-3">
+                <span className="block text-5xl sm:text-6xl font-black text-[#C91520] tracking-tighter leading-none">
+                  {stats.totalMinutes.toLocaleString('tr-TR')}
                 </span>
-                <span className="text-xl font-black uppercase tracking-wider text-white block mt-1">
-                  {stats.topGenre}
+                <span className="block text-xs font-bold uppercase tracking-widest text-white/80">
+                  DAKİKA İZLEDİN ({stats.totalHours} SAAT)
                 </span>
-                <p className="text-xs text-white/70 font-medium leading-relaxed mt-3">
-                  Zihnini zorlayan, sürükleyici ve tutkulu atmosferler senin vazgeçilmezin!
+                <div className="w-12 h-0.5 bg-[#C91520] mx-auto my-2 opacity-60" />
+                <p className="text-xs text-white/70 font-medium">
+                  Toplam <strong className="text-white font-bold">{stats.totalEpisodes} Bölüm</strong> Bitirdin
                 </p>
               </div>
 
-              <div className="relative z-10 w-full flex items-center justify-between text-xs font-black uppercase tracking-wider text-[#070707]">
-                <span>EPISODIO ANALİZ</span>
-                <span>#1 FAVORİ TÜR</span>
+              <div className="relative z-10 w-full pt-2 flex items-center justify-between border-t border-white/15 text-xs font-semibold text-white/70">
+                <span>EPISODIO ISTATISTIK</span>
+                <span className="text-2xl font-black text-white">2026</span>
               </div>
             </div>
           )}
 
-          {/* SLİDE 2: Art-Deco Çerçeveli Siyah Şablon (Top 5 Sıralı Dizi Listesi) */}
-          {currentSlide === 2 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] text-white p-6">
+          {/* SLİDE 1: 2. SAYFA - "Dizi DNA'n" başlığı kaldırıldı. "Senin Dizi Ruh Eşin" şık başlık, Emojisiz modern kart */}
+          {currentSlide === 1 && (
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] text-[#070707] p-4">
               
-              <div className="relative z-10 w-full flex items-center justify-between border-b border-white/20 pb-3">
-                <span className="text-xs font-black uppercase tracking-widest text-[#C91520] bg-black/60 px-3 py-1 rounded-full border border-[#C91520]/40">EN ÇOK İZLEDİĞİN DİZİLER</span>
-                <span className="text-xs font-black text-white">TOP 5</span>
+              <div className="relative z-10 pt-4 text-center w-full">
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-[#070707] leading-tight font-serif italic">
+                  Senin Dizi Ruh Eşin
+                </h2>
               </div>
 
-              {/* 5 Sıralı Liste (100% Yüklenen Afiş Çerçeveleri) */}
-              <div className="relative z-10 w-full space-y-2 my-auto">
-                {stats.topShows.slice(0, 5).map((show, idx) => (
-                  <div
-                    key={show.id}
-                    className="flex items-center gap-3 p-2.5 rounded-2xl bg-black/80 border border-white/20 hover:bg-black transition-all shadow-lg backdrop-blur-md"
-                  >
-                    <span className="w-5 text-base font-black text-[#C91520]">{idx + 1}</span>
-                    
-                    {/* Afiş Çerçevesi */}
-                    <div className="w-10 h-13 rounded-lg overflow-hidden bg-[#151518] shrink-0 border border-white/30">
+              {/* Emojisiz, Şık & Modern Tür Kartı */}
+              <div className="relative z-10 my-auto w-full p-6 rounded-3xl bg-[#070707] text-white shadow-2xl border border-black/20 text-center space-y-3">
+                <span className="text-5xl sm:text-6xl font-black text-[#D4A017] tracking-tight block">
+                  %{stats.topGenrePercent}
+                </span>
+                <span className="text-xl font-extrabold uppercase tracking-wider text-white block">
+                  {stats.topGenre}
+                </span>
+                <div className="w-12 h-0.5 bg-[#D4A017] mx-auto opacity-50" />
+                <p className="text-xs text-white/70 font-medium leading-relaxed">
+                  Zihnini zorlayan, sürükleyici ve tutkulu atmosferler senin vazgeçilmezin.
+                </p>
+              </div>
+
+              <div className="relative z-10 w-full flex items-center justify-between text-xs font-extrabold uppercase tracking-wider text-[#070707]">
+                <span>EPISODIO ANALİZ</span>
+                <span>FAVORİ TÜR</span>
+              </div>
+            </div>
+          )}
+
+          {/* SLİDE 2: 3. SAYFA - Başlık Arka Planı Kaldırıldı, Kutular Kaldırıldı, DİKEY Gerçek Dizi Kartları */}
+          {currentSlide === 2 && (
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] text-white p-4">
+              
+              {/* Arka plansız, şık & güzel yazılmış başlık */}
+              <div className="relative z-10 w-full pt-2">
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-serif italic drop-shadow-md">
+                  En Çok İzlediğin Diziler
+                </h2>
+              </div>
+
+              {/* Dikey Çerçevesiz Gerçek Dizi Kartları Grid/Row Yapısı */}
+              <div className="relative z-10 w-full my-auto grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {stats.topShows.slice(0, 4).map((show, idx) => (
+                  <div key={show.id} className="flex flex-col items-center gap-1.5 group">
+                    <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-[#151518]">
                       <img
                         src={show.poster}
                         alt={show.name}
                         className="w-full h-full object-cover"
                         crossOrigin="anonymous"
                       />
+                      <div className="absolute top-1.5 left-1.5 w-6 h-6 rounded-full bg-black/80 border border-white/30 flex items-center justify-center text-xs font-black text-[#C91520]">
+                        {idx + 1}
+                      </div>
                     </div>
-
-                    <div className="min-w-0 flex-1 text-left">
-                      <p className="text-xs font-bold text-white truncate">{show.name}</p>
-                      <p className="text-[10px] text-[#D4A017] font-bold">★ {show.rating} Puan</p>
-                    </div>
+                    <p className="text-[11px] font-bold text-white truncate max-w-full">{show.name}</p>
                   </div>
                 ))}
               </div>
 
-              <div className="relative z-10 w-full text-[10px] font-black uppercase tracking-widest text-white/60 bg-black/60 py-1 rounded-full border border-white/10">
-                VERİLER İZLEME GEÇMİŞİNDEN HESAPLANDI
+              <div className="relative z-10 w-full text-[10px] font-bold uppercase tracking-widest text-white/50">
+                IZLEME GEÇMİŞİNDEN DERLENDİ
               </div>
             </div>
           )}
 
-          {/* SLİDE 3: Kırmızı & Siyah Dalga Şablonu (Dizi Sever Unvanı) */}
+          {/* SLİDE 3: 4. SAYFA - Başlık Kaldırıldı, Emojisiz Sade Kutu Tasarımı */}
           {currentSlide === 3 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] text-white p-6">
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] text-white p-4">
               
-              <div className="relative z-10 pt-4">
-                <span className="text-xs font-black uppercase tracking-widest text-white bg-black/60 px-3.5 py-1 rounded-full border border-white/20">SENİN DİZİ SEVER UNVANIN</span>
-              </div>
+              <div className="relative z-10 pt-4" />
 
-              <div className="relative z-10 my-auto space-y-4 bg-black/80 p-6 rounded-3xl border border-white/20 backdrop-blur-xl w-full shadow-2xl">
-                <div className="w-24 h-24 rounded-full bg-white text-[#C91520] flex items-center justify-center text-5xl mx-auto shadow-2xl animate-pulse">
-                  {stats.persona.emoji}
-                </div>
+              {/* Emojisiz, Sade ve Şık Unvan Kutusu */}
+              <div className="relative z-10 my-auto space-y-3 bg-black/70 p-6 rounded-3xl border border-white/20 backdrop-blur-xl w-full shadow-2xl">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50 block">DİZİ SEVER KİMLİĞİN</span>
                 <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white leading-tight drop-shadow-md">
                   {stats.persona.title}
                 </h2>
-                <p className="text-xs text-white/90 font-bold max-w-xs mx-auto leading-relaxed">
+                <div className="w-10 h-0.5 bg-white/30 mx-auto my-1" />
+                <p className="text-xs text-white/80 font-medium max-w-xs mx-auto leading-relaxed">
                   {stats.persona.desc}
                 </p>
               </div>
 
-              <div className="relative z-10 w-full text-xs font-black uppercase tracking-widest text-white bg-black/60 py-1.5 rounded-full border border-white/20">
-                EPISODIO DİZİ KİMLİĞİ
+              <div className="relative z-10 w-full text-xs font-extrabold uppercase tracking-widest text-white/60">
+                EPISODIO KİMLİK
               </div>
             </div>
           )}
 
-          {/* SLİDE 4: Final Story Paylaşım Kartı (Referans Görseldeki Sağ Alt Format) */}
+          {/* SLİDE 4: 5. SAYFA - Kutu Tasarımı YAPAN, Doğrudan Görsel Üzerine İnşa Edilmiş Profesyonel Final Sonuç */}
           {currentSlide === 4 && (
-            <div className="flex flex-col items-center gap-3 animate-[fadeIn_0.3s_ease-out] w-full">
+            <div className="flex flex-col items-center gap-3 animate-[fadeIn_0.3s_ease-out] w-full h-full justify-between">
               
-              {/* Referans Görsel Formatındaki Özet İndirme Kartı */}
+              {/* Kutu Olmadan Doğrudan Görsel Üzerine İnşa Edilen Özet Alanı */}
               <div
                 ref={summaryCardRef}
-                className="w-full max-w-[320px] p-5 rounded-3xl bg-[#070707] text-white border border-white/20 shadow-2xl flex flex-col justify-between gap-3 text-center relative overflow-hidden"
+                className="w-full h-full max-h-[500px] p-6 rounded-3xl text-white shadow-2xl flex flex-col justify-between text-center relative overflow-hidden bg-black/40 backdrop-blur-sm border border-white/10"
               >
-                {/* Referans Çizgili Üst Kart */}
-                <div className="flex items-center justify-between border-b border-white/15 pb-2.5">
+                {/* Sol Üst Logo ve Kullanıcı İsim Bilgisi */}
+                <div className="flex items-center justify-between border-b border-white/15 pb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-[#C91520] flex items-center justify-center text-white font-bold text-xs border border-white/30">
+                    <div className="w-7 h-7 rounded-full bg-[#C91520] flex items-center justify-center text-white font-bold text-xs border border-white/30">
                       {user.username[0]?.toUpperCase()}
                     </div>
-                    <span className="text-xs font-black text-white truncate max-w-[100px]">@{user.username}</span>
+                    <span className="text-xs font-extrabold text-white">{user.username}</span>
                   </div>
-                  <span className="text-[10px] font-black text-[#D4A017] tracking-widest uppercase">EPISODIO</span>
+                  <img src="/logo.png" alt="Episodio" className="h-5 w-auto object-contain" />
                 </div>
 
-                {/* Dev Saat Sayısı */}
-                <div className="py-1">
-                  <span className="text-4xl font-black text-[#C91520] tracking-tighter block">{stats.totalHours} SAAT</span>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white/60 block mt-0.5">
-                    {stats.totalEpisodes} Bölüm • {stats.topGenre}
-                  </span>
+                {/* Büyük Süre ve Detaylar */}
+                <div className="py-2 space-y-1">
+                  <span className="text-[10px] font-extrabold text-[#D4A017] uppercase tracking-widest block">2026 DİZİ KARNEM</span>
+                  <h3 className="text-4xl font-black text-white tracking-tighter drop-shadow-lg">{stats.totalHours} SAAT</h3>
+                  <p className="text-xs text-white/80 font-semibold">{stats.totalEpisodes} Bölüm • {stats.topGenre}</p>
                 </div>
 
-                {/* Top 3 Afişli Liste */}
-                <div className="space-y-1.5 text-left bg-white/[0.04] p-2.5 rounded-2xl border border-white/10">
-                  <span className="text-[9px] font-black text-white/40 uppercase tracking-widest block mb-1">FAVORİ DİZİLERİN</span>
+                {/* Dikey Dizi Afişleri Üçlüsü */}
+                <div className="grid grid-cols-3 gap-2 py-1">
                   {stats.topShows.slice(0, 3).map((s, i) => (
-                    <div key={s.id} className="flex items-center gap-2">
-                      <span className="text-xs font-black text-[#C91520]">{i + 1}</span>
-                      <img src={s.poster} alt="" className="w-5 h-7 object-cover rounded shrink-0 border border-white/20" crossOrigin="anonymous" />
-                      <span className="text-xs font-bold text-white truncate">{s.name}</span>
+                    <div key={s.id} className="flex flex-col items-center gap-1">
+                      <div className="aspect-[2/3] w-full rounded-xl overflow-hidden border border-white/20 shadow-md bg-[#151518]">
+                        <img src={s.poster} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
+                      </div>
+                      <span className="text-[10px] font-bold text-white truncate max-w-full">{s.name}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Persona Rozet Etiketi */}
-                <div className="py-1.5 px-3 rounded-full bg-[#C91520] text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5">
-                  <span>{stats.persona.emoji}</span>
-                  <span>{stats.persona.title}</span>
-                </div>
-
-                <div className="text-[9px] font-black text-white/40 tracking-widest uppercase pt-1 border-t border-white/10">
-                  episodio.com.tr
+                {/* Unvan & Alt Bilgi */}
+                <div className="pt-2 border-t border-white/15 flex items-center justify-between text-xs font-bold text-white/80">
+                  <span className="text-[#D4A017]">{stats.persona.title}</span>
+                  <span className="text-[10px] font-extrabold text-white/40 tracking-wider">episodio.com.tr</span>
                 </div>
               </div>
 
-              {/* İndir & Profil Butonları */}
+              {/* Aksiyon Butonları */}
               <div className="flex flex-col gap-2 w-full max-w-[320px] relative z-40">
                 <button
                   type="button"
