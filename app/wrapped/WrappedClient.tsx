@@ -25,9 +25,7 @@ interface ShowDetail {
   id: number;
   name: string;
   poster: string;
-  backdrop: string;
   rating: string;
-  genres: string[];
   runtime: number;
 }
 
@@ -47,10 +45,8 @@ interface CalculatedStats {
 }
 
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
-const TMDB_BACKDROP_BASE = 'https://image.tmdb.org/t/p/w1280';
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || '4f3b798b31a26d70c48e8946e336b135';
 
-// 100% Güvenilir Poster Yükleme Fallback'leri (CORS ve Yükleme Hatalarını Çözen Sistem)
 const FALLBACK_POSTERS = [
   'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=500&auto=format&fit=crop',
   'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=500&auto=format&fit=crop',
@@ -64,45 +60,35 @@ const DEFAULT_SHOWS: ShowDetail[] = [
     id: 1396,
     name: 'Breaking Bad',
     poster: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=500&auto=format&fit=crop',
-    backdrop: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1280&auto=format&fit=crop',
     rating: '9.5',
-    genres: ['Suç', 'Drama', 'Gerilim'],
     runtime: 62 * 47,
   },
   {
     id: 66732,
     name: 'Stranger Things',
     poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=500&auto=format&fit=crop',
-    backdrop: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=1280&auto=format&fit=crop',
     rating: '8.7',
-    genres: ['Bilim Kurgu', 'Korku'],
     runtime: 34 * 50,
   },
   {
     id: 76479,
     name: 'The Boys',
     poster: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=500&auto=format&fit=crop',
-    backdrop: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1280&auto=format&fit=crop',
     rating: '8.7',
-    genres: ['Aksiyon', 'Komedi'],
     runtime: 32 * 60,
   },
   {
     id: 94605,
     name: 'Arcane',
     poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=500&auto=format&fit=crop',
-    backdrop: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1280&auto=format&fit=crop',
     rating: '9.0',
-    genres: ['Animasyon', 'Aksiyon'],
     runtime: 18 * 40,
   },
   {
     id: 82596,
     name: 'Mindhunter',
     poster: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop',
-    backdrop: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=1280&auto=format&fit=crop',
     rating: '8.6',
-    genres: ['Suç', 'Gizem'],
     runtime: 19 * 55,
   },
 ];
@@ -168,22 +154,15 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
                 genreMap[gName] = (genreMap[gName] || 0) + 1;
               });
 
-              // Resim URL kontrolü + Güvenli Fallback
               const poster = data.poster_path
                 ? `${TMDB_IMAGE_BASE}${data.poster_path}`
                 : FALLBACK_POSTERS[idx % FALLBACK_POSTERS.length];
-              
-              const backdrop = data.backdrop_path
-                ? `${TMDB_BACKDROP_BASE}${data.backdrop_path}`
-                : FALLBACK_POSTERS[(idx + 1) % FALLBACK_POSTERS.length];
 
               shows.push({
                 id: data.id,
                 name: data.name || data.original_name || 'Dizi',
                 poster,
-                backdrop,
                 rating: data.vote_average ? data.vote_average.toFixed(1) : '8.8',
-                genres: gNames,
                 runtime: showTotalMins,
               });
             } catch {
@@ -192,7 +171,6 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           })
         );
 
-        // Eksik kalan posterleri varsayılanlarla tamamla
         while (shows.length < 5) {
           shows.push(DEFAULT_SHOWS[shows.length % DEFAULT_SHOWS.length]);
         }
@@ -298,7 +276,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
       const html2canvas = (await import('html2canvas')).default;
       if (summaryCardRef.current) {
         const canvas = await html2canvas(summaryCardRef.current, {
-          backgroundColor: '#000000',
+          backgroundColor: '#070707',
           scale: 2,
           useCORS: true,
           allowTaint: true,
@@ -329,7 +307,14 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
     );
   }
 
-  const topShow = stats.topShows[0] || DEFAULT_SHOWS[0];
+  // Slayt Şablon Görsellerimiz
+  const slideBgs = [
+    '/wrapped_bg_1.jpg',
+    '/wrapped_bg_2.jpg',
+    '/wrapped_bg_3.jpg',
+    '/wrapped_bg_4.jpg',
+    '/wrapped_bg_1.jpg',
+  ];
 
   return (
     <div className="fixed inset-0 z-50 bg-[#000000] text-white flex items-center justify-center overflow-hidden select-none font-body-md">
@@ -337,13 +322,27 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
       {/* 9:16 Story Frame Container */}
       <div className="relative w-full max-w-md h-full max-h-[100dvh] sm:max-h-[920px] bg-[#070707] sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between border border-white/10">
         
+        {/* Özel Üretilmiş Yüksek Çözünürlüklü Şablon Görseli (Template Background Image) */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+          <img
+            key={currentSlide}
+            src={slideBgs[currentSlide]}
+            alt=""
+            className="w-full h-full object-cover transition-opacity duration-700 ease-out"
+          />
+          {/* Slayt 1 (Krem) için koyulaştırıcı gereksiz, diğer siyah slaytlar için şeffaf yumuşatıcı */}
+          {currentSlide !== 1 && (
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px] z-10" />
+          )}
+        </div>
+
         {/* Üst Kısım: İlerleme Çubukları & Başlık */}
         <div className="relative z-40 p-4 pt-5 flex flex-col gap-3">
           <div className="flex items-center gap-1.5 w-full">
             {Array.from({ length: TOTAL_SLIDES }).map((_, idx) => (
-              <div key={idx} className="flex-1 h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-md">
+              <div key={idx} className="flex-1 h-1 bg-white/30 rounded-full overflow-hidden backdrop-blur-md">
                 <div
-                  className={`h-full bg-white transition-all duration-300 ${
+                  className={`h-full transition-all duration-300 ${currentSlide === 1 ? 'bg-[#070707]' : 'bg-white'} ${
                     idx < currentSlide
                       ? 'w-full'
                       : idx === currentSlide
@@ -357,14 +356,16 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-black tracking-widest text-[#C91520]">EPISODIO</span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#D4A017] bg-[#D4A017]/10 px-2.5 py-0.5 rounded-full border border-[#D4A017]/30">
+              <span className={`text-xs font-black tracking-widest ${currentSlide === 1 ? 'text-[#C91520]' : 'text-white'}`}>EPISODIO</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#D4A017] bg-black/60 backdrop-blur-md px-2.5 py-0.5 rounded-full border border-[#D4A017]/40 shadow-sm">
                 WRAPPED 2026
               </span>
             </div>
             <button
               onClick={() => router.push('/home')}
-              className="w-8 h-8 rounded-full bg-black/60 border border-white/20 flex items-center justify-center text-white/80 hover:text-white transition-colors backdrop-blur-md cursor-pointer"
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors backdrop-blur-md cursor-pointer ${
+                currentSlide === 1 ? 'bg-black/10 text-black hover:bg-black/20' : 'bg-black/60 text-white/80 hover:text-white border border-white/20'
+              }`}
             >
               <span className="material-symbols-outlined text-lg">close</span>
             </button>
@@ -391,63 +392,54 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           />
         </div>
 
-        {/* SLİDE İÇERİKLERİ (Editorial Grafik Tasarımlı 5 Farklı Sayfa) */}
+        {/* SLİDE İÇERİKLERİ (Özel Görsel Şablon Üzerine Tipografi) */}
         <div className="relative z-20 flex-1 flex flex-col justify-center px-6 py-4 overflow-hidden">
           
-          {/* SLİDE 0: Editorial Black & Red Big Stats ("264,960 DAKİKA") */}
+          {/* SLİDE 0: Siyah & Kırmızı Keskin Geometrik Şablon ("264,960 DAKİKA") */}
           {currentSlide === 0 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] bg-[#070707] p-4 rounded-2xl border border-white/10 overflow-hidden">
-              {/* Arka Plan Geometrik Çizgi Deseni */}
-              <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(#C91520_1px,transparent_1px)] [background-size:16px_16px]" />
-              
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] p-4">
               <div className="relative z-10 pt-4">
-                <p className="text-xs font-black uppercase tracking-widest text-[#C91520]">@{user.username}</p>
-                <h3 className="text-lg font-black uppercase tracking-tight text-white/90 mt-1">
-                  HAZIR MISIN? İŞTE SENİN 2026 DİZİ KARNEN
+                <p className="text-xs font-black uppercase tracking-widest text-[#C91520] bg-black/60 px-3 py-1 rounded-full border border-[#C91520]/40 backdrop-blur-md">
+                  @{user.username}
+                </p>
+                <h3 className="text-xl font-black uppercase tracking-tight text-white mt-3 drop-shadow-lg">
+                  2026 DİZİ KARNEN HAZIR!
                 </h3>
               </div>
 
-              {/* Dev Sayı Vurgusu (Editorial Type) */}
-              <div className="relative z-10 my-auto py-6">
+              {/* Dev Sayı Vurgusu */}
+              <div className="relative z-10 my-auto py-4 bg-black/70 p-6 rounded-3xl border border-white/10 backdrop-blur-md shadow-2xl w-full">
                 <span className="block text-5xl sm:text-6xl font-black text-[#C91520] tracking-tighter leading-none">
                   {stats.totalMinutes.toLocaleString('tr-TR')}
                 </span>
-                <span className="block text-sm font-black uppercase tracking-widest text-white/60 mt-2">
+                <span className="block text-sm font-black uppercase tracking-widest text-white/80 mt-3">
                   DAKİKA İZLEDİN ({stats.totalHours} SAAT)
                 </span>
+                <p className="text-xs text-white/60 font-semibold mt-2">
+                  Tam {stats.totalEpisodes} Bölüm Bitirdin! 🎬
+                </p>
               </div>
 
-              {/* Alt Satranç / Geometrik Desen + Yıl */}
-              <div className="relative z-10 w-full pt-4 border-t border-white/10 flex items-center justify-between">
-                <div className="flex gap-1">
-                  <div className="w-3 h-3 bg-[#C91520]" />
-                  <div className="w-3 h-3 bg-white" />
-                  <div className="w-3 h-3 bg-[#C91520]" />
-                </div>
+              <div className="relative z-10 w-full pt-4 flex items-center justify-between border-t border-white/20">
+                <span className="text-xs font-black text-white/70 tracking-widest uppercase">EPISODIO ISTATISTIK</span>
                 <span className="text-3xl font-black text-white tracking-tighter">2026</span>
               </div>
             </div>
           )}
 
-          {/* SLİDE 1: Warm Cream & Crimson Polka Dots ("Meski pun ini bukan...") */}
+          {/* SLİDE 1: Krem & Kırmızı Benekli Özel Şablon ("Meski pun ini bukan...") */}
           {currentSlide === 1 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] bg-[#F4F2EB] text-[#070707] p-6 rounded-2xl border border-black/10 overflow-hidden">
-              {/* Kırmızı & Siyah Benekli Desen (Polka Dots Background) */}
-              <div className="absolute top-4 right-4 flex flex-wrap gap-2 w-32 opacity-80 pointer-events-none">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <div key={i} className={`w-3.5 h-3.5 rounded-full ${i % 2 === 0 ? 'bg-[#C91520]' : 'bg-[#070707]'}`} />
-                ))}
-              </div>
-
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] text-[#070707] p-6">
+              
               <div className="relative z-10 pt-4 text-left w-full">
-                <span className="text-xs font-black uppercase tracking-widest text-[#C91520]">DİZİ DNA'N</span>
-                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-[#070707] mt-1 leading-tight">
-                  SENİN RUH EŞİN OLAN TÜR:
+                <span className="text-xs font-black uppercase tracking-widest text-[#C91520] bg-[#C91520]/10 px-3 py-1 rounded-full border border-[#C91520]/30">DİZİ DNA'N</span>
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-[#070707] mt-3 leading-tight">
+                  SENİN DİZİ RUH EŞİN:
                 </h2>
               </div>
 
               {/* Dev Tür Kartı */}
-              <div className="relative z-10 my-auto w-full p-6 rounded-3xl bg-[#070707] text-white shadow-2xl border border-black/10 text-center">
+              <div className="relative z-10 my-auto w-full p-6 rounded-3xl bg-[#070707] text-white shadow-2xl border border-black/20 text-center">
                 <span className="text-4xl sm:text-5xl font-black text-[#D4A017] tracking-tight block">
                   %{stats.topGenrePercent}
                 </span>
@@ -459,21 +451,20 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
                 </p>
               </div>
 
-              {/* Alt Desen */}
-              <div className="relative z-10 w-full flex items-center justify-between text-xs font-black uppercase tracking-wider text-[#070707]/60">
+              <div className="relative z-10 w-full flex items-center justify-between text-xs font-black uppercase tracking-wider text-[#070707]">
                 <span>EPISODIO ANALİZ</span>
                 <span>#1 FAVORİ TÜR</span>
               </div>
             </div>
           )}
 
-          {/* SLİDE 2: Top 5 Show Ranked List (Afişleri 100% Yüklenen Liste) */}
+          {/* SLİDE 2: Art-Deco Çerçeveli Siyah Şablon (Top 5 Sıralı Dizi Listesi) */}
           {currentSlide === 2 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] bg-[#0A0A0E] text-white p-5 rounded-2xl border border-white/10 overflow-hidden">
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] text-white p-6">
               
-              <div className="relative z-10 w-full flex items-center justify-between border-b border-white/10 pb-3">
-                <span className="text-xs font-black uppercase tracking-widest text-[#C91520]">EN ÇOK İZLEDİĞİN DİZİLER</span>
-                <span className="text-xs font-black text-white/50">TOP 5</span>
+              <div className="relative z-10 w-full flex items-center justify-between border-b border-white/20 pb-3">
+                <span className="text-xs font-black uppercase tracking-widest text-[#C91520] bg-black/60 px-3 py-1 rounded-full border border-[#C91520]/40">EN ÇOK İZLEDİĞİN DİZİLER</span>
+                <span className="text-xs font-black text-white">TOP 5</span>
               </div>
 
               {/* 5 Sıralı Liste (100% Yüklenen Afiş Çerçeveleri) */}
@@ -481,12 +472,12 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
                 {stats.topShows.slice(0, 5).map((show, idx) => (
                   <div
                     key={show.id}
-                    className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] transition-all"
+                    className="flex items-center gap-3 p-2.5 rounded-2xl bg-black/80 border border-white/20 hover:bg-black transition-all shadow-lg backdrop-blur-md"
                   >
                     <span className="w-5 text-base font-black text-[#C91520]">{idx + 1}</span>
                     
                     {/* Afiş Çerçevesi */}
-                    <div className="w-9 h-12 rounded-md overflow-hidden bg-[#151518] shrink-0 border border-white/20">
+                    <div className="w-10 h-13 rounded-lg overflow-hidden bg-[#151518] shrink-0 border border-white/30">
                       <img
                         src={show.poster}
                         alt={show.name}
@@ -497,33 +488,28 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
 
                     <div className="min-w-0 flex-1 text-left">
                       <p className="text-xs font-bold text-white truncate">{show.name}</p>
-                      <p className="text-[10px] text-white/40 font-medium">★ {show.rating} Puan</p>
+                      <p className="text-[10px] text-[#D4A017] font-bold">★ {show.rating} Puan</p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="relative z-10 w-full text-[10px] font-black uppercase tracking-widest text-white/40">
+              <div className="relative z-10 w-full text-[10px] font-black uppercase tracking-widest text-white/60 bg-black/60 py-1 rounded-full border border-white/10">
                 VERİLER İZLEME GEÇMİŞİNDEN HESAPLANDI
               </div>
             </div>
           )}
 
-          {/* SLİDE 3: Editorial Persona Title (Dizi Sever Unvanı) */}
+          {/* SLİDE 3: Kırmızı & Siyah Dalga Şablonu (Dizi Sever Unvanı) */}
           {currentSlide === 3 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] bg-[#C91520] text-white p-6 rounded-2xl border border-white/10 overflow-hidden">
-              {/* Daire Çizgili Arka Plan Deseni */}
-              <div className="absolute inset-0 pointer-events-none opacity-20 flex items-center justify-center">
-                <div className="w-80 h-80 border-8 border-white rounded-full" />
-                <div className="w-56 h-56 border-8 border-white rounded-full absolute" />
-              </div>
-
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] text-white p-6">
+              
               <div className="relative z-10 pt-4">
-                <span className="text-xs font-black uppercase tracking-widest text-white/80">SENİN DİZİ SEVER UNVANIN</span>
+                <span className="text-xs font-black uppercase tracking-widest text-white bg-black/60 px-3.5 py-1 rounded-full border border-white/20">SENİN DİZİ SEVER UNVANIN</span>
               </div>
 
-              <div className="relative z-10 my-auto space-y-4">
-                <div className="w-24 h-24 rounded-full bg-white text-[#C91520] flex items-center justify-center text-5xl mx-auto shadow-2xl">
+              <div className="relative z-10 my-auto space-y-4 bg-black/80 p-6 rounded-3xl border border-white/20 backdrop-blur-xl w-full shadow-2xl">
+                <div className="w-24 h-24 rounded-full bg-white text-[#C91520] flex items-center justify-center text-5xl mx-auto shadow-2xl animate-pulse">
                   {stats.persona.emoji}
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white leading-tight drop-shadow-md">
@@ -534,25 +520,25 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
                 </p>
               </div>
 
-              <div className="relative z-10 w-full text-xs font-black uppercase tracking-widest text-white/70">
+              <div className="relative z-10 w-full text-xs font-black uppercase tracking-widest text-white bg-black/60 py-1.5 rounded-full border border-white/20">
                 EPISODIO DİZİ KİMLİĞİ
               </div>
             </div>
           )}
 
-          {/* SLİDE 4: Editorial Final Share Card (Referans Görseldeki Sağ Alt Kart Mantığı) */}
+          {/* SLİDE 4: Final Story Paylaşım Kartı (Referans Görseldeki Sağ Alt Format) */}
           {currentSlide === 4 && (
             <div className="flex flex-col items-center gap-3 animate-[fadeIn_0.3s_ease-out] w-full">
               
               {/* Referans Görsel Formatındaki Özet İndirme Kartı */}
               <div
                 ref={summaryCardRef}
-                className="w-full max-w-[320px] p-5 rounded-3xl bg-[#070707] text-white border border-white/20 shadow-2xl flex flex-col justify-between gap-4 text-center relative overflow-hidden"
+                className="w-full max-w-[320px] p-5 rounded-3xl bg-[#070707] text-white border border-white/20 shadow-2xl flex flex-col justify-between gap-3 text-center relative overflow-hidden"
               >
                 {/* Referans Çizgili Üst Kart */}
-                <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                <div className="flex items-center justify-between border-b border-white/15 pb-2.5">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-[#C91520] flex items-center justify-center text-white font-bold text-xs">
+                    <div className="w-6 h-6 rounded-full bg-[#C91520] flex items-center justify-center text-white font-bold text-xs border border-white/30">
                       {user.username[0]?.toUpperCase()}
                     </div>
                     <span className="text-xs font-black text-white truncate max-w-[100px]">@{user.username}</span>
@@ -563,7 +549,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
                 {/* Dev Saat Sayısı */}
                 <div className="py-1">
                   <span className="text-4xl font-black text-[#C91520] tracking-tighter block">{stats.totalHours} SAAT</span>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white/50 block mt-0.5">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/60 block mt-0.5">
                     {stats.totalEpisodes} Bölüm • {stats.topGenre}
                   </span>
                 </div>
@@ -623,7 +609,9 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="relative z-40 p-4 border-t border-white/10 flex items-center justify-between text-[11px] text-white/50 bg-[#070707]">
+        <div className={`relative z-40 p-4 border-t flex items-center justify-between text-[11px] font-bold ${
+          currentSlide === 1 ? 'border-black/10 bg-[#F4F2EB] text-[#070707]' : 'border-white/10 bg-[#070707] text-white/60'
+        }`}>
           <span>{currentSlide + 1} / {TOTAL_SLIDES}</span>
           <span>Dokunarak İlerle 👉</span>
         </div>
