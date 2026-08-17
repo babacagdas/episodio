@@ -46,40 +46,40 @@ interface CalculatedStats {
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || '4f3b798b31a26d70c48e8946e336b135';
 
-const FALLBACK_POSTERS = [
-  'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=500&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=500&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=500&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=500&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=500&auto=format&fit=crop',
-];
-
-const DEFAULT_SHOWS: ShowDetail[] = [
+// %100 Orijinal TMDB Resim Bağlantıları (Gerçek Dizi Afişleri)
+const REAL_TMDB_SHOWS: ShowDetail[] = [
   {
     id: 1396,
     name: 'Breaking Bad',
-    poster: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?q=80&w=500&auto=format&fit=crop',
+    poster: 'https://image.tmdb.org/t/p/w500/ztkUQFLAcSSvUTo2xVoVhB65hA1.jpg',
     rating: '9.5',
     runtime: 62 * 47,
   },
   {
+    id: 121361,
+    name: 'Game of Thrones',
+    poster: 'https://image.tmdb.org/t/p/w500/1XS1oqL89opfnbLl8WnZY1eeYuf.jpg',
+    rating: '9.3',
+    runtime: 73 * 57,
+  },
+  {
     id: 66732,
     name: 'Stranger Things',
-    poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=500&auto=format&fit=crop',
+    poster: 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg',
     rating: '8.7',
     runtime: 34 * 50,
   },
   {
-    id: 76479,
-    name: 'The Boys',
-    poster: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=500&auto=format&fit=crop',
-    rating: '8.7',
-    runtime: 32 * 60,
+    id: 100088,
+    name: 'The Last of Us',
+    poster: 'https://image.tmdb.org/t/p/w500/u3bZgnGQ9T01sWNhyveQz0wH0Hl.jpg',
+    rating: '8.8',
+    runtime: 9 * 50,
   },
   {
     id: 94605,
     name: 'Arcane',
-    poster: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=500&auto=format&fit=crop',
+    poster: 'https://image.tmdb.org/t/p/w500/fqld2yuvFL2djjuhjScM3LhJkVh.jpg',
     rating: '9.0',
     runtime: 18 * 40,
   },
@@ -92,6 +92,10 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<CalculatedStats | null>(null);
   const [downloading, setDownloading] = useState(false);
+
+  // 3. Sayfa animasyon durumu (Önce yan yana, sonra dikey dizilme)
+  const [slide3Phase, setSlide3Phase] = useState<'horizontal' | 'vertical'>('horizontal');
+
   const summaryCardRef = useRef<HTMLDivElement>(null);
 
   const TOTAL_SLIDES = 5;
@@ -106,7 +110,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           showCount: 8,
           topGenre: 'SUÇ & DRAMA',
           topGenrePercent: 86,
-          topShows: DEFAULT_SHOWS,
+          topShows: REAL_TMDB_SHOWS,
           persona: {
             title: 'MARATON CANAVARI',
             desc: 'Sezonları aralıksız bitiren, dur durak bilmeyen gerçek bir dizi tutkunu.',
@@ -147,7 +151,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
 
               const poster = data.poster_path
                 ? `${TMDB_IMAGE_BASE}${data.poster_path}`
-                : FALLBACK_POSTERS[idx % FALLBACK_POSTERS.length];
+                : REAL_TMDB_SHOWS[idx % REAL_TMDB_SHOWS.length].poster;
 
               shows.push({
                 id: data.id,
@@ -163,7 +167,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
         );
 
         while (shows.length < 4) {
-          shows.push(DEFAULT_SHOWS[shows.length % DEFAULT_SHOWS.length]);
+          shows.push(REAL_TMDB_SHOWS[shows.length % REAL_TMDB_SHOWS.length]);
         }
 
         shows.sort((a, b) => b.runtime - a.runtime);
@@ -181,10 +185,10 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           }
         });
 
-        const topGenrePercent = totalGenreCount > 0 ? Math.min(94, Math.round((topGenreVal / totalGenreCount) * 100) + 28) : 84;
+        const topGenrePercent = totalGenreCount > 0 ? Math.min(94, Math.round((topGenreVal / totalGenreCount) * 100) + 28) : 86;
         const hours = Math.round(totalMins / 60) || 48;
 
-        // Persona (Emoji kullanmadan sade ve profesyonel unvanlar)
+        // Persona
         let persona = {
           title: 'MARATON CANAVARI',
           desc: 'Sezonları tek solukta bitiren, sürükleyici hikayelerin bağımlısı.',
@@ -220,7 +224,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           showCount: 4,
           topGenre: 'SUÇ & DRAMA',
           topGenrePercent: 86,
-          topShows: DEFAULT_SHOWS,
+          topShows: REAL_TMDB_SHOWS,
           persona: {
             title: 'MARATON CANAVARI',
             desc: 'Tek oturuşta 5+ bölüm bitiren tutkulu dizi sever.',
@@ -234,13 +238,24 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
     calculate();
   }, [initialWatchData]);
 
+  // 3. Sayfa Animasyon Zamanlaması (Yan Yana -> Dikey Dönüşüm)
+  useEffect(() => {
+    if (currentSlide === 2) {
+      setSlide3Phase('horizontal');
+      const timer = setTimeout(() => {
+        setSlide3Phase('vertical');
+      }, 1800);
+      return () => clearTimeout(timer);
+    }
+  }, [currentSlide]);
+
   // Otomatik İlerleme Zamanlayıcısı
   useEffect(() => {
     if (loading || isPaused || currentSlide >= TOTAL_SLIDES - 1) return;
 
     const timer = setInterval(() => {
       setCurrentSlide((prev) => prev + 1);
-    }, 6000);
+    }, 6500);
 
     return () => clearInterval(timer);
   }, [loading, isPaused, currentSlide]);
@@ -320,7 +335,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           )}
         </div>
 
-        {/* Üst Kısım: İlerleme Çubukları & SADECE GERÇEK LOGO (Etiket Kaldırıldı) */}
+        {/* Üst Kısım: İlerleme Çubukları & SADECE GERÇEK LOGO */}
         <div className="relative z-40 p-4 pt-5 flex flex-col gap-3">
           <div className="flex items-center gap-1.5 w-full">
             {Array.from({ length: TOTAL_SLIDES }).map((_, idx) => (
@@ -330,7 +345,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
                     idx < currentSlide
                       ? 'w-full'
                       : idx === currentSlide
-                      ? 'w-full animate-[progress_6s_linear]'
+                      ? 'w-full animate-[progress_6.5s_linear]'
                       : 'w-0'
                   }`}
                 />
@@ -339,7 +354,6 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           </div>
 
           <div className="flex items-center justify-between">
-            {/* Sol Üstte Gerçek Episodio Logosu (Yanındaki etiket tamamen kaldırıldı) */}
             <div className="flex items-center">
               <img src="/logo.png" alt="Episodio" className="h-6 w-auto object-contain drop-shadow-md" />
             </div>
@@ -378,32 +392,35 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
         {/* SLİDE İÇERİKLERİ */}
         <div className="relative z-20 flex-1 flex flex-col justify-center px-6 py-4 overflow-hidden">
           
-          {/* SLİDE 0: 1. SAYFA - Çerçevesiz, @ İşaretsiz Yumuşak İsim & Yumuşak Başlık & Emojisiz Şık İstatistik */}
+          {/* SLİDE 0: 1. SAYFA - Flulu Şık Ortalanmış Başlık, Kutusuz/Arka Plansız Net BEYAZ Dakika Sayısı */}
           {currentSlide === 0 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] p-2">
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.4s_ease-out] p-2">
               
-              {/* Kullanıcı Adı (Çerçevesiz, @ işaretsiz, şık font) & Yumuşak Başlık */}
-              <div className="relative z-10 pt-2 space-y-2">
-                <span className="text-xl font-bold tracking-wide text-white drop-shadow-md">
+              {/* Kullanıcı Adı */}
+              <div className="relative z-10 pt-2">
+                <span className="text-base font-extrabold tracking-widest text-white/80 uppercase">
                   {user.username}
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white/95 leading-tight font-serif italic drop-shadow-lg">
-                  2026 Dizi Karnen Hazır
-                </h2>
               </div>
 
-              {/* Emojisiz, Şık & Modern İstatistik Kartı */}
-              <div className="relative z-10 my-auto w-full p-6 rounded-3xl bg-black/65 border border-white/15 backdrop-blur-md shadow-2xl text-center space-y-3">
-                <span className="block text-5xl sm:text-6xl font-black text-[#C91520] tracking-tighter leading-none">
-                  {stats.totalMinutes.toLocaleString('tr-TR')}
-                </span>
-                <span className="block text-xs font-bold uppercase tracking-widest text-white/80">
-                  DAKİKA İZLEDİN ({stats.totalHours} SAAT)
-                </span>
-                <div className="w-12 h-0.5 bg-[#C91520] mx-auto my-2 opacity-60" />
-                <p className="text-xs text-white/70 font-medium">
-                  Toplam <strong className="text-white font-bold">{stats.totalEpisodes} Bölüm</strong> Bitirdin
-                </p>
+              {/* Ortalanmış Flulu / Akıcı Şık Başlık */}
+              <div className="relative z-10 my-auto py-2 space-y-4">
+                <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white/90 uppercase leading-snug drop-shadow-[0_4px_20px_rgba(255,255,255,0.2)] font-serif italic backdrop-blur-xs">
+                  2026 Dizi Karnen Hazır
+                </h2>
+
+                {/* KUTU VE ARKA PLAN KALDIRILDI - DOĞRUDAN GÖRSEL ÜZERİNDE BEYAZ DAKİKA */}
+                <div className="py-4 space-y-2">
+                  <span className="block text-6xl sm:text-7xl font-black text-white tracking-tighter drop-shadow-[0_10px_30px_rgba(255,255,255,0.3)]">
+                    {stats.totalMinutes.toLocaleString('tr-TR')}
+                  </span>
+                  <span className="block text-xs font-black uppercase tracking-widest text-white/80">
+                    DAKİKA İZLEDİN ({stats.totalHours} SAAT)
+                  </span>
+                  <p className="text-xs text-white/60 font-semibold pt-1">
+                    Toplam {stats.totalEpisodes} Bölüm Bitirdin
+                  </p>
+                </div>
               </div>
 
               <div className="relative z-10 w-full pt-2 flex items-center justify-between border-t border-white/15 text-xs font-semibold text-white/70">
@@ -413,26 +430,26 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
             </div>
           )}
 
-          {/* SLİDE 1: 2. SAYFA - "Dizi DNA'n" başlığı kaldırıldı. "Senin Dizi Ruh Eşin" şık başlık, Emojisiz modern kart */}
+          {/* SLİDE 1: 2. SAYFA - "Senin Dizi Ruh Eşin" Farklı Duruşlu Başlık, Kutusuz İstatistik, Şık Yüzdelik */}
           {currentSlide === 1 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] text-[#070707] p-4">
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.4s_ease-out] text-[#070707] p-4">
               
+              {/* Farklı ve İddialı Duruşlu Başlık */}
               <div className="relative z-10 pt-4 text-center w-full">
-                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-[#070707] leading-tight font-serif italic">
+                <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-[#070707] leading-none font-serif italic border-b-2 border-[#C91520] pb-3 inline-block">
                   Senin Dizi Ruh Eşin
                 </h2>
               </div>
 
-              {/* Emojisiz, Şık & Modern Tür Kartı */}
-              <div className="relative z-10 my-auto w-full p-6 rounded-3xl bg-[#070707] text-white shadow-2xl border border-black/20 text-center space-y-3">
-                <span className="text-5xl sm:text-6xl font-black text-[#D4A017] tracking-tight block">
+              {/* ARKA PLAN VE KUTU KALDIRILDI - DOĞRUDAN ŞIK VE İDDİALI YÜZDELİK */}
+              <div className="relative z-10 my-auto text-center space-y-2">
+                <span className="text-6xl sm:text-7xl font-black text-[#C91520] tracking-tighter block drop-shadow-md">
                   %{stats.topGenrePercent}
                 </span>
-                <span className="text-xl font-extrabold uppercase tracking-wider text-white block">
+                <span className="text-2xl sm:text-3xl font-black uppercase tracking-widest text-[#070707] block">
                   {stats.topGenre}
                 </span>
-                <div className="w-12 h-0.5 bg-[#D4A017] mx-auto opacity-50" />
-                <p className="text-xs text-white/70 font-medium leading-relaxed">
+                <p className="text-xs text-[#070707]/80 font-bold leading-relaxed max-w-xs mx-auto pt-2">
                   Zihnini zorlayan, sürükleyici ve tutkulu atmosferler senin vazgeçilmezin.
                 </p>
               </div>
@@ -444,57 +461,93 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
             </div>
           )}
 
-          {/* SLİDE 2: 3. SAYFA - Başlık Arka Planı Kaldırıldı, Kutular Kaldırıldı, DİKEY Gerçek Dizi Kartları */}
+          {/* SLİDE 2: 3. SAYFA - Ortalanmış / İki Satırlı Başlık + Gerçek Dizi Afişleri (Önce Yan Yana, Sonra Alt Alta Animasyon) */}
           {currentSlide === 2 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] text-white p-4">
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.4s_ease-out] text-white p-4">
               
-              {/* Arka plansız, şık & güzel yazılmış başlık */}
+              {/* Ortalanmış / İki Satır Şık Başlık */}
               <div className="relative z-10 w-full pt-2">
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white font-serif italic drop-shadow-md">
-                  En Çok İzlediğin Diziler
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white uppercase leading-tight font-serif italic drop-shadow-lg">
+                  EN ÇOK<br />
+                  <span className="text-[#C91520]">İZLENEN DİZİLER</span>
                 </h2>
               </div>
 
-              {/* Dikey Çerçevesiz Gerçek Dizi Kartları Grid/Row Yapısı */}
-              <div className="relative z-10 w-full my-auto grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {stats.topShows.slice(0, 4).map((show, idx) => (
-                  <div key={show.id} className="flex flex-col items-center gap-1.5 group">
-                    <div className="relative aspect-[2/3] w-full rounded-2xl overflow-hidden border border-white/20 shadow-2xl bg-[#151518]">
-                      <img
-                        src={show.poster}
-                        alt={show.name}
-                        className="w-full h-full object-cover"
-                        crossOrigin="anonymous"
-                      />
-                      <div className="absolute top-1.5 left-1.5 w-6 h-6 rounded-full bg-black/80 border border-white/30 flex items-center justify-center text-xs font-black text-[#C91520]">
-                        {idx + 1}
+              {/* ANİMASYONLU DİZİ KARTLARI (Önce 5 Tane Yan Yana, Sonra Alt Alta İsimleriyle) */}
+              <div className="relative z-10 w-full my-auto transition-all duration-700 ease-in-out">
+                {slide3Phase === 'horizontal' ? (
+                  /* 1. FAZ: YAN YANA ANİMASYONLU SIRALAMA */
+                  <div className="flex items-center justify-center gap-2 animate-[fadeIn_0.5s_ease-out]">
+                    {stats.topShows.slice(0, 5).map((show, idx) => (
+                      <div
+                        key={show.id}
+                        className="relative aspect-[2/3] w-16 sm:w-18 rounded-xl overflow-hidden border-2 border-white/30 shadow-2xl transform hover:scale-110 transition-transform duration-500 animate-[bounce_1s_ease-in-out]"
+                        style={{ animationDelay: `${idx * 150}ms` }}
+                      >
+                        <img
+                          src={show.poster}
+                          alt={show.name}
+                          className="w-full h-full object-cover"
+                          crossOrigin="anonymous"
+                        />
+                        <div className="absolute top-1 left-1 w-5 h-5 rounded-full bg-black/90 border border-white/40 flex items-center justify-center text-[10px] font-black text-[#C91520]">
+                          {idx + 1}
+                        </div>
                       </div>
-                    </div>
-                    <p className="text-[11px] font-bold text-white truncate max-w-full">{show.name}</p>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  /* 2. FAZ: ALT ALTA ANİMASYONLU VE İSİMLİ LİSTE */
+                  <div className="flex flex-col gap-2.5 max-w-xs mx-auto animate-[fadeIn_0.6s_ease-out]">
+                    {stats.topShows.slice(0, 4).map((show, idx) => (
+                      <div
+                        key={show.id}
+                        className="flex items-center gap-3 animate-[slideInRight_0.4s_ease-out]"
+                        style={{ animationDelay: `${idx * 100}ms` }}
+                      >
+                        <span className="w-5 text-base font-black text-[#C91520] shrink-0">{idx + 1}</span>
+                        <div className="w-9 h-13 rounded-lg overflow-hidden border border-white/30 shrink-0 shadow-md">
+                          <img
+                            src={show.poster}
+                            alt={show.name}
+                            className="w-full h-full object-cover"
+                            crossOrigin="anonymous"
+                          />
+                        </div>
+                        <div className="text-left min-w-0 flex-1">
+                          <p className="text-xs font-bold text-white truncate">{show.name}</p>
+                          <p className="text-[10px] text-[#D4A017] font-extrabold">★ {show.rating} Puan</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="relative z-10 w-full text-[10px] font-bold uppercase tracking-widest text-white/50">
-                IZLEME GEÇMİŞİNDEN DERLENDİ
+                GERÇEK DİZİ İZLEME SIRALAMASI
               </div>
             </div>
           )}
 
-          {/* SLİDE 3: 4. SAYFA - Başlık Kaldırıldı, Emojisiz Sade Kutu Tasarımı */}
+          {/* SLİDE 3: 4. SAYFA - "Dizi Sever Kimliğin" Büyük ve İddialı Başlık, Kutusuz Şık Renkli Unvan */}
           {currentSlide === 3 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.3s_ease-out] text-white p-4">
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.4s_ease-out] text-white p-4">
               
-              <div className="relative z-10 pt-4" />
-
-              {/* Emojisiz, Sade ve Şık Unvan Kutusu */}
-              <div className="relative z-10 my-auto space-y-3 bg-black/70 p-6 rounded-3xl border border-white/20 backdrop-blur-xl w-full shadow-2xl">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/50 block">DİZİ SEVER KİMLİĞİN</span>
-                <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-white leading-tight drop-shadow-md">
-                  {stats.persona.title}
+              {/* İddialı Büyük Başlık */}
+              <div className="relative z-10 pt-4">
+                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-widest text-white font-serif italic drop-shadow-lg">
+                  Dizi Sever Kimliğin
                 </h2>
-                <div className="w-10 h-0.5 bg-white/30 mx-auto my-1" />
-                <p className="text-xs text-white/80 font-medium max-w-xs mx-auto leading-relaxed">
+              </div>
+
+              {/* KUTU VEYA KART TASARIMI YOK - DOĞRUDAN GÖRSEL ÜZERİNDE ŞIK FARKLI RENKTE UNVAN */}
+              <div className="relative z-10 my-auto text-center space-y-3">
+                <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tight text-[#D4A017] leading-none drop-shadow-[0_5px_25px_rgba(212,160,23,0.4)]">
+                  {stats.persona.title}
+                </h1>
+                <div className="w-12 h-1 bg-[#D4A017] mx-auto opacity-70 rounded-full" />
+                <p className="text-xs text-white/90 font-bold max-w-xs mx-auto leading-relaxed pt-2">
                   {stats.persona.desc}
                 </p>
               </div>
@@ -505,38 +558,46 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
             </div>
           )}
 
-          {/* SLİDE 4: 5. SAYFA - Kutu Tasarımı YAPAN, Doğrudan Görsel Üzerine İnşa Edilmiş Profesyonel Final Sonuç */}
+          {/* SLİDE 4: 5. SAYFA - Sol Tarafta Profil Fotoğrafı, Kutusuz / Arka Plansız Şık Final Sonuç */}
           {currentSlide === 4 && (
-            <div className="flex flex-col items-center gap-3 animate-[fadeIn_0.3s_ease-out] w-full h-full justify-between">
+            <div className="flex flex-col items-center gap-3 animate-[fadeIn_0.4s_ease-out] w-full h-full justify-between">
               
-              {/* Kutu Olmadan Doğrudan Görsel Üzerine İnşa Edilen Özet Alanı */}
+              {/* KUTU VE ARKA PLAN OLMADAN DOĞRUDAN GÖRSEL ÜZERİNE İNŞA EDİLEN FİNAL RESMİ */}
               <div
                 ref={summaryCardRef}
-                className="w-full h-full max-h-[500px] p-6 rounded-3xl text-white shadow-2xl flex flex-col justify-between text-center relative overflow-hidden bg-black/40 backdrop-blur-sm border border-white/10"
+                className="w-full h-full max-h-[500px] p-6 text-white shadow-2xl flex flex-col justify-between text-center relative overflow-hidden"
               >
-                {/* Sol Üst Logo ve Kullanıcı İsim Bilgisi */}
-                <div className="flex items-center justify-between border-b border-white/15 pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-[#C91520] flex items-center justify-center text-white font-bold text-xs border border-white/30">
-                      {user.username[0]?.toUpperCase()}
+                {/* SOL TARAF PROFİL FOTOĞRAFI + KULLANICI İSMİ */}
+                <div className="flex items-center justify-between border-b border-white/20 pb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-[#C91520] shrink-0 shadow-md">
+                      {user.avatar_url ? (
+                        <img src={user.avatar_url} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
+                      ) : (
+                        <div className="w-full h-full bg-[#C91520] flex items-center justify-center text-white font-bold text-sm">
+                          {user.username[0]?.toUpperCase()}
+                        </div>
+                      )}
                     </div>
-                    <span className="text-xs font-extrabold text-white">{user.username}</span>
+                    <div className="text-left">
+                      <span className="text-xs font-black text-white block">{user.username}</span>
+                      <span className="text-[9px] text-[#D4A017] font-bold uppercase tracking-wider block">EPISODIO 2026</span>
+                    </div>
                   </div>
                   <img src="/logo.png" alt="Episodio" className="h-5 w-auto object-contain" />
                 </div>
 
-                {/* Büyük Süre ve Detaylar */}
+                {/* Büyük Süre */}
                 <div className="py-2 space-y-1">
-                  <span className="text-[10px] font-extrabold text-[#D4A017] uppercase tracking-widest block">2026 DİZİ KARNEM</span>
-                  <h3 className="text-4xl font-black text-white tracking-tighter drop-shadow-lg">{stats.totalHours} SAAT</h3>
-                  <p className="text-xs text-white/80 font-semibold">{stats.totalEpisodes} Bölüm • {stats.topGenre}</p>
+                  <h3 className="text-5xl font-black text-[#C91520] tracking-tighter drop-shadow-lg">{stats.totalHours} SAAT</h3>
+                  <p className="text-xs text-white/90 font-bold">{stats.totalEpisodes} Bölüm • {stats.topGenre}</p>
                 </div>
 
-                {/* Dikey Dizi Afişleri Üçlüsü */}
+                {/* Dikey Gerçek Afiş Üçlüsü */}
                 <div className="grid grid-cols-3 gap-2 py-1">
-                  {stats.topShows.slice(0, 3).map((s, i) => (
+                  {stats.topShows.slice(0, 3).map((s) => (
                     <div key={s.id} className="flex flex-col items-center gap-1">
-                      <div className="aspect-[2/3] w-full rounded-xl overflow-hidden border border-white/20 shadow-md bg-[#151518]">
+                      <div className="aspect-[2/3] w-full rounded-xl overflow-hidden border border-white/30 shadow-lg">
                         <img src={s.poster} alt="" className="w-full h-full object-cover" crossOrigin="anonymous" />
                       </div>
                       <span className="text-[10px] font-bold text-white truncate max-w-full">{s.name}</span>
@@ -545,9 +606,9 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
                 </div>
 
                 {/* Unvan & Alt Bilgi */}
-                <div className="pt-2 border-t border-white/15 flex items-center justify-between text-xs font-bold text-white/80">
-                  <span className="text-[#D4A017]">{stats.persona.title}</span>
-                  <span className="text-[10px] font-extrabold text-white/40 tracking-wider">episodio.com.tr</span>
+                <div className="pt-2 border-t border-white/20 flex items-center justify-between text-xs font-bold text-white">
+                  <span className="text-[#D4A017] font-black">{stats.persona.title}</span>
+                  <span className="text-[10px] text-white/50 tracking-wider font-extrabold">episodio.com.tr</span>
                 </div>
               </div>
 
