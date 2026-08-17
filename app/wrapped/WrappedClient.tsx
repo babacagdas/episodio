@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 
 interface WatchData {
   show_id: number;
+  show_name?: string | null;
+  poster_path?: string | null;
   status: string;
   rating?: number | null;
   updated_at?: string;
@@ -46,8 +48,8 @@ interface CalculatedStats {
 const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || '4f3b798b31a26d70c48e8946e336b135';
 
-// %100 Orijinal TMDB Resim Bağlantıları (Gerçek Dizi Afişleri)
-const REAL_TMDB_SHOWS: ShowDetail[] = [
+// Orijinal Gerçek TMDB Afiş Bağlantıları
+const POPULAR_TMDB_FALLBACKS: ShowDetail[] = [
   {
     id: 1396,
     name: 'Breaking Bad',
@@ -93,7 +95,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
   const [stats, setStats] = useState<CalculatedStats | null>(null);
   const [downloading, setDownloading] = useState(false);
 
-  // 3. Sayfa animasyon durumu (Önce yan yana, sonra dikey dizilme)
+  // 3. Sayfa YAVAŞ & AKICI Animasyon Fazı
   const [slide3Phase, setSlide3Phase] = useState<'horizontal' | 'vertical'>('horizontal');
 
   const summaryCardRef = useRef<HTMLDivElement>(null);
@@ -102,15 +104,50 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
 
   useEffect(() => {
     async function calculate() {
+      // 1. Kullanıcı veri tabanında hiç izleme kaydı yoksa TMDB API'den Gerçek Popüler Dizileri Canlı Çek
       if (initialWatchData.length === 0) {
+        try {
+          const res = await fetch(`https://api.themoviedb.org/3/trending/tv/week?api_key=${API_KEY}&language=tr-TR`);
+          if (res.ok) {
+            const data = await res.json();
+            const realTrending: ShowDetail[] = (data.results || []).slice(0, 5).map((item: any) => ({
+              id: item.id,
+              name: item.name || item.original_name,
+              poster: item.poster_path ? `${TMDB_IMAGE_BASE}${item.poster_path}` : POPULAR_TMDB_FALLBACKS[0].poster,
+              rating: item.vote_average ? item.vote_average.toFixed(1) : '8.8',
+              runtime: 24 * 45,
+            }));
+
+            if (realTrending.length > 0) {
+              setStats({
+                totalHours: 124,
+                totalMinutes: 7440,
+                totalEpisodes: 160,
+                showCount: realTrending.length,
+                topGenre: 'SUÇ & DRAMA',
+                topGenrePercent: 84,
+                topShows: realTrending,
+                persona: {
+                  title: 'MARATON CANAVARI',
+                  desc: 'Sezonları aralıksız bitiren, dur durak bilmeyen gerçek bir dizi tutkunu.',
+                },
+              });
+              setLoading(false);
+              return;
+            }
+          }
+        } catch {
+          // fallback
+        }
+
         setStats({
           totalHours: 142,
           totalMinutes: 8520,
           totalEpisodes: 184,
-          showCount: 8,
+          showCount: 5,
           topGenre: 'SUÇ & DRAMA',
           topGenrePercent: 86,
-          topShows: REAL_TMDB_SHOWS,
+          topShows: POPULAR_TMDB_FALLBACKS,
           persona: {
             title: 'MARATON CANAVARI',
             desc: 'Sezonları aralıksız bitiren, dur durak bilmeyen gerçek bir dizi tutkunu.',
@@ -120,46 +157,74 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
         return;
       }
 
+      // 2. Kullanıcının Gerçek İzlediği Dizilerin TMDB ve Supabase Verilerini Birebir İşleme
       try {
-        const uniqueShowIds = Array.from(new Set(initialWatchData.map((d) => d.show_id))).slice(0, 15);
-        
         let totalMins = 0;
         let totalEps = 0;
         const genreMap: Record<string, number> = {};
         const shows: ShowDetail[] = [];
 
         await Promise.all(
-          uniqueShowIds.map(async (showId, idx) => {
+          initialWatchData.map(async (row, idx) => {
             try {
+              let posterUrl = POPULAR_TMDB_FALLBACKS[idx % POPULAR_TMDB_FALLBACKS.length].poster;
+              let showTitle = row.show_name || 'Dizi';
+              let rating = row.rating ? row.rating.toFixed(1) : '8.8';
+
+              if (row.poster_path) {
+                if (row.poster_path.startsWith('http')) {
+                  posterUrl = row.poster_path;
+                } else {
+                  posterUrl = `${TMDB_IMAGE_BASE}${row.poster_path}`;
+                }
+              }
+
+              // TMDB detay isteği (Bölüm sayısı, runtime ve türler)
               const res = await fetch(
-                `https://api.themoviedb.org/3/tv/${showId}?api_key=${API_KEY}&language=tr-TR`
+                `https://api.themoviedb.org/3/tv/${row.show_id}?api_key=${API_KEY}&language=tr-TR`
               );
-              if (!res.ok) return;
-              const data = await res.json();
+              
+              if (res.ok) {
+                const data = await res.json();
+                showTitle = data.name || data.original_name || showTitle;
+                if (data.poster_path) {
+                  posterUrl = `${TMDB_IMAGE_BASE}${data.poster_path}`;
+                }
+                if (data.vote_average) {
+                  rating = data.vote_average.toFixed(1);
+                }
 
-              const avgRuntime = data.episode_run_time?.[0] || 45;
-              const epCount = data.number_of_episodes || 10;
-              const showTotalMins = epCount * avgRuntime;
+                const avgRuntime = data.episode_run_time?.[0] || 45;
+                const epCount = data.number_of_episodes || 10;
+                const showTotalMins = epCount * avgRuntime;
 
-              totalMins += showTotalMins;
-              totalEps += epCount;
+                totalMins += showTotalMins;
+                totalEps += epCount;
 
-              const gNames = data.genres ? data.genres.map((g: any) => g.name) : [];
-              gNames.forEach((gName: string) => {
-                genreMap[gName] = (genreMap[gName] || 0) + 1;
-              });
+                if (data.genres) {
+                  data.genres.forEach((g: any) => {
+                    genreMap[g.name] = (genreMap[g.name] || 0) + 1;
+                  });
+                }
 
-              const poster = data.poster_path
-                ? `${TMDB_IMAGE_BASE}${data.poster_path}`
-                : REAL_TMDB_SHOWS[idx % REAL_TMDB_SHOWS.length].poster;
-
-              shows.push({
-                id: data.id,
-                name: data.name || data.original_name || 'Dizi',
-                poster,
-                rating: data.vote_average ? data.vote_average.toFixed(1) : '8.8',
-                runtime: showTotalMins,
-              });
+                shows.push({
+                  id: row.show_id,
+                  name: showTitle,
+                  poster: posterUrl,
+                  rating,
+                  runtime: showTotalMins,
+                });
+              } else {
+                totalMins += 450;
+                totalEps += 10;
+                shows.push({
+                  id: row.show_id,
+                  name: showTitle,
+                  poster: posterUrl,
+                  rating,
+                  runtime: 450,
+                });
+              }
             } catch {
               // ignore fetch error
             }
@@ -167,7 +232,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
         );
 
         while (shows.length < 4) {
-          shows.push(REAL_TMDB_SHOWS[shows.length % REAL_TMDB_SHOWS.length]);
+          shows.push(POPULAR_TMDB_FALLBACKS[shows.length % POPULAR_TMDB_FALLBACKS.length]);
         }
 
         shows.sort((a, b) => b.runtime - a.runtime);
@@ -186,9 +251,8 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
         });
 
         const topGenrePercent = totalGenreCount > 0 ? Math.min(94, Math.round((topGenreVal / totalGenreCount) * 100) + 28) : 86;
-        const hours = Math.round(totalMins / 60) || 48;
+        const hours = Math.round(totalMins / 60) || 36;
 
-        // Persona
         let persona = {
           title: 'MARATON CANAVARI',
           desc: 'Sezonları tek solukta bitiren, sürükleyici hikayelerin bağımlısı.',
@@ -208,8 +272,8 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
 
         setStats({
           totalHours: hours,
-          totalMinutes: totalMins || 2880,
-          totalEpisodes: totalEps || 64,
+          totalMinutes: totalMins || 2160,
+          totalEpisodes: totalEps || 48,
           showCount: shows.length,
           topGenre: topGenreName,
           topGenrePercent,
@@ -224,7 +288,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
           showCount: 4,
           topGenre: 'SUÇ & DRAMA',
           topGenrePercent: 86,
-          topShows: REAL_TMDB_SHOWS,
+          topShows: POPULAR_TMDB_FALLBACKS,
           persona: {
             title: 'MARATON CANAVARI',
             desc: 'Tek oturuşta 5+ bölüm bitiren tutkulu dizi sever.',
@@ -238,24 +302,24 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
     calculate();
   }, [initialWatchData]);
 
-  // 3. Sayfa Animasyon Zamanlaması (Yan Yana -> Dikey Dönüşüm)
+  // 3. Sayfa SLOW & AKICI Animasyon Zamanlaması (3.5 Saniye Yavaş Geçiş)
   useEffect(() => {
     if (currentSlide === 2) {
       setSlide3Phase('horizontal');
       const timer = setTimeout(() => {
         setSlide3Phase('vertical');
-      }, 1800);
+      }, 3200);
       return () => clearTimeout(timer);
     }
   }, [currentSlide]);
 
-  // Otomatik İlerleme Zamanlayıcısı
+  // Otomatik İlerleme Zamanlayıcısı (Her Slayt 7 Saniye)
   useEffect(() => {
     if (loading || isPaused || currentSlide >= TOTAL_SLIDES - 1) return;
 
     const timer = setInterval(() => {
       setCurrentSlide((prev) => prev + 1);
-    }, 6500);
+    }, 7000);
 
     return () => clearInterval(timer);
   }, [loading, isPaused, currentSlide]);
@@ -328,7 +392,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
             key={currentSlide}
             src={slideBgs[currentSlide]}
             alt=""
-            className="w-full h-full object-cover transition-opacity duration-700 ease-out"
+            className="w-full h-full object-cover transition-opacity duration-1000 ease-out"
           />
           {currentSlide !== 1 && (
             <div className="absolute inset-0 bg-black/35 backdrop-blur-[1px] z-10" />
@@ -345,7 +409,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
                     idx < currentSlide
                       ? 'w-full'
                       : idx === currentSlide
-                      ? 'w-full animate-[progress_6.5s_linear]'
+                      ? 'w-full animate-[progress_7s_linear]'
                       : 'w-0'
                   }`}
                 />
@@ -392,9 +456,9 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
         {/* SLİDE İÇERİKLERİ */}
         <div className="relative z-20 flex-1 flex flex-col justify-center px-6 py-4 overflow-hidden">
           
-          {/* SLİDE 0: 1. SAYFA - Flulu Şık Ortalanmış Başlık, Kutusuz/Arka Plansız Net BEYAZ Dakika Sayısı */}
+          {/* SLİDE 0: 1. SAYFA - Flulu Ortalanmış Başlık & Kutusuz Saf BEYAZ Dakika */}
           {currentSlide === 0 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.4s_ease-out] p-2">
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.6s_ease-out] p-2">
               
               {/* Kullanıcı Adı */}
               <div className="relative z-10 pt-2">
@@ -405,19 +469,19 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
 
               {/* Ortalanmış Flulu / Akıcı Şık Başlık */}
               <div className="relative z-10 my-auto py-2 space-y-4">
-                <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white/90 uppercase leading-snug drop-shadow-[0_4px_20px_rgba(255,255,255,0.2)] font-serif italic backdrop-blur-xs">
+                <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white/90 uppercase leading-snug drop-shadow-[0_4px_20px_rgba(255,255,255,0.25)] font-serif italic">
                   2026 Dizi Karnen Hazır
                 </h2>
 
-                {/* KUTU VE ARKA PLAN KALDIRILDI - DOĞRUDAN GÖRSEL ÜZERİNDE BEYAZ DAKİKA */}
+                {/* DOĞRUDAN GÖRSEL ÜZERİNDE BEYAZ DAKİKA */}
                 <div className="py-4 space-y-2">
-                  <span className="block text-6xl sm:text-7xl font-black text-white tracking-tighter drop-shadow-[0_10px_30px_rgba(255,255,255,0.3)]">
+                  <span className="block text-6xl sm:text-7xl font-black text-white tracking-tighter drop-shadow-[0_10px_35px_rgba(255,255,255,0.35)]">
                     {stats.totalMinutes.toLocaleString('tr-TR')}
                   </span>
-                  <span className="block text-xs font-black uppercase tracking-widest text-white/80">
+                  <span className="block text-xs font-black uppercase tracking-widest text-white/90">
                     DAKİKA İZLEDİN ({stats.totalHours} SAAT)
                   </span>
-                  <p className="text-xs text-white/60 font-semibold pt-1">
+                  <p className="text-xs text-white/70 font-semibold pt-1">
                     Toplam {stats.totalEpisodes} Bölüm Bitirdin
                   </p>
                 </div>
@@ -430,18 +494,17 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
             </div>
           )}
 
-          {/* SLİDE 1: 2. SAYFA - "Senin Dizi Ruh Eşin" Farklı Duruşlu Başlık, Kutusuz İstatistik, Şık Yüzdelik */}
+          {/* SLİDE 1: 2. SAYFA - "Senin Dizi Ruh Eşin" İddialı Başlık, Kutusuz Şık Yüzdelik */}
           {currentSlide === 1 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.4s_ease-out] text-[#070707] p-4">
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.6s_ease-out] text-[#070707] p-4">
               
-              {/* Farklı ve İddialı Duruşlu Başlık */}
               <div className="relative z-10 pt-4 text-center w-full">
                 <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-[#070707] leading-none font-serif italic border-b-2 border-[#C91520] pb-3 inline-block">
                   Senin Dizi Ruh Eşin
                 </h2>
               </div>
 
-              {/* ARKA PLAN VE KUTU KALDIRILDI - DOĞRUDAN ŞIK VE İDDİALI YÜZDELİK */}
+              {/* DOĞRUDAN ŞIK VE İDDİALI YÜZDELİK */}
               <div className="relative z-10 my-auto text-center space-y-2">
                 <span className="text-6xl sm:text-7xl font-black text-[#C91520] tracking-tighter block drop-shadow-md">
                   %{stats.topGenrePercent}
@@ -461,9 +524,9 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
             </div>
           )}
 
-          {/* SLİDE 2: 3. SAYFA - Ortalanmış / İki Satırlı Başlık + Gerçek Dizi Afişleri (Önce Yan Yana, Sonra Alt Alta Animasyon) */}
+          {/* SLİDE 2: 3. SAYFA - YAVAŞ (SLOW) ANİMASYONLU GERÇEK DİZİ AFİŞLERİ */}
           {currentSlide === 2 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.4s_ease-out] text-white p-4">
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.6s_ease-out] text-white p-4">
               
               {/* Ortalanmış / İki Satır Şık Başlık */}
               <div className="relative z-10 w-full pt-2">
@@ -473,16 +536,16 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
                 </h2>
               </div>
 
-              {/* ANİMASYONLU DİZİ KARTLARI (Önce 5 Tane Yan Yana, Sonra Alt Alta İsimleriyle) */}
-              <div className="relative z-10 w-full my-auto transition-all duration-700 ease-in-out">
+              {/* YAVAŞ VE AKICI DÖNÜŞÜM ANİMASYONU (SLOW TRANSITION) */}
+              <div className="relative z-10 w-full my-auto transition-all duration-1000 ease-in-out">
                 {slide3Phase === 'horizontal' ? (
-                  /* 1. FAZ: YAN YANA ANİMASYONLU SIRALAMA */
-                  <div className="flex items-center justify-center gap-2 animate-[fadeIn_0.5s_ease-out]">
+                  /* FAZ 1: YAN YANA GERÇEK TMDB AFİŞLERİ */
+                  <div className="flex items-center justify-center gap-2.5 transition-all duration-1000 ease-in-out">
                     {stats.topShows.slice(0, 5).map((show, idx) => (
                       <div
                         key={show.id}
-                        className="relative aspect-[2/3] w-16 sm:w-18 rounded-xl overflow-hidden border-2 border-white/30 shadow-2xl transform hover:scale-110 transition-transform duration-500 animate-[bounce_1s_ease-in-out]"
-                        style={{ animationDelay: `${idx * 150}ms` }}
+                        className="relative aspect-[2/3] w-16 sm:w-20 rounded-xl overflow-hidden border-2 border-white/40 shadow-2xl transition-all duration-1000 ease-in-out transform hover:scale-105"
+                        style={{ transitionDelay: `${idx * 200}ms` }}
                       >
                         <img
                           src={show.poster}
@@ -497,16 +560,16 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
                     ))}
                   </div>
                 ) : (
-                  /* 2. FAZ: ALT ALTA ANİMASYONLU VE İSİMLİ LİSTE */
-                  <div className="flex flex-col gap-2.5 max-w-xs mx-auto animate-[fadeIn_0.6s_ease-out]">
+                  /* FAZ 2: YAVAŞÇA ALT ALTA DİZİLİŞ VE İSİMLER */
+                  <div className="flex flex-col gap-3 max-w-xs mx-auto transition-all duration-1000 ease-in-out">
                     {stats.topShows.slice(0, 4).map((show, idx) => (
                       <div
                         key={show.id}
-                        className="flex items-center gap-3 animate-[slideInRight_0.4s_ease-out]"
-                        style={{ animationDelay: `${idx * 100}ms` }}
+                        className="flex items-center gap-3 transition-all duration-1000 ease-in-out"
+                        style={{ transitionDelay: `${idx * 150}ms` }}
                       >
                         <span className="w-5 text-base font-black text-[#C91520] shrink-0">{idx + 1}</span>
-                        <div className="w-9 h-13 rounded-lg overflow-hidden border border-white/30 shrink-0 shadow-md">
+                        <div className="w-10 h-14 rounded-xl overflow-hidden border border-white/30 shrink-0 shadow-lg">
                           <img
                             src={show.poster}
                             alt={show.name}
@@ -532,7 +595,7 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
 
           {/* SLİDE 3: 4. SAYFA - "Dizi Sever Kimliğin" Büyük ve İddialı Başlık, Kutusuz Şık Renkli Unvan */}
           {currentSlide === 3 && (
-            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.4s_ease-out] text-white p-4">
+            <div className="relative h-full flex flex-col justify-between items-center text-center animate-[fadeIn_0.6s_ease-out] text-white p-4">
               
               {/* İddialı Büyük Başlık */}
               <div className="relative z-10 pt-4">
@@ -541,9 +604,9 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
                 </h2>
               </div>
 
-              {/* KUTU VEYA KART TASARIMI YOK - DOĞRUDAN GÖRSEL ÜZERİNDE ŞIK FARKLI RENKTE UNVAN */}
+              {/* KUTUSUZ VE DOĞRUDAN GÖRSEL ÜZERİNDE UNVAN */}
               <div className="relative z-10 my-auto text-center space-y-3">
-                <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tight text-[#D4A017] leading-none drop-shadow-[0_5px_25px_rgba(212,160,23,0.4)]">
+                <h1 className="text-4xl sm:text-5xl font-black uppercase tracking-tight text-[#D4A017] leading-none drop-shadow-[0_5px_30px_rgba(212,160,23,0.5)]">
                   {stats.persona.title}
                 </h1>
                 <div className="w-12 h-1 bg-[#D4A017] mx-auto opacity-70 rounded-full" />
@@ -558,11 +621,10 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
             </div>
           )}
 
-          {/* SLİDE 4: 5. SAYFA - Sol Tarafta Profil Fotoğrafı, Kutusuz / Arka Plansız Şık Final Sonuç */}
+          {/* SLİDE 4: 5. SAYFA - Sol Tarafta Gerçek Profil Fotoğrafı + Kutusuz Şık Final Sonuç */}
           {currentSlide === 4 && (
-            <div className="flex flex-col items-center gap-3 animate-[fadeIn_0.4s_ease-out] w-full h-full justify-between">
+            <div className="flex flex-col items-center gap-3 animate-[fadeIn_0.6s_ease-out] w-full h-full justify-between">
               
-              {/* KUTU VE ARKA PLAN OLMADAN DOĞRUDAN GÖRSEL ÜZERİNE İNŞA EDİLEN FİNAL RESMİ */}
               <div
                 ref={summaryCardRef}
                 className="w-full h-full max-h-[500px] p-6 text-white shadow-2xl flex flex-col justify-between text-center relative overflow-hidden"
@@ -593,8 +655,8 @@ export default function WrappedClient({ user, initialWatchData }: Props) {
                   <p className="text-xs text-white/90 font-bold">{stats.totalEpisodes} Bölüm • {stats.topGenre}</p>
                 </div>
 
-                {/* Dikey Gerçek Afiş Üçlüsü */}
-                <div className="grid grid-cols-3 gap-2 py-1">
+                {/* Dikey Orijinal Gerçek TMDB Afiş Üçlüsü */}
+                <div className="grid grid-cols-3 gap-2.5 py-1">
                   {stats.topShows.slice(0, 3).map((s) => (
                     <div key={s.id} className="flex flex-col items-center gap-1">
                       <div className="aspect-[2/3] w-full rounded-xl overflow-hidden border border-white/30 shadow-lg">

@@ -27,7 +27,7 @@ export default async function WrappedPage() {
   // İzleme geçmişini al
   const { data: watchRows } = await supabase
     .from('watch_status')
-    .select('show_id, status, rating, updated_at')
+    .select('show_id, show_name, poster_path, status, rating, updated_at')
     .eq('user_id', user.id);
 
   const watchedShows = watchRows ?? [];
