@@ -116,11 +116,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Be+Vietnam+Pro:wght@400;500;700;800;900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
           rel="stylesheet"
         />
-        <Script
+        <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5764218124463804"
           crossOrigin="anonymous"
-          strategy="afterInteractive"
         />
       </head>
       <body className="antialiased bg-[#000000] text-[#F4F6FA]" style={{ backgroundColor: '#000000' }} suppressHydrationWarning>
