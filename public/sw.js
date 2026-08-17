@@ -1,5 +1,5 @@
-const CACHE_NAME = 'episodio-pwa-v4';
-const PRECACHE_ASSETS = ['/home', '/', '/splash_bg.jpg', '/splash_video.mp4', '/apple-splash.png', '/icon.png'];
+const CACHE_NAME = 'episodio-pwa-v5';
+const PRECACHE_ASSETS = ['/home', '/', '/wrapped', '/splash_bg.jpg', '/splash_video.mp4', '/apple-splash.png', '/icon.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
