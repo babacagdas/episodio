@@ -137,11 +137,11 @@ export default function FollowListsModal({
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/85 backdrop-blur-md" onClick={() => setOpen(false)} />
 
-          {/* Modal Container: Instagram style pure dark modal */}
-          <div className="relative z-10 w-full max-w-[420px] h-[480px] bg-[#121212] border border-white/15 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+          {/* Modal Container: Glassmorphic premium dark modal */}
+          <div className="relative z-10 w-full max-w-[420px] h-[480px] bg-[#0D0D0E]/95 border border-white/10 rounded-3xl shadow-2xl backdrop-blur-xl flex flex-col overflow-hidden">
             
             {/* Header Tabs & Dedicated Close Button */}
-            <div className="relative flex items-center justify-between border-b border-white/10 shrink-0 bg-[#121212] px-3 py-1.5">
+            <div className="relative flex items-center justify-between border-b border-white/10 shrink-0 bg-transparent px-3.5 py-2">
               <div className="flex items-center gap-1 min-w-0 pr-8">
                 <button
                   type="button"

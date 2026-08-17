@@ -53,7 +53,7 @@ export default function AddToListButton({ show }: Props) {
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={() => setOpen(false)} />
-          <div className="relative z-10 w-full max-w-[380px] rounded-3xl p-5 bg-[#0A0A0D] border border-white/10 shadow-2xl flex flex-col">
+          <div className="relative z-10 w-full max-w-[380px] rounded-3xl p-6 bg-[#0D0D0E]/95 border border-white/10 shadow-2xl backdrop-blur-xl flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-white">Listeye Ekle</h3>
               <button

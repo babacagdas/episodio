@@ -134,7 +134,7 @@ export default function CreateListModal({ open, onClose, onSuccess }: CreateList
       />
 
       {/* Modal Card */}
-      <div className="relative z-10 w-full max-w-[380px] bg-[#0A0A0D] border border-white/[0.1] rounded-3xl p-5 flex flex-col gap-4 shadow-[0_25px_70px_rgba(0,0,0,0.95)] backdrop-blur-2xl animate-[chatScaleIn_0.25s_cubic-bezier(0.16,1,0.3,1)_forwards]">
+      <div className="relative z-10 w-full max-w-[380px] bg-[#0D0D0E]/95 border border-white/10 rounded-3xl p-6 flex flex-col gap-4 shadow-2xl backdrop-blur-xl animate-[chatScaleIn_0.25s_cubic-bezier(0.16,1,0.3,1)_forwards]">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-1 border-b border-white/[0.06]">
@@ -247,7 +247,7 @@ export default function CreateListModal({ open, onClose, onSuccess }: CreateList
           type="button"
           onClick={handleCreate}
           disabled={loading || !name.trim()}
-          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#E50914] to-[#C91520] hover:from-[#f40d1a] hover:to-[#da1824] text-white text-xs font-bold transition-all shadow-[0_4px_15px_rgba(201,21,32,0.3)] disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2 mt-1"
+          className="w-full py-3 rounded-xl bg-[#C91520] hover:bg-[#E21825] text-white text-xs font-bold transition-all shadow-[0_4px_20px_rgba(201,21,32,0.4)] disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2 mt-1 cursor-pointer"
         >
           {loading ? (
             <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
