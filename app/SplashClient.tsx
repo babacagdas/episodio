@@ -202,7 +202,7 @@ export default function SplashClient({ initialModal = null }: Props) {
 
   return (
     <div suppressHydrationWarning className="bg-[#000000] h-[100dvh] min-h-[100svh] text-white font-body-md overflow-hidden antialiased relative select-none">
-      
+
       {/* Premium Cinematic Background */}
       <div className="fixed inset-0 z-0">
         <img
@@ -215,7 +215,7 @@ export default function SplashClient({ initialModal = null }: Props) {
 
       {/* Main Container */}
       <main className="relative z-20 flex h-full w-full flex-col items-center justify-between px-6 py-8 md:py-12">
-        
+
         {/* Top Spacer */}
         <div className="flex-1 w-full" />
 
@@ -263,13 +263,13 @@ export default function SplashClient({ initialModal = null }: Props) {
       {/* Glassmorphic Bottom Sheet Sign In Modal */}
       {showSignInModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
-          
+
           {/* Backdrop Click to Close */}
           <div className="absolute inset-0" onClick={() => setShowSignInModal(false)} />
 
           {/* Modal Card */}
           <div className="relative w-full max-w-md bg-[#0D0D0E]/95 border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl backdrop-blur-xl z-10 animate-slideUp">
-            
+
             {/* Top Handle Indicator */}
             <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-5 sm:hidden" />
 
@@ -420,13 +420,13 @@ export default function SplashClient({ initialModal = null }: Props) {
       {/* Glassmorphic Bottom Sheet Sign Up Modal */}
       {showSignUpModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
-          
+
           {/* Backdrop Click to Close */}
           <div className="absolute inset-0" onClick={() => setShowSignUpModal(false)} />
 
           {/* Modal Card */}
           <div className="relative w-full max-w-md bg-[#0D0D0E]/95 border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl backdrop-blur-xl z-10 animate-slideUp max-h-[90vh] overflow-y-auto">
-            
+
             {/* Top Handle Indicator */}
             <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mb-5 sm:hidden" />
 

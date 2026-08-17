@@ -885,11 +885,11 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                         <span className="material-symbols-outlined text-lg">sentiment_satisfied</span>
                       </button>
 
-                      {/* Dizi Paylaş Butonu */}
+                      {/* Dizi Paylaş Butonu (Masaüstünde Göster, Mobilde Taşmayı Önlemek İçin Gizli) */}
                       <button
                         type="button"
                         onClick={() => setShowShareModal(true)}
-                        className="w-7 h-7 rounded-full hover:bg-white/[0.04] flex items-center justify-center transition-colors text-white/30 hover:text-[#C91520]"
+                        className="hidden md:flex w-7 h-7 rounded-full hover:bg-white/[0.04] items-center justify-center transition-colors text-white/30 hover:text-[#C91520]"
                         title="Dizi Öner / Paylaş"
                       >
                         <span className="material-symbols-outlined text-lg">local_activity</span>
@@ -922,16 +922,16 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                       placeholder="Bir mesaj yazın..."
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
-                      className="flex-1 bg-transparent border-0 px-2 py-1 text-[16px] md:text-xs text-white placeholder-white/20 focus:outline-none focus:ring-0"
+                      className="flex-1 bg-transparent border-0 px-2 py-1 text-[15px] md:text-xs text-white placeholder-white/20 focus:outline-none focus:ring-0"
                     />
 
-                    {/* Gönder Butonu - Standalone Instagram Paperplane Icon */}
+                    {/* Gönder Butonu - Instagram Tarzı Etli / Dolgun Kağıt Uçak İkonu */}
                     <button
                       type="submit"
                       disabled={!inputMessage.trim()}
-                      className={`p-1.5 shrink-0 transition-all duration-200 active:scale-90 ${
+                      className={`p-1.5 shrink-0 transition-all duration-200 active:scale-90 flex items-center justify-center ${
                         inputMessage.trim()
-                          ? 'text-[#C91520] hover:text-[#E50914] cursor-pointer opacity-100'
+                          ? 'text-[#C91520] hover:text-[#E21825] cursor-pointer opacity-100 scale-105 drop-shadow-[0_2px_10px_rgba(201,21,32,0.5)]'
                           : 'text-white/20 cursor-not-allowed opacity-30'
                       }`}
                       aria-label="Mesaj gönder"
@@ -939,15 +939,10 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                     >
                       <svg
                         viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="w-5 h-5"
+                        fill="currentColor"
+                        className="w-5.5 h-5.5 sm:w-6 sm:h-6 transform rotate-[-10deg]"
                       >
-                        <line x1="22" y1="2" x2="11" y2="13" />
-                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
                       </svg>
                     </button>
                   </form>
