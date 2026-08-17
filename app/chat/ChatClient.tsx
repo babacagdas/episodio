@@ -885,16 +885,6 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                         <span className="material-symbols-outlined text-lg">sentiment_satisfied</span>
                       </button>
 
-                      {/* Dizi Paylaş Butonu (Masaüstünde Göster, Mobilde Taşmayı Önlemek İçin Gizli) */}
-                      <button
-                        type="button"
-                        onClick={() => setShowShareModal(true)}
-                        className="hidden md:flex w-7 h-7 rounded-full hover:bg-white/[0.04] items-center justify-center transition-colors text-white/30 hover:text-[#C91520]"
-                        title="Dizi Öner / Paylaş"
-                      >
-                        <span className="material-symbols-outlined text-lg">local_activity</span>
-                      </button>
-
                       {showEmojiPicker && (
                         <>
                           <div className="fixed inset-0 z-40" onClick={() => setShowEmojiPicker(false)} />
