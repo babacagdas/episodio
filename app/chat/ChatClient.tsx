@@ -869,17 +869,17 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                 </div>
 
                 {/* Mesaj Yazma Girişi */}
-                <div className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:p-4 bg-[#0A0A0A]/90 backdrop-blur-md border-t border-white/[0.05] shrink-0">
+                <div className="p-2.5 sm:p-3 pb-[calc(0.65rem+env(safe-area-inset-bottom,0px))] md:p-4 bg-[#0A0A0A]/95 backdrop-blur-md border-t border-white/[0.06] shrink-0 w-full max-w-full overflow-hidden">
                   <form
                     onSubmit={handleSendMessage}
-                    className="bg-white/[0.02] border border-white/[0.06] rounded-full py-1.5 px-3 flex items-center gap-2 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.2)]"
+                    className="w-full bg-white/[0.03] border border-white/[0.08] rounded-full py-1 px-3 flex items-center gap-1.5 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.2)] overflow-hidden"
                   >
                     {/* Emoji Picker Butonu ve Listesi */}
-                    <div className="relative flex items-center gap-1">
+                    <div className="relative shrink-0 flex items-center">
                       <button
                         type="button"
                         onClick={() => setShowEmojiPicker((prev) => !prev)}
-                        className={`w-7 h-7 rounded-full hover:bg-white/[0.04] flex items-center justify-center transition-colors ${showEmojiPicker ? 'text-[#D4A017]' : 'text-white/30 hover:text-white/70'}`}
+                        className={`w-7 h-7 rounded-full hover:bg-white/[0.04] flex items-center justify-center transition-colors ${showEmojiPicker ? 'text-[#D4A017]' : 'text-white/40 hover:text-white/80'}`}
                         title="Emoji Ekle"
                       >
                         <span className="material-symbols-outlined text-lg">sentiment_satisfied</span>
@@ -912,10 +912,10 @@ export default function ChatClient({ currentUser }: ChatClientProps) {
                       placeholder="Bir mesaj yazın..."
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
-                      className="flex-1 bg-transparent border-0 px-2 py-1 text-[15px] md:text-xs text-white placeholder-white/20 focus:outline-none focus:ring-0"
+                      className="flex-1 min-w-0 bg-transparent border-0 px-1.5 py-1.5 text-[14px] sm:text-[15px] md:text-xs text-white placeholder-white/30 focus:outline-none focus:ring-0"
                     />
 
-                    {/* Gönder Butonu - Instagram Tarzı Etli / Dolgun Kağıt Uçak İkonu */}
+                    {/* Gönder Butonu - Mesaj kapsülünün en sağında 100% sabit */}
                     <button
                       type="submit"
                       disabled={!inputMessage.trim()}
