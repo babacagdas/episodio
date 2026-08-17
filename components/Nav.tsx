@@ -265,17 +265,17 @@ export function BottomNav() {
               className="flex h-full w-full items-center justify-center transition-transform active:scale-90"
             >
               {isProfile && userAvatar ? (
-                <div className={`relative flex items-center justify-center transition-all duration-200 ${active ? 'scale-110' : 'opacity-65 hover:opacity-100'}`}>
+                <div className={`relative flex items-center justify-center transition-all duration-200 ${active ? 'scale-105 opacity-100' : 'opacity-40 hover:opacity-100'}`}>
                   <img
                     src={userAvatar}
                     alt="Profil"
                     className={`h-6 w-6 rounded-full object-cover border transition-all ${
-                      active ? 'border-white ring-2 ring-white/50' : 'border-white/20'
+                      active ? 'border-white' : 'border-white/20'
                     }`}
                   />
                 </div>
               ) : (
-                <span className={`relative flex items-center justify-center transition-all duration-200 ${active ? 'text-white font-black scale-110 drop-shadow-[0_0_10px_rgba(255,255,255,0.65)]' : 'text-white/35 hover:text-white/75'}`}>
+                <span className={`relative flex items-center justify-center transition-all duration-200 ${active ? 'text-white scale-105' : 'text-white/35 hover:text-white/75'}`}>
                   <span
                     className="material-symbols-outlined text-[23px]"
                     style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
