@@ -262,7 +262,8 @@ export function BottomNav() {
               href={href}
               aria-label={label}
               title={label}
-              className="flex h-full w-full items-center justify-center transition-transform active:scale-90"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+              className="flex h-full w-full items-center justify-center transition-transform active:scale-95 outline-none focus:outline-none focus:ring-0 focus-visible:outline-none select-none"
             >
               {isProfile && userAvatar ? (
                 <div className={`relative flex items-center justify-center transition-all duration-200 ${active ? 'scale-105 opacity-100' : 'opacity-40 hover:opacity-100'}`}>

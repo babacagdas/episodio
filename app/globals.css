@@ -33,8 +33,9 @@
     color: #fff;
   }
 
-  /* Kaydırma çubuklarını tüm tarayıcılarda, PWA'da ve mobil cihazlarda tamamen gizleme */
+  /* Kaydırma çubuklarını tüm tarayıcılarda, PWA'da ve mobil cihazlarda tamamen gizleme & dokunma halkalarını engelleme */
   *, *::before, *::after {
+    -webkit-tap-highlight-color: transparent !important;
     scrollbar-width: none !important; /* Firefox */
     -ms-overflow-style: none !important; /* IE and Edge */
   }
