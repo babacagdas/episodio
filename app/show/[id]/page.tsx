@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { BottomNav } from '@/components/Nav';
@@ -12,6 +13,59 @@ import ThemeMusicPlayer from './ThemeMusicPlayer';
 const BACKDROP_BASE = 'https://image.tmdb.org/t/p/original';
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 const PERSON_BASE = 'https://image.tmdb.org/t/p/w185';
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const show = await getShowDetail(id);
+    const year = show.first_air_date?.slice(0, 4) ? ` (${show.first_air_date.slice(0, 4)})` : '';
+    const title = `${show.name}${year} Konusu, Sezonları ve İncelemeleri`;
+    const description = show.overview
+      ? `${show.name} dizisini takip et, bölüm incelemelerini oku ve izleme listene ekle. ${show.overview.slice(0, 150)}...`
+      : `${show.name} dizisinin tüm sezonları, bölüm yorumları ve oyuncu kadrosu Episodio'da.`;
+
+    const image = show.backdrop_path
+      ? `https://image.tmdb.org/t/p/w1280${show.backdrop_path}`
+      : show.poster_path
+      ? `https://image.tmdb.org/t/p/w500${show.poster_path}`
+      : 'https://episodio.com.tr/icon.png';
+
+    return {
+      title,
+      description,
+      keywords: [
+        show.name,
+        `${show.name} konusu`,
+        `${show.name} kaç sezon`,
+        `${show.name} izleme listesi`,
+        `${show.name} yorumları`,
+        `${show.name} oyuncuları`,
+        'episodio',
+      ],
+      openGraph: {
+        title: `${show.name} | Episodio`,
+        description,
+        url: `https://episodio.com.tr/show/${id}`,
+        siteName: 'Episodio',
+        images: [{ url: image, width: 1200, height: 630, alt: show.name }],
+        type: 'video.tv_show',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${show.name} | Episodio`,
+        description,
+        images: [image],
+      },
+      alternates: {
+        canonical: `https://episodio.com.tr/show/${id}`,
+      },
+    };
+  } catch {
+    return {
+      title: 'Dizi Detayı | Episodio',
+    };
+  }
+}
 
 export default async function ShowDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

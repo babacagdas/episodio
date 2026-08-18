@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
@@ -8,6 +9,53 @@ import { ActorBackButton, ActorFavoriteButton } from './ActorHeaderActions';
 
 const PROFILE_BASE = 'https://image.tmdb.org/t/p/w500';
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const person = await getPersonDetail(id);
+    if (!person) return { title: 'Oyuncu Profili | Episodio' };
+    const title = `${person.name} Biyografisi, Oynadığı Diziler ve Filmler`;
+    const description = person.biography
+      ? `${person.name} hakkında tüm bilgiler, biyografisi, rol aldığı diziler ve hayran yorumları. ${person.biography.slice(0, 140)}...`
+      : `${person.name} rol aldığı diziler, hayatı ve hayran yorumları Episodio'da.`;
+
+    const image = person.profile_path
+      ? `https://image.tmdb.org/t/p/w500${person.profile_path}`
+      : 'https://episodio.com.tr/icon.png';
+
+    return {
+      title,
+      description,
+      keywords: [
+        person.name,
+        `${person.name} dizileri`,
+        `${person.name} kimdir`,
+        `${person.name} hayatı`,
+        'episodio',
+      ],
+      openGraph: {
+        title: `${person.name} | Episodio`,
+        description,
+        url: `https://episodio.com.tr/person/${id}`,
+        siteName: 'Episodio',
+        images: [{ url: image, width: 500, height: 750, alt: person.name }],
+        type: 'profile',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${person.name} | Episodio`,
+        description,
+        images: [image],
+      },
+      alternates: {
+        canonical: `https://episodio.com.tr/person/${id}`,
+      },
+    };
+  } catch {
+    return { title: 'Oyuncu Profili | Episodio' };
+  }
+}
 
 export default async function PersonDetailPage({
   params,
