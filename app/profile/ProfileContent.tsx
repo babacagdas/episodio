@@ -1036,13 +1036,6 @@ export default function ProfileContent({
               <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight">{displayName}</h2>
               {profile.username && <p className="text-sm sm:text-base font-medium text-white/75 mt-1 drop-shadow-sm">@{profile.username}</p>}
               {profile.bio && <p className="text-sm text-white/50 mt-2 max-w-md">{profile.bio}</p>}
-              <Link
-                href="/wrapped"
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-[#C91520]/20 to-[#D4A017]/20 border border-[#D4A017]/40 text-[#D4A017] text-xs font-bold hover:scale-105 transition-all shadow-[0_0_15px_rgba(212,160,23,0.2)] mt-2"
-              >
-                <span className="material-symbols-outlined text-sm">movie</span>
-                <span>Dizi Özeti (Wrapped)</span>
-              </Link>
             </div>
             <div className="hidden">
               <button
