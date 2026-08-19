@@ -1104,7 +1104,7 @@ export default function ProfileContent({
                     onClick={onClick}
                     className={`text-center ${onClick ? 'cursor-pointer hover:opacity-80 active:scale-95 transition-all' : ''}`}
                   >
-                    <span className="block text-base font-bold text-white">{val}</span>
+                    <span className={`block text-base font-extrabold ${label === 'İzleme Süresi' ? 'text-[#D4A017]' : 'text-white'}`}>{val}</span>
                     <span className="text-[9px] text-white/30 uppercase tracking-wide">{label}</span>
                   </div>
                 ))}
@@ -1131,7 +1131,7 @@ export default function ProfileContent({
                     onClick={onClick}
                     className={`text-center ${onClick ? 'cursor-pointer hover:opacity-80 active:scale-95 transition-all' : ''}`}
                   >
-                    <span className="block text-2xl font-bold text-white">{val}</span>
+                    <span className={`block text-2xl font-extrabold ${label === 'İzleme Süresi' ? 'text-[#D4A017]' : 'text-white'}`}>{val}</span>
                     <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
                   </div>
                 ))}
