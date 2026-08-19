@@ -10,6 +10,7 @@ import ListPreviewCard from '@/components/ListPreviewCard';
 import ShowCard from '@/components/ShowCard';
 import { CardSkeleton } from '@/components/Skeletons';
 import FollowListsModal from '@/app/u/[username]/FollowListsModal';
+import UserReviewsModal from '@/components/UserReviewsModal';
 import type { User } from '@supabase/supabase-js';
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
@@ -123,6 +124,7 @@ export default function ProfileContent({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [listModalOpen, setListModalOpen] = useState(false);
+  const [reviewsModalOpen, setReviewsModalOpen] = useState(false);
   const [listName, setListName] = useState('');
   const [listDescription, setListDescription] = useState('');
   const [listVisibility, setListVisibility] = useState<'public' | 'private'>('public');
@@ -1093,11 +1095,15 @@ export default function ProfileContent({
             <>
               <div className="grid grid-cols-3 gap-2.5 md:hidden">
                 {[
-                  { val: statsLoading ? '...' : watchedCount, label: 'İzlendi' },
-                  { val: formattedWatchTime, label: 'İzleme Süresi' },
-                  { val: statsLoading ? '...' : reviewCount, label: 'Yorum' },
-                ].map(({ val, label }) => (
-                  <div key={label} className="text-center">
+                  { val: statsLoading ? '...' : watchedCount, label: 'İzlendi', onClick: undefined },
+                  { val: formattedWatchTime, label: 'İzleme Süresi', onClick: undefined },
+                  { val: statsLoading ? '...' : reviewCount, label: 'Yorum', onClick: () => setReviewsModalOpen(true) },
+                ].map(({ val, label, onClick }) => (
+                  <div
+                    key={label}
+                    onClick={onClick}
+                    className={`text-center ${onClick ? 'cursor-pointer hover:opacity-80 active:scale-95 transition-all' : ''}`}
+                  >
                     <span className="block text-base font-bold text-white">{val}</span>
                     <span className="text-[9px] text-white/30 uppercase tracking-wide">{label}</span>
                   </div>
@@ -1116,11 +1122,15 @@ export default function ProfileContent({
                 )}
                 <div className="w-px h-8 bg-white/10" />
                 {[
-                  { val: statsLoading ? '...' : watchedCount, label: 'İzlendi' },
-                  { val: statsLoading ? '...' : reviewCount, label: 'Yorum' },
-                  { val: formattedWatchTime, label: 'İzleme Süresi' },
-                ].map(({ val, label }) => (
-                  <div key={label} className="text-center">
+                  { val: statsLoading ? '...' : watchedCount, label: 'İzlendi', onClick: undefined },
+                  { val: statsLoading ? '...' : reviewCount, label: 'Yorum', onClick: () => setReviewsModalOpen(true) },
+                  { val: formattedWatchTime, label: 'İzleme Süresi', onClick: undefined },
+                ].map(({ val, label, onClick }) => (
+                  <div
+                    key={label}
+                    onClick={onClick}
+                    className={`text-center ${onClick ? 'cursor-pointer hover:opacity-80 active:scale-95 transition-all' : ''}`}
+                  >
                     <span className="block text-2xl font-bold text-white">{val}</span>
                     <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
                   </div>
@@ -1487,6 +1497,16 @@ export default function ProfileContent({
           </div>
         )}
       </section>
+
+      {user && (
+        <UserReviewsModal
+          userId={user.id}
+          username={profile.username || displayName}
+          avatarUrl={avatar || undefined}
+          isOpen={reviewsModalOpen}
+          onClose={() => setReviewsModalOpen(false)}
+        />
+      )}
     </main>
   );
 }

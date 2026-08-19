@@ -6,6 +6,7 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import FollowButton from './FollowButton';
 import FollowListsModal from './FollowListsModal';
 import WatchedShowsSection from './WatchedShowsSection';
+import UserReviewsClientSection from './UserReviewsClientSection';
 import ListPreviewCard from '@/components/ListPreviewCard';
 import { getTvBackdropPath } from '@/lib/tmdb';
 
@@ -296,18 +297,15 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
             return (
               <>
                 {/* Mobil: İzlendi / İzleme Süresi / Yorum */}
-                <div className="grid grid-cols-3 gap-4 md:hidden">
-                  {[
-                    { val: watchedStatValue, label: 'İzlendi' },
-                    { val: watchTimeStatValue, label: 'İzleme Süresi' },
-                    { val: reviewCount, label: 'Yorum' },
-                  ].map(({ val, label }) => (
-                    <div key={label} className="text-center">
-                      <span className="block text-base sm:text-2xl font-bold text-white">{val}</span>
-                      <span className="text-[10px] sm:text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
-                    </div>
-                  ))}
-                </div>
+                <UserReviewsClientSection
+                  userId={profile.id}
+                  username={displayName}
+                  avatarUrl={profile.avatar_url || undefined}
+                  reviewCount={reviewCount}
+                  watchedStatValue={watchedStatValue}
+                  watchTimeStatValue={watchTimeStatValue}
+                  isDesktop={false}
+                />
 
                 {/* Mobil: Sade Dizi Zevk Uyumu Yazısı (Çerçevesiz, İkonsuz) */}
                 {matchPercentage !== null && (
@@ -330,16 +328,15 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                       order="following-first"
                     />
                     <div className="w-px h-8 bg-white/10" />
-                    {[
-                      { val: watchedStatValue, label: 'İzlendi' },
-                      { val: reviewCount, label: 'Yorum' },
-                      { val: watchTimeStatValue, label: 'İzleme Süresi' },
-                    ].map(({ val, label }) => (
-                      <div key={label} className="text-center">
-                        <span className="block text-2xl font-bold text-white">{val}</span>
-                        <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
-                      </div>
-                    ))}
+                    <UserReviewsClientSection
+                      userId={profile.id}
+                      username={displayName}
+                      avatarUrl={profile.avatar_url || undefined}
+                      reviewCount={reviewCount}
+                      watchedStatValue={watchedStatValue}
+                      watchTimeStatValue={watchTimeStatValue}
+                      isDesktop={true}
+                    />
                   </div>
 
                   {matchPercentage !== null && (
