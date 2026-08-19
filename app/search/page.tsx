@@ -683,19 +683,19 @@ export default function Search() {
         {!query.trim() && (
           <div className="pt-10 border-t border-white/10 space-y-6">
             
-            {/* Büyük Sade Başlık + Şık Yan Yana Kategori & Sıralama Modalları */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* Büyük Sade Başlık + Şık Yan Yana Kategori & Sıralama Modalları (Mobilde Ortalandı) */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-4 text-center sm:text-left">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                   Gelişmiş Dizi Kütüphanesi
                 </h2>
                 <p className="text-xs sm:text-sm text-white/50 mt-1">
-                  Tüm zamanların dizilerini puanlarına, yıllarına ve resmi TMDB türlerine göre özgürce filtrele
+                  Tüm zamanların efsanevi dizilerini puanlarına, yıllarına ve türlerine göre özgürce keşfet
                 </p>
               </div>
 
-              {/* Yan Yana Kategori & Sıralama Butonları */}
-              <div className="flex items-center gap-3 shrink-0">
+              {/* Yan Yana Kategori & Sıralama Butonları (Mobilde Ortalandı) */}
+              <div className="flex items-center justify-center sm:justify-end gap-3 shrink-0 w-full sm:w-auto">
                 
                 {/* 1. Kategori Seçim Butonu & Açılır Modalı (Mobilde %50 küçültüldü) */}
                 <div className="relative">
