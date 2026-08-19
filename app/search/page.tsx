@@ -697,7 +697,7 @@ export default function Search() {
               {/* Yan Yana Kategori & Sıralama Butonları */}
               <div className="flex items-center gap-3 shrink-0">
                 
-                {/* 1. Kategori Seçim Butonu & Açılır Modalı */}
+                {/* 1. Kategori Seçim Butonu & Açılır Modalı (Mobilde %50 küçültüldü) */}
                 <div className="relative">
                   <button
                     type="button"
@@ -705,25 +705,25 @@ export default function Search() {
                       setCategoryModalOpen((prev) => !prev);
                       setSortModalOpen(false);
                     }}
-                    className={`px-4 py-2 text-xs font-bold rounded-full transition-all flex items-center gap-2 border backdrop-blur-md shadow-md cursor-pointer active:scale-95 ${
+                    className={`px-2.5 py-1 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-bold rounded-full transition-all flex items-center gap-1 sm:gap-2 border backdrop-blur-md shadow-md cursor-pointer active:scale-95 ${
                       selectedCategories.size > 0 && !selectedCategories.has('all')
                         ? 'bg-[#C91520] border-[#C91520] text-white shadow-[0_0_15px_rgba(201,21,32,0.4)]'
                         : 'bg-white/[0.08] hover:bg-white/[0.14] border-white/15 text-white'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-base">category</span>
+                    <span className="material-symbols-outlined text-xs sm:text-base">category</span>
                     <span>
                       {selectedCategories.has('all')
                         ? 'Tüm Kategoriler'
                         : `Kategoriler (${selectedCategories.size})`}
                     </span>
-                    <span className="material-symbols-outlined text-sm opacity-60 ml-0.5">expand_more</span>
+                    <span className="material-symbols-outlined text-[12px] sm:text-sm opacity-60 ml-0.5">expand_more</span>
                   </button>
 
                   {categoryModalOpen && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setCategoryModalOpen(false)} />
-                      <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 z-50 bg-[#0A0A0E]/95 border border-white/15 rounded-2xl p-2 shadow-2xl w-[270px] sm:w-[300px] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
+                      <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-2 z-50 bg-[#0A0A0E]/95 border border-white/15 rounded-2xl p-2 shadow-2xl w-[calc(100vw-32px)] max-w-[280px] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
                         <div className="px-3 py-1 flex items-center justify-end border-b border-white/10 mb-1 min-h-[28px]">
                           {!selectedCategories.has('all') && (
                             <button
@@ -763,7 +763,7 @@ export default function Search() {
                   )}
                 </div>
 
-                {/* 2. Sıralama Seçim Butonu & Açılır Modalı */}
+                {/* 2. Sıralama Seçim Butonu & Açılır Modalı (Mobilde %50 küçültüldü) */}
                 <div className="relative">
                   <button
                     type="button"
@@ -771,17 +771,17 @@ export default function Search() {
                       setSortModalOpen((prev) => !prev);
                       setCategoryModalOpen(false);
                     }}
-                    className="px-4 py-2 text-xs font-bold rounded-full transition-all flex items-center gap-2 border border-white/15 bg-white/[0.08] hover:bg-white/[0.14] text-white active:scale-95 cursor-pointer backdrop-blur-md shadow-md"
+                    className="px-2.5 py-1 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-bold rounded-full transition-all flex items-center gap-1 sm:gap-2 border border-white/15 bg-white/[0.08] hover:bg-white/[0.14] text-white active:scale-95 cursor-pointer backdrop-blur-md shadow-md"
                   >
-                    <span className="material-symbols-outlined text-base text-[#C91520]">{currentSortOption.icon}</span>
+                    <span className="material-symbols-outlined text-xs sm:text-base text-[#C91520]">{currentSortOption.icon}</span>
                     <span>{currentSortOption.label}</span>
-                    <span className="material-symbols-outlined text-sm opacity-60 ml-0.5">expand_more</span>
+                    <span className="material-symbols-outlined text-[12px] sm:text-sm opacity-60 ml-0.5">expand_more</span>
                   </button>
 
                   {sortModalOpen && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setSortModalOpen(false)} />
-                      <div className="absolute right-0 top-full mt-2 z-50 bg-[#0A0A0E]/95 border border-white/15 rounded-2xl p-1.5 shadow-2xl min-w-[210px] backdrop-blur-2xl space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="absolute right-0 top-full mt-2 z-50 bg-[#0A0A0E]/95 border border-white/15 rounded-2xl p-1.5 shadow-2xl w-[calc(100vw-32px)] max-w-[220px] backdrop-blur-2xl space-y-1 animate-in fade-in zoom-in-95 duration-150">
                         <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/10 mb-1">
                           Sıralama Seçeneği
                         </div>
