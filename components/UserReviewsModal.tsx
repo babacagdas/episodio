@@ -266,9 +266,9 @@ export default function UserReviewsModal({
                         src={item.poster_path}
                         alt={item.show_name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        crossOrigin="anonymous"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = 'https://episodio.com.tr/icon.png';
+                          // Fallback to text box if image network error occurs
+                          e.currentTarget.style.display = 'none';
                         }}
                       />
                     ) : (
