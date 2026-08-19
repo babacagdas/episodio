@@ -31,24 +31,41 @@ interface PopularList {
   creatorAvatar: string | null;
 }
 
+// ⚡ Resmi Tüm TMDB TV Türleri & Özel Koleksiyonlar
 const CATEGORY_OPTIONS = [
   { id: 'all', label: 'Tüm Kütüphane', icon: 'grid_view' },
   { id: 'top8', label: '8.0+ Efsaneler', icon: 'star' },
+  
+  // TMDB Resmi TV Türleri
+  { id: 'action', label: 'Aksiyon & Macera', icon: 'local_fire_department' },
+  { id: 'animation', label: 'Animasyon', icon: 'animation' },
+  { id: 'comedy', label: 'Komedi', icon: 'mood' },
+  { id: 'crime', label: 'Suç & Polisiye', icon: 'local_police' },
+  { id: 'doc', label: 'Belgesel', icon: 'auto_stories' },
+  { id: 'drama', label: 'Dram', icon: 'theater_comedy' },
+  { id: 'family', label: 'Aile', icon: 'family_restroom' },
+  { id: 'kids', label: 'Çocuk', icon: 'child_care' },
+  { id: 'mystery', label: 'Gizem', icon: 'search' },
+  { id: 'news', label: 'Haber & Aktüalite', icon: 'newspaper' },
+  { id: 'reality', label: 'Reality & Yarışma', icon: 'live_tv' },
+  { id: 'scifi', label: 'Bilimkurgu & Fantastik', icon: 'rocket_launch' },
+  { id: 'soap', label: 'Pembe Dizi & Günlük', icon: 'tv_gen' },
+  { id: 'talk', label: 'Talk Show & Sohbet', icon: 'forum' },
+  { id: 'war', label: 'Savaş & Politika', icon: 'military_tech' },
+  { id: 'western', label: 'Kovboy (Western)', icon: 'explore' },
+
+  // Ülke & Bölge Koleksiyonları
+  { id: 'tr', label: 'Türk Dizileri', icon: 'flag' },
+  { id: 'kr', label: 'Kore Dizileri (K-Drama)', icon: 'subtitles' },
+  { id: 'us', label: 'ABD Dizileri', icon: 'public' },
+  { id: 'uk', label: 'İngiliz Dizileri', icon: 'domain' },
+
+  // Dönem Filtreleri
   { id: '2020s', label: '2020\'ler', icon: 'calendar_today' },
   { id: '2010s', label: '2010\'lar', icon: 'calendar_today' },
   { id: '2000s', label: '2000\'ler', icon: 'calendar_today' },
   { id: '90s', label: '90\'lar', icon: 'calendar_today' },
   { id: '80s', label: '80\'ler & Öncesi', icon: 'history' },
-  { id: 'drama', label: 'Dram', icon: 'theater_comedy' },
-  { id: 'action', label: 'Aksiyon & Macera', icon: 'local_fire_department' },
-  { id: 'comedy', label: 'Komedi', icon: 'mood' },
-  { id: 'scifi', label: 'Bilimkurgu & Gizem', icon: 'rocket_launch' },
-  { id: 'crime', label: 'Suç & Polisiye', icon: 'local_police' },
-  { id: 'doc', label: 'Tarih & Belgesel', icon: 'auto_stories' },
-  { id: 'fantasy', label: 'Fantastik & Animasyon', icon: 'auto_awesome' },
-  { id: 'horror', label: 'Korku & Gerilim', icon: 'skull' },
-  { id: 'tr', label: 'Türk Dizileri', icon: 'flag' },
-  { id: 'kr', label: 'Kore Dizileri (K-Drama)', icon: 'subtitles' },
 ];
 
 const SORT_OPTIONS = [
@@ -155,15 +172,24 @@ export default function Search() {
         const decade = Array.from(catSet).find((c) => ['2020s', '2010s', '2000s', '90s', '80s'].includes(c));
         if (decade) qs.set('decade', decade);
 
+        // TMDB Resmi Tür Kimlikleri
         const genreMap: Record<string, string> = {
-          drama: '18',
           action: '10759',
+          animation: '16',
           comedy: '35',
-          scifi: '10765',
           crime: '80',
           doc: '99',
-          fantasy: '10765',
-          horror: '9648',
+          drama: '18',
+          family: '10751',
+          kids: '10762',
+          mystery: '9648',
+          news: '10763',
+          reality: '10764',
+          scifi: '10765',
+          soap: '10766',
+          talk: '10767',
+          war: '10768',
+          western: '37',
         };
 
         const selectedGenre = Array.from(catSet).find((c) => genreMap[c]);
@@ -171,6 +197,8 @@ export default function Search() {
 
         if (catSet.has('tr')) qs.set('originCountry', 'TR');
         if (catSet.has('kr')) qs.set('originCountry', 'KR');
+        if (catSet.has('us')) qs.set('originCountry', 'US');
+        if (catSet.has('uk')) qs.set('originCountry', 'GB');
       }
 
       const res = await fetch(`/api/shows/filter?${qs.toString()}`);
@@ -662,7 +690,7 @@ export default function Search() {
                   Gelişmiş Dizi Kütüphanesi
                 </h2>
                 <p className="text-xs sm:text-sm text-white/50 mt-1">
-                  Tüm zamanların dizilerini puanlarına, yıllarına ve türlerine göre özgürce filtrele
+                  Tüm zamanların dizilerini puanlarına, yıllarına ve resmi TMDB türlerine göre özgürce filtrele
                 </p>
               </div>
 
@@ -695,10 +723,10 @@ export default function Search() {
                   {categoryModalOpen && (
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setCategoryModalOpen(false)} />
-                      <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 z-50 bg-[#0A0A0E]/95 border border-white/15 rounded-2xl p-2 shadow-2xl w-[260px] sm:w-[280px] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
+                      <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 z-50 bg-[#0A0A0E]/95 border border-white/15 rounded-2xl p-2 shadow-2xl w-[270px] sm:w-[300px] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
                         <div className="px-3 py-1.5 flex items-center justify-between border-b border-white/10 mb-1">
                           <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/40">
-                            Kategoriler & Türler
+                            Tüm TMDB Türleri & Kategoriler
                           </span>
                           {!selectedCategories.has('all') && (
                             <button
@@ -711,7 +739,7 @@ export default function Search() {
                           )}
                         </div>
 
-                        <div className="max-h-72 overflow-y-auto space-y-0.5 pr-1 no-scrollbar">
+                        <div className="max-h-80 overflow-y-auto space-y-0.5 pr-1 no-scrollbar">
                           {CATEGORY_OPTIONS.map((cat) => {
                             const isSelected = selectedCategories.has(cat.id);
                             return (
