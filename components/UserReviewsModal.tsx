@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { getShowDetail } from '@/lib/tmdb';
 
 interface UserReviewsModalProps {
   userId: string;
@@ -16,7 +15,7 @@ interface UserReviewsModalProps {
 interface CombinedReviewItem {
   id: string;
   type: 'show_review' | 'episode_comment';
-  show_id: number;
+  show_id: number | string;
   show_name: string;
   poster_path: string;
   rating?: number | null;
@@ -68,56 +67,62 @@ export default function UserReviewsModal({
           .order('created_at', { ascending: false })
           .limit(40);
 
-        // 3. Kullanıcının watch_status tablosundan mevcut dizi isimlerini ve afişlerini doğrudan çek
+        // 3. Kullanıcının watch_status tablosundan mevcut dizi isimlerini ve afişlerini çek
         const { data: watchStatusData } = await supabase
           .from('watch_status')
           .select('show_id, show_name, poster_path')
           .eq('user_id', userId);
 
-        const showDetailsMap: Record<number, { name: string; poster: string }> = {};
+        const showDetailsMap: Record<string, { name: string; poster: string }> = {};
 
         (watchStatusData || []).forEach((row) => {
           if (row.show_id) {
-            showDetailsMap[row.show_id] = {
+            const idKey = String(row.show_id);
+            showDetailsMap[idKey] = {
               name: row.show_name || 'Dizi',
               poster: formatPosterUrl(row.poster_path),
             };
           }
         });
 
-        // 4. Benzersiz Show ID'lerinden haritada eksik kalanları TMDB API ile tamamla
+        // 4. Tüm benzersiz Show ID'leri topla
         const allShowIds = Array.from(
           new Set([
-            ...(showReviews || []).map((r) => r.show_id),
-            ...(epComments || []).map((c) => c.show_id),
+            ...(showReviews || []).map((r) => String(r.show_id)),
+            ...(epComments || []).map((c) => String(c.show_id)),
           ])
-        );
+        ).filter(Boolean);
 
-        const missingShowIds = allShowIds.filter(
+        // Eksik veya afişi bulunmayan tüm dizileri sunucumuzun /api/shows/batch-details rotasından çek
+        const missingIds = allShowIds.filter(
           (id) => !showDetailsMap[id] || !showDetailsMap[id].poster
         );
 
-        await Promise.all(
-          missingShowIds.map(async (showId) => {
-            try {
-              const detail = await getShowDetail(String(showId));
-              if (detail) {
-                showDetailsMap[showId] = {
-                  name: detail.name || detail.original_name || 'Dizi',
-                  poster: formatPosterUrl(detail.poster_path),
-                };
-              }
-            } catch {
-              // fallback if TMDB call fails
+        if (missingIds.length > 0) {
+          try {
+            const apiRes = await fetch(`/api/shows/batch-details?ids=${missingIds.join(',')}`);
+            if (apiRes.ok) {
+              const batchMap: Record<string, { name: string; poster: string }> = await apiRes.json();
+              Object.keys(batchMap).forEach((idKey) => {
+                if (batchMap[idKey]) {
+                  showDetailsMap[idKey] = {
+                    name: batchMap[idKey].name || showDetailsMap[idKey]?.name || 'Dizi',
+                    poster: formatPosterUrl(batchMap[idKey].poster) || showDetailsMap[idKey]?.poster || '',
+                  };
+                }
+              });
             }
-          })
-        );
+          } catch {
+            // ignore batch fetch error
+          }
+        }
 
-        // 5. İki veri türünü birleştir ve tarihe göre sırala
+        // 5. Verileri birleştir
         const combined: CombinedReviewItem[] = [];
 
         (showReviews || []).forEach((r) => {
-          const detail = showDetailsMap[r.show_id] || { name: 'Dizi', poster: '' };
+          const idKey = String(r.show_id);
+          const detail = showDetailsMap[idKey] || { name: 'Dizi', poster: '' };
           combined.push({
             id: `show_${r.id}`,
             type: 'show_review',
@@ -131,7 +136,8 @@ export default function UserReviewsModal({
         });
 
         (epComments || []).forEach((c) => {
-          const detail = showDetailsMap[c.show_id] || { name: 'Dizi', poster: '' };
+          const idKey = String(c.show_id);
+          const detail = showDetailsMap[idKey] || { name: 'Dizi', poster: '' };
           combined.push({
             id: `ep_${c.id}`,
             type: 'episode_comment',
@@ -262,7 +268,6 @@ export default function UserReviewsModal({
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         crossOrigin="anonymous"
                         onError={(e) => {
-                          // Resim yüklenemezse varsayılan logo/görsel göster
                           (e.currentTarget as HTMLImageElement).src = 'https://episodio.com.tr/icon.png';
                         }}
                       />
