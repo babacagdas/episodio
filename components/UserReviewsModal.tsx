@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { getShowDetail } from '@/lib/tmdb';
 
 interface UserReviewsModalProps {
   userId: string;
@@ -25,8 +26,12 @@ interface CombinedReviewItem {
   created_at: string;
 }
 
-const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || '4f3b798b31a26d70c48e8946e336b135';
-const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
+function formatPosterUrl(path: string | null | undefined): string {
+  if (!path || path.trim() === '') return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (path.startsWith('/')) return `https://image.tmdb.org/t/p/w342${path}`;
+  return `https://image.tmdb.org/t/p/w342/${path}`;
+}
 
 export default function UserReviewsModal({
   userId,
@@ -53,7 +58,7 @@ export default function UserReviewsModal({
           .select('id, show_id, rating, content, created_at')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
-          .limit(30);
+          .limit(40);
 
         // 2. Bölüm Yorumlarını Çek (episode_discussions tablosu)
         const { data: epComments } = await supabase
@@ -61,9 +66,26 @@ export default function UserReviewsModal({
           .select('id, show_id, season_number, episode_number, content, created_at')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
-          .limit(30);
+          .limit(40);
 
-        // Benzersiz Show ID'lerini bulup TMDB API'sinden Dizi Adı ve Orijinal Afiş Çekme
+        // 3. Kullanıcının watch_status tablosundan mevcut dizi isimlerini ve afişlerini doğrudan çek
+        const { data: watchStatusData } = await supabase
+          .from('watch_status')
+          .select('show_id, show_name, poster_path')
+          .eq('user_id', userId);
+
+        const showDetailsMap: Record<number, { name: string; poster: string }> = {};
+
+        (watchStatusData || []).forEach((row) => {
+          if (row.show_id) {
+            showDetailsMap[row.show_id] = {
+              name: row.show_name || 'Dizi',
+              poster: formatPosterUrl(row.poster_path),
+            };
+          }
+        });
+
+        // 4. Benzersiz Show ID'lerinden haritada eksik kalanları TMDB API ile tamamla
         const allShowIds = Array.from(
           new Set([
             ...(showReviews || []).map((r) => r.show_id),
@@ -71,29 +93,27 @@ export default function UserReviewsModal({
           ])
         );
 
-        const showDetailsMap: Record<number, { name: string; poster: string }> = {};
+        const missingShowIds = allShowIds.filter(
+          (id) => !showDetailsMap[id] || !showDetailsMap[id].poster
+        );
 
         await Promise.all(
-          allShowIds.map(async (showId) => {
+          missingShowIds.map(async (showId) => {
             try {
-              const res = await fetch(
-                `https://api.themoviedb.org/3/tv/${showId}?api_key=${API_KEY}&language=tr-TR`,
-                { headers: { accept: 'application/json' } }
-              );
-              if (res.ok) {
-                const data = await res.json();
+              const detail = await getShowDetail(String(showId));
+              if (detail) {
                 showDetailsMap[showId] = {
-                  name: data.name || data.original_name || 'Dizi',
-                  poster: data.poster_path ? `${POSTER_BASE}${data.poster_path}` : '',
+                  name: detail.name || detail.original_name || 'Dizi',
+                  poster: formatPosterUrl(detail.poster_path),
                 };
               }
             } catch {
-              // fallback
+              // fallback if TMDB call fails
             }
           })
         );
 
-        // İki veriyi birleştirme ve tarihe göre sıralama
+        // 5. İki veri türünü birleştir ve tarihe göre sırala
         const combined: CombinedReviewItem[] = [];
 
         (showReviews || []).forEach((r) => {
@@ -241,10 +261,15 @@ export default function UserReviewsModal({
                         alt={item.show_name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         crossOrigin="anonymous"
+                        onError={(e) => {
+                          // Resim yüklenemezse varsayılan logo/görsel göster
+                          (e.currentTarget as HTMLImageElement).src = 'https://episodio.com.tr/icon.png';
+                        }}
                       />
                     ) : (
-                      <div className="w-full h-full bg-[#141414] flex items-center justify-center text-white/30 text-xs">
-                        Afiş Yok
+                      <div className="w-full h-full bg-gradient-to-br from-[#C91520]/40 to-[#141414] p-1 flex flex-col items-center justify-center text-center">
+                        <span className="material-symbols-outlined text-white/40 text-xl">tv</span>
+                        <span className="text-[9px] font-bold text-white/70 leading-tight mt-1 line-clamp-2">{item.show_name}</span>
                       </div>
                     )}
                   </Link>
