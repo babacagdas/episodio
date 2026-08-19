@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
-import { getShowDetail } from '@/lib/tmdb';
 
 interface UserReviewsModalProps {
   userId: string;
@@ -27,6 +25,7 @@ interface CombinedReviewItem {
   created_at: string;
 }
 
+const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || '4f3b798b31a26d70c48e8946e336b135';
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 
 export default function UserReviewsModal({
@@ -64,7 +63,7 @@ export default function UserReviewsModal({
           .order('created_at', { ascending: false })
           .limit(30);
 
-        // Benzersiz Show ID'lerini bulup TMDB'den Dizi Adı ve Afiş Resmi Çekme
+        // Benzersiz Show ID'lerini bulup TMDB API'sinden Dizi Adı ve Orijinal Afiş Çekme
         const allShowIds = Array.from(
           new Set([
             ...(showReviews || []).map((r) => r.show_id),
@@ -72,16 +71,20 @@ export default function UserReviewsModal({
           ])
         );
 
-        const showDetailsMap: Record<string, { name: string; poster: string }> = {};
+        const showDetailsMap: Record<number, { name: string; poster: string }> = {};
 
         await Promise.all(
           allShowIds.map(async (showId) => {
             try {
-              const detail = await getShowDetail(showId);
-              if (detail) {
+              const res = await fetch(
+                `https://api.themoviedb.org/3/tv/${showId}?api_key=${API_KEY}&language=tr-TR`,
+                { headers: { accept: 'application/json' } }
+              );
+              if (res.ok) {
+                const data = await res.json();
                 showDetailsMap[showId] = {
-                  name: detail.name || detail.original_name || 'Dizi',
-                  poster: detail.poster_path ? `${POSTER_BASE}${detail.poster_path}` : '',
+                  name: data.name || data.original_name || 'Dizi',
+                  poster: data.poster_path ? `${POSTER_BASE}${data.poster_path}` : '',
                 };
               }
             } catch {
@@ -161,7 +164,6 @@ export default function UserReviewsModal({
             </div>
             <div>
               <h2 className="text-lg font-bold text-white leading-tight">@{username} Yorumları</h2>
-              <p className="text-xs text-white/50">Letterboxd Tarzı Dizi & Bölüm İncelemeleri</p>
             </div>
           </div>
 
@@ -193,7 +195,7 @@ export default function UserReviewsModal({
                 : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
             }`}
           >
-            📺 Dizi İncelemeleri ({reviews.filter((r) => r.type === 'show_review').length})
+            Dizi İncelemeleri ({reviews.filter((r) => r.type === 'show_review').length})
           </button>
           <button
             onClick={() => setActiveTab('episodes')}
@@ -203,11 +205,11 @@ export default function UserReviewsModal({
                 : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
             }`}
           >
-            🎬 Bölüm Yorumları ({reviews.filter((r) => r.type === 'episode_comment').length})
+            Bölüm Yorumları ({reviews.filter((r) => r.type === 'episode_comment').length})
           </button>
         </div>
 
-        {/* Yorumlar Listesi (Letterboxd Style) */}
+        {/* Yorumlar Listesi */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16 text-white/40 gap-3">
@@ -226,12 +228,12 @@ export default function UserReviewsModal({
                 key={item.id}
                 className="flex gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.05] transition-all"
               >
-                {/* Sol Taraf: Dizi Afişi + Yıldız Rozeti */}
+                {/* Sol Taraf: Dizi Afişi + Puan Rozeti */}
                 <div className="shrink-0 flex flex-col items-center gap-1.5">
                   <Link
                     href={`/show/${item.show_id}`}
                     onClick={onClose}
-                    className="relative aspect-[2/3] w-16 sm:w-20 rounded-xl overflow-hidden border border-white/20 shadow-lg group"
+                    className="relative aspect-[2/3] w-16 sm:w-20 rounded-xl overflow-hidden border border-white/20 shadow-lg group bg-[#141414]"
                   >
                     {item.poster_path ? (
                       <img
@@ -247,8 +249,8 @@ export default function UserReviewsModal({
                     )}
                   </Link>
                   {item.rating && (
-                    <span className="text-[11px] font-black text-[#D4A017] flex items-center gap-0.5 bg-black/60 px-2 py-0.5 rounded-full border border-[#D4A017]/30">
-                      ★ {item.rating}
+                    <span className="text-[11px] font-bold text-white/90 bg-white/10 px-2 py-0.5 rounded-full border border-white/10">
+                      Puan: {item.rating}/10
                     </span>
                   )}
                 </div>
@@ -256,7 +258,7 @@ export default function UserReviewsModal({
                 {/* Sağ Taraf: Detaylar & Yorum Metni */}
                 <div className="flex-1 min-w-0 flex flex-col justify-between">
                   <div>
-                    {/* Rozet ve Tarih Barı */}
+                    {/* Rozet ve Başlık Barı (Sade, Emojisiz, Renkli Arka Plan Olmadan) */}
                     <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
                       <Link
                         href={`/show/${item.show_id}`}
@@ -267,12 +269,12 @@ export default function UserReviewsModal({
                       </Link>
 
                       {item.type === 'show_review' ? (
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#C91520] bg-[#C91520]/10 px-2.5 py-0.5 rounded-full border border-[#C91520]/30">
-                          📺 Dizi İncelemesi
+                        <span className="text-[10px] font-semibold text-white/60 border border-white/10 px-2.5 py-0.5 rounded-full">
+                          Dizi İncelemesi
                         </span>
                       ) : (
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#D4A017] bg-[#D4A017]/10 px-2.5 py-0.5 rounded-full border border-[#D4A017]/30">
-                          🎬 {item.season_number}. Sezon {item.episode_number}. Bölüm
+                        <span className="text-[10px] font-semibold text-white/75 border border-white/15 px-2.5 py-0.5 rounded-full">
+                          {item.season_number}. Sezon {item.episode_number}. Bölüm
                         </span>
                       )}
                     </div>
