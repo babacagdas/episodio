@@ -31,6 +31,32 @@ interface PopularList {
   creatorAvatar: string | null;
 }
 
+const CATEGORY_OPTIONS = [
+  { id: 'all', label: 'Tüm Kütüphane', icon: 'grid_view' },
+  { id: 'top8', label: '⭐ 8.0+ Efsaneler', icon: 'star' },
+  { id: '2020s', label: '2020\'ler', icon: 'calendar_today' },
+  { id: '2010s', label: '2010\'lar', icon: 'calendar_today' },
+  { id: '2000s', label: '2000\'ler', icon: 'calendar_today' },
+  { id: '90s', label: '90\'lar', icon: 'calendar_today' },
+  { id: '80s', label: '80\'ler & Öncesi', icon: 'history' },
+  { id: 'drama', label: '🎭 Dram', icon: 'theater_comedy' },
+  { id: 'action', label: '🔥 Aksiyon & Macera', icon: 'local_fire_department' },
+  { id: 'comedy', label: '😂 Komedi', icon: 'mood' },
+  { id: 'scifi', label: '🚀 Bilimkurgu & Gizem', icon: 'rocket_launch' },
+  { id: 'crime', label: '🔪 Suç & Polisiye', icon: 'local_police' },
+  { id: 'doc', label: '📜 Tarih & Belgesel', icon: 'auto_stories' },
+  { id: 'fantasy', label: '🔮 Fantastik & Animasyon', icon: 'auto_awesome' },
+  { id: 'horror', label: '👻 Korku & Gerilim', icon: 'skull' },
+  { id: 'tr', label: '🇹🇷 Türk Dizileri', icon: 'flag' },
+  { id: 'kr', label: '🇰🇷 K-Drama (Kore)', icon: 'subtitles' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'popularity.desc', label: 'En Popülerler', icon: 'trending_up' },
+  { value: 'vote_average.desc', label: 'En Yüksek Puan (IMDb 8.0+)', icon: 'star' },
+  { value: 'first_air_date.desc', label: 'En Yeni Çıkanlar', icon: 'new_releases' },
+];
+
 function ProfileCard({
   profile,
   isFollowing = false,
@@ -96,11 +122,12 @@ export default function Search() {
   // ⚡ Letterboxd Tarzı Hızlı İzledim İşaretleme
   const [watchedShowIds, setWatchedShowIds] = useState<Set<number>>(new Set());
 
-  // ⚡ Letterboxd Tarzı Gelişmiş Kütüphane Durumu
+  // ⚡ Gelişmiş Kütüphane Durumu ve Çoklu Kategori Seçimi
   const [libraryShows, setLibraryShows] = useState<Show[]>([]);
   const [libraryLoading, setLibraryLoading] = useState(false);
-  const [libraryFilter, setLibraryFilter] = useState<string>('all');
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set(['all']));
   const [librarySort, setLibrarySort] = useState<'popularity.desc' | 'vote_average.desc' | 'first_air_date.desc'>('popularity.desc');
+  const [sortModalOpen, setSortModalOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -114,25 +141,35 @@ export default function Search() {
     }
   }, []);
 
-  // ⚡ Gelişmiş Letterboxd Kütüphane Dizilerini TMDB API'den Çekme
-  const fetchLibraryShows = useCallback(async (filterKey: string, sortKey: string) => {
+  // ⚡ Gelişmiş Kütüphane Dizilerini Çoklu Kategoriye Göre TMDB API'den Çekme
+  const fetchLibraryShows = useCallback(async (catSet: Set<string>, sortKey: string) => {
     setLibraryLoading(true);
     try {
       const qs = new URLSearchParams();
       qs.set('sortBy', sortKey);
 
-      if (filterKey === 'top8') {
-        qs.set('minRating', '8.0');
-      } else if (filterKey === '2020s' || filterKey === '2010s' || filterKey === '2000s' || filterKey === '90s') {
-        qs.set('decade', filterKey);
-      } else if (filterKey === 'drama') {
-        qs.set('genreId', '18');
-      } else if (filterKey === 'action') {
-        qs.set('genreId', '10759');
-      } else if (filterKey === 'comedy') {
-        qs.set('genreId', '35');
-      } else if (filterKey === 'scifi') {
-        qs.set('genreId', '10765');
+      if (!catSet.has('all')) {
+        if (catSet.has('top8')) qs.set('minRating', '8.0');
+
+        const decade = Array.from(catSet).find((c) => ['2020s', '2010s', '2000s', '90s', '80s'].includes(c));
+        if (decade) qs.set('decade', decade);
+
+        const genreMap: Record<string, string> = {
+          drama: '18',
+          action: '10759',
+          comedy: '35',
+          scifi: '10765',
+          crime: '80',
+          doc: '99',
+          fantasy: '10765',
+          horror: '9648',
+        };
+
+        const selectedGenre = Array.from(catSet).find((c) => genreMap[c]);
+        if (selectedGenre) qs.set('genreId', genreMap[selectedGenre]);
+
+        if (catSet.has('tr')) qs.set('originCountry', 'TR');
+        if (catSet.has('kr')) qs.set('originCountry', 'KR');
       }
 
       const res = await fetch(`/api/shows/filter?${qs.toString()}`);
@@ -161,7 +198,7 @@ export default function Search() {
       .catch(() => {});
 
     // 2. İlk Gelişmiş Kütüphane Yüklemesi
-    fetchLibraryShows('all', 'popularity.desc');
+    fetchLibraryShows(selectedCategories, librarySort);
 
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data }) => {
@@ -406,16 +443,27 @@ export default function Search() {
     [currentUserId, watchedShowIds]
   );
 
-  // Gelişmiş filtre butonuna basılınca
-  const handleLibraryFilterChange = (filterKey: string) => {
-    setLibraryFilter(filterKey);
-    fetchLibraryShows(filterKey, librarySort);
-  };
-
-  // Sıralama değişince
-  const handleLibrarySortChange = (sortKey: 'popularity.desc' | 'vote_average.desc' | 'first_air_date.desc') => {
-    setLibrarySort(sortKey);
-    fetchLibraryShows(libraryFilter, sortKey);
+  // Çoklu kategori seçimi ve değişimi
+  const handleCategoryToggle = (catId: string) => {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev);
+      if (catId === 'all') {
+        next.clear();
+        next.add('all');
+      } else {
+        next.delete('all');
+        if (next.has(catId)) {
+          next.delete(catId);
+        } else {
+          next.add(catId);
+        }
+        if (next.size === 0) {
+          next.add('all');
+        }
+      }
+      fetchLibraryShows(next, librarySort);
+      return next;
+    });
   };
 
   const displayedTrending = query.trim()
@@ -423,6 +471,8 @@ export default function Search() {
     : activeFilters
     ? filteredShows
     : trending.slice(0, 18);
+
+  const currentSortOption = SORT_OPTIONS.find((s) => s.value === librarySort) || SORT_OPTIONS[0];
 
   return (
     <div className="font-body-md text-body-md antialiased min-h-screen pb-24 md:pb-12 bg-[#07070A] text-white">
@@ -600,75 +650,101 @@ export default function Search() {
           )}
         </div>
 
-        {/* 3. YENİ SAYFA AŞAĞISINDA: GELİŞMİŞ DİZİ KÜTÜPHANESİ (LETTERBOXD STYLE) */}
+        {/* 3. YENİ SAYFA AŞAĞISINDA: GELİŞMİŞ DİZİ KÜTÜPHANESİ (ÖZEL TASARIM & ÇOKLU SEÇİM) */}
         {!query.trim() && (
-          <div className="pt-8 border-t border-white/10 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+          <div className="pt-10 border-t border-white/10 space-y-6">
+            
+            {/* Büyük Estetik Başlık + Özel Şık Sıralama Modalı */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-lg sm:text-xl font-extrabold text-white flex items-center gap-2">
-                  <span>🍿 Gelişmiş Dizi Kütüphanesi</span>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C91520]/20 text-[#C91520] border border-[#C91520]/30">
-                    Letterboxd Style
-                  </span>
+                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  Gelişmiş Dizi Kütüphanesi
                 </h2>
-                <p className="text-xs text-white/40 mt-1">
-                  Tüm zamanların dizilerini puanlarına, yıllarına ve türlerine göre canlı filtrele
+                <p className="text-xs sm:text-sm text-white/50 mt-1">
+                  Tüm zamanların dizilerini puanlarına, yıllarına ve türlerine göre özgürce filtrele
                 </p>
               </div>
 
-              {/* Sıralama Açılır Menüsü */}
-              <div className="flex items-center gap-2 text-xs text-white/60 shrink-0">
-                <span className="text-white/40 text-[11px] font-medium">Sıralama:</span>
-                <select
-                  value={librarySort}
-                  onChange={(e) => handleLibrarySortChange(e.target.value as any)}
-                  className="bg-[#121217] border border-white/15 rounded-lg px-2.5 py-1 text-xs text-white/90 focus:outline-none focus:border-[#C91520] cursor-pointer"
+              {/* Dizi Detay Sayfasındaki İzleme Durumu Gibi Şık Özel Sıralama Butonu & Modalı */}
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setSortModalOpen((prev) => !prev)}
+                  className="px-4 py-2 text-xs font-bold rounded-full transition-all flex items-center gap-2 border border-white/15 bg-white/[0.08] hover:bg-white/[0.14] text-white active:scale-95 cursor-pointer backdrop-blur-md shadow-md"
                 >
-                  <option value="popularity.desc">En Popülerler</option>
-                  <option value="vote_average.desc">En Yüksek Puan (Vote)</option>
-                  <option value="first_air_date.desc">En Yeni Çıkanlar</option>
-                </select>
+                  <span className="material-symbols-outlined text-base text-[#C91520]">{currentSortOption.icon}</span>
+                  <span>{currentSortOption.label}</span>
+                  <span className="material-symbols-outlined text-sm opacity-60 ml-0.5">expand_more</span>
+                </button>
+
+                {sortModalOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setSortModalOpen(false)} />
+                    <div className="absolute right-0 top-full mt-2 z-50 bg-[#0A0A0E]/95 border border-white/15 rounded-2xl p-1.5 shadow-2xl min-w-[210px] backdrop-blur-2xl space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/10 mb-1">
+                        Sıralama Seçeneği
+                      </div>
+                      {SORT_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => {
+                            setLibrarySort(opt.value as any);
+                            setSortModalOpen(false);
+                            fetchLibraryShows(selectedCategories, opt.value);
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                            librarySort === opt.value
+                              ? 'bg-[#C91520] text-white shadow-lg shadow-[#C91520]/30'
+                              : 'text-white/70 hover:text-white hover:bg-white/10'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-base">{opt.icon}</span>
+                          <span>{opt.label}</span>
+                          {librarySort === opt.value && (
+                            <span className="ml-auto material-symbols-outlined text-sm text-white font-bold">check</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Letterboxd Tarzı Gelişmiş Filtre Çipleri */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-              {[
-                { id: 'all', label: 'Tüm Kütüphane' },
-                { id: 'top8', label: '⭐ 8.0+ Efsaneler' },
-                { id: '2020s', label: '2020\'ler' },
-                { id: '2010s', label: '2010\'lar' },
-                { id: '2000s', label: '2000\'ler' },
-                { id: '90s', label: '90\'lar' },
-                { id: 'drama', label: 'Dram' },
-                { id: 'action', label: 'Aksiyon & Macera' },
-                { id: 'comedy', label: 'Komedi' },
-                { id: 'scifi', label: 'Bilimkurgu' },
-              ].map((chip) => (
-                <button
-                  key={chip.id}
-                  type="button"
-                  onClick={() => handleLibraryFilterChange(chip.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                    libraryFilter === chip.id
-                      ? 'bg-[#C91520] text-white shadow-lg shadow-[#C91520]/20'
-                      : 'bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white border border-white/10'
-                  }`}
-                >
-                  {chip.label}
-                </button>
-              ))}
+            {/* Estetik Scroll Edilebilir Çoklu Kategori Çipleri (Multi-Select Support) */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 px-0.5 scroll-smooth">
+              {CATEGORY_OPTIONS.map((cat) => {
+                const isSelected = selectedCategories.has(cat.id);
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleCategoryToggle(cat.id)}
+                    className={`px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-1.5 active:scale-95 ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-[#E50914] to-[#C91520] text-white shadow-[0_0_15px_rgba(201,21,32,0.4)] border border-red-500/50 scale-[1.02]'
+                        : 'bg-white/[0.05] hover:bg-white/[0.1] text-white/70 hover:text-white border border-white/10 hover:border-white/20 backdrop-blur-md'
+                    }`}
+                  >
+                    <span>{cat.label}</span>
+                    {isSelected && cat.id !== 'all' && (
+                      <span className="material-symbols-outlined text-[13px] font-bold text-white bg-black/30 rounded-full p-0.5">check</span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Kütüphane Izgarası (Mobilde 3 Kart, Bilgisayar/Tablette 6 Kart) */}
             {libraryLoading ? (
               <div className="flex flex-col items-center justify-center py-16 text-white/40 gap-3">
                 <span className="w-8 h-8 border-2 border-[#C91520] border-t-transparent rounded-full animate-spin" />
-                <p className="text-xs font-semibold">Tüm Zamanların Dizileri Filtreleniyor...</p>
+                <p className="text-xs font-semibold">Gelişmiş Kütüphane Dizileri Yükleniyor...</p>
               </div>
             ) : libraryShows.length === 0 ? (
               <div className="py-12 text-center text-white/30 border border-white/10 rounded-2xl text-xs">
-                Bu filtreyle eşleşen dizi bulunamadı.
+                Seçilen filtre kombinasyonuna uygun dizi bulunamadı.
               </div>
             ) : (
               <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
