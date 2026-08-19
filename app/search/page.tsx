@@ -724,15 +724,12 @@ export default function Search() {
                     <>
                       <div className="fixed inset-0 z-40" onClick={() => setCategoryModalOpen(false)} />
                       <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 z-50 bg-[#0A0A0E]/95 border border-white/15 rounded-2xl p-2 shadow-2xl w-[270px] sm:w-[300px] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
-                        <div className="px-3 py-1.5 flex items-center justify-between border-b border-white/10 mb-1">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/40">
-                            Tüm TMDB Türleri & Kategoriler
-                          </span>
+                        <div className="px-3 py-1 flex items-center justify-end border-b border-white/10 mb-1 min-h-[28px]">
                           {!selectedCategories.has('all') && (
                             <button
                               type="button"
                               onClick={() => handleCategoryToggle('all')}
-                              className="text-[10px] font-bold text-[#C91520] hover:underline"
+                              className="text-[10px] font-bold text-[#C91520] hover:underline ml-auto"
                             >
                               Sıfırla
                             </button>
@@ -747,16 +744,15 @@ export default function Search() {
                                 key={cat.id}
                                 type="button"
                                 onClick={() => handleCategoryToggle(cat.id)}
-                                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                className={`w-full flex items-center justify-between px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
                                   isSelected
                                     ? 'bg-[#C91520] text-white shadow-md'
                                     : 'text-white/70 hover:text-white hover:bg-white/10'
                                 }`}
                               >
-                                <span className="material-symbols-outlined text-base text-white/60">{cat.icon}</span>
                                 <span className="truncate">{cat.label}</span>
                                 {isSelected && (
-                                  <span className="ml-auto material-symbols-outlined text-sm text-white font-bold">check</span>
+                                  <span className="material-symbols-outlined text-sm text-white font-bold shrink-0 ml-2">check</span>
                                 )}
                               </button>
                             );
