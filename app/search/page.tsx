@@ -93,6 +93,13 @@ export default function Search() {
   const [topPresetCount, setTopPresetCount] = useState<number | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
+  // ⚡ Letterboxd Tarzı Hızlı İzledim İşaretleme
+  const [watchedShowIds, setWatchedShowIds] = useState<Set<number>>(new Set());
+
+  // ⚡ Letterboxd Tarzı Hızlı Yıl ve Sıralama Filtreleri
+  const [selectedDecade, setSelectedDecade] = useState<string>('all');
+  const [selectedSort, setSelectedSort] = useState<'popular' | 'rating' | 'newest'>('popular');
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem('episodio_recent_searches');
@@ -108,7 +115,12 @@ export default function Search() {
   useEffect(() => {
     fetch(`/api/trending`)
       .then(r => r.json())
-      .then(setTrending)
+      .then((data: Show[]) => {
+        if (Array.isArray(data)) {
+          // Trend dizileri tam 18 adet ile sınırla
+          setTrending(data.slice(0, 18));
+        }
+      })
       .catch(() => {});
 
     const supabase = createClient();
@@ -116,7 +128,7 @@ export default function Search() {
       const user = data.user;
       setCurrentUserId(user?.id ?? null);
 
-      const [suggestedRes, followsRes] = await Promise.all([
+      const [suggestedRes, followsRes, watchStatusRes] = await Promise.all([
         supabase
           .from('profiles')
           .select('id, username, full_name, bio, avatar_url')
@@ -125,6 +137,9 @@ export default function Search() {
         user
           ? supabase.from('follows').select('following_id').eq('follower_id', user.id)
           : Promise.resolve({ data: [] as { following_id: string }[] }),
+        user
+          ? supabase.from('watch_status').select('show_id').eq('user_id', user.id).eq('status', 'completed')
+          : Promise.resolve({ data: [] as { show_id: number }[] }),
       ]);
 
       const suggested = ((suggestedRes.data ?? []) as UserSearchProfile[]).filter((profile) => profile.id !== user?.id);
@@ -134,6 +149,10 @@ export default function Search() {
       (followsRes.data ?? []).forEach((row: { following_id: string }) => { map[row.following_id] = true; });
       setFollowingMap(map);
 
+      if (watchStatusRes.data) {
+        setWatchedShowIds(new Set(watchStatusRes.data.map((w) => Number(w.show_id))));
+      }
+
       const [listsRes, itemsRes, likesRes] = await Promise.all([
         supabase
           .from('lists')
@@ -142,10 +161,7 @@ export default function Search() {
           .order('created_at', { ascending: false })
           .limit(20),
         supabase.from('list_items').select('list_id, poster_path'),
-        supabase
-          .from('list_likes')
-          .select('list_id, created_at')
-          .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+        supabase.from('list_likes').select('list_id'),
       ]);
 
       const listRows = (listsRes.data ?? []) as { id: string; user_id: string; name: string; description: string | null; visibility: 'public' | 'private' }[];
@@ -203,7 +219,6 @@ export default function Search() {
     if (!trimmed || trimmed.length < 2) return;
     setRecentSearches((prev) => {
       const lower = trimmed.toLowerCase();
-      // Filter out exact matches AND prefix/substring matches (e.g. 'dex' when adding 'dexter')
       const filtered = prev.filter((item) => {
         const itemLower = item.toLowerCase();
         return itemLower !== lower && !lower.startsWith(itemLower) && !itemLower.startsWith(lower);
@@ -290,97 +305,119 @@ export default function Search() {
     }
   }, []);
 
-  const handleApplyTopPreset = useCallback(async (count: 10 | 50) => {
-    setFilterApplying(true);
-    setFilterError(null);
-    setTopPresetCount(count);
-    try {
-      const res = await fetch(`/api/shows/filter?minRating=8.0`);
-      const data: unknown = await res.json().catch(() => null);
-      if (Array.isArray(data) && data.length > 0) {
-        const sorted = [...(data as Show[])].sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0)).slice(0, count);
-        setFilteredShows(sorted);
-        setActiveFilters({ category: null, year: null, provider: null });
-      } else {
-        setFilteredShows(trending.slice(0, count));
-        setActiveFilters({ category: null, year: null, provider: null });
-      }
-    } catch {
-      setFilteredShows(trending.slice(0, count));
-      setActiveFilters({ category: null, year: null, provider: null });
-    } finally {
-      setFilterApplying(false);
-    }
-  }, [trending]);
-
   const clearDiscoverFilter = useCallback(() => {
     setActiveFilters(null);
-    setTopPresetCount(null);
     setFilteredShows([]);
+    setTopPresetCount(null);
     setFilterError(null);
   }, []);
 
-  const toggleFollow = useCallback(async (profile: UserSearchProfile) => {
-    if (!currentUserId) {
-      window.location.href = `/signin?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
-      return;
-    }
+  const toggleFollow = useCallback(
+    async (targetProfile: UserSearchProfile) => {
+      if (!currentUserId) return;
+      const targetId = targetProfile.id;
+      const currentlyFollowing = !!followingMap[targetId];
+      setFollowingMap((prev) => ({ ...prev, [targetId]: !currentlyFollowing }));
 
-    const supabase = createClient();
-    const isFollowing = !!followingMap[profile.id];
-    const nextFollowing = !isFollowing;
+      const supabase = createClient();
+      if (currentlyFollowing) {
+        await supabase.from('follows').delete().eq('follower_id', currentUserId).eq('following_id', targetId);
+      } else {
+        await supabase.from('follows').insert({ follower_id: currentUserId, following_id: targetId });
+      }
+    },
+    [currentUserId, followingMap]
+  );
 
-    setFollowingMap((prev) => ({ ...prev, [profile.id]: nextFollowing }));
+  // ⚡ Letterboxd Tarzı Tek Tıkla Göz İkonuyla "İzledim" İşaretleme
+  const handleToggleWatch = useCallback(
+    async (show: Show, e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!currentUserId) return;
 
-    if (nextFollowing) {
-      const { error } = await supabase.from('follows').insert({ follower_id: currentUserId, following_id: profile.id });
-      if (error) setFollowingMap((prev) => ({ ...prev, [profile.id]: isFollowing }));
-    } else {
-      const { error } = await supabase.from('follows').delete().eq('follower_id', currentUserId).eq('following_id', profile.id);
-      if (error) setFollowingMap((prev) => ({ ...prev, [profile.id]: isFollowing }));
-    }
+      const showIdNum = Number(show.id);
+      const isCurrentlyWatched = watchedShowIds.has(showIdNum);
 
-    if (nextFollowing && profile.id !== currentUserId) {
-      const { data: actorProfile } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('id', currentUserId)
-        .maybeSingle();
-
-      const actorUsername = actorProfile?.username ?? null;
-      await supabase.from('user_notifications').insert({
-        user_id: profile.id,
-        actor_id: currentUserId,
-        type: 'follow',
-        message: actorUsername ? `@${actorUsername} seni takip etmeye başladı.` : 'Seni takip etmeye başladı.',
-        link: actorUsername ? `/u/${actorUsername}` : `/u/${currentUserId}`,
+      setWatchedShowIds((prev) => {
+        const next = new Set(prev);
+        if (isCurrentlyWatched) {
+          next.delete(showIdNum);
+        } else {
+          next.add(showIdNum);
+        }
+        return next;
       });
-    }
-  }, [currentUserId, followingMap]);
 
-  const displayed = query.trim() ? results : ((activeFilters || topPresetCount) ? filteredShows : trending);
-  const discoverShowsLabel = query.trim()
-    ? 'Diziler'
-    : topPresetCount
-    ? `Tarihin En İyi ${topPresetCount} Dizisi`
+      const supabase = createClient();
+      if (isCurrentlyWatched) {
+        await supabase.from('watch_status').delete().eq('user_id', currentUserId).eq('show_id', showIdNum);
+      } else {
+        await supabase.from('watch_status').upsert({
+          user_id: currentUserId,
+          show_id: showIdNum,
+          show_name: show.name,
+          poster_path: show.poster_path,
+          status: 'completed',
+          updated_at: new Date().toISOString(),
+        });
+      }
+    },
+    [currentUserId, watchedShowIds]
+  );
+
+  // Liste için ana gösterilecek diziler
+  let rawDisplayed = query.trim()
+    ? results
     : activeFilters
-    ? 'Filtreye uygun diziler'
-    : 'Trend Diziler';
+    ? filteredShows
+    : topPresetCount
+    ? filteredShows
+    : trending.slice(0, 18);
+
+  // ⚡ Letterboxd Tarzı Yıl ve Sıralama Filtrelerini Uygulama
+  let displayed = [...rawDisplayed];
+
+  if (selectedDecade !== 'all') {
+    displayed = displayed.filter((show) => {
+      const year = Number(show.first_air_date?.slice(0, 4) || '0');
+      if (selectedDecade === '2020s') return year >= 2020;
+      if (selectedDecade === '2010s') return year >= 2010 && year <= 2019;
+      if (selectedDecade === '2000s') return year >= 2000 && year <= 2009;
+      if (selectedDecade === '90s') return year >= 1990 && year <= 1999;
+      if (selectedDecade === 'top') return Number(show.vote_average) >= 8.0;
+      return true;
+    });
+  }
+
+  if (selectedSort === 'rating') {
+    displayed.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
+  } else if (selectedSort === 'newest') {
+    displayed.sort(
+      (a, b) => new Date(b.first_air_date || 0).getTime() - new Date(a.first_air_date || 0).getTime()
+    );
+  }
+
+  const discoverShowsLabel = query.trim()
+    ? `Dizi Sonuçları (${displayed.length})`
+    : activeFilters
+    ? 'Filtrelenmiş Diziler'
+    : 'Keşfet & Trend Diziler';
 
   return (
-    <div className="font-body-md min-h-screen antialiased flex flex-col pb-24 md:pb-0 pt-[60px] md:pt-0 overflow-x-hidden">
-      <MobileHeader />
+    <div className="font-body-md text-body-md antialiased min-h-screen pb-24 md:pb-12 bg-[#07070A] text-white">
       <Sidebar />
+      <MobileHeader />
 
-      <main className="md:ml-[200px] md:w-[calc(100%-200px)] px-6 md:px-12 pt-8 pb-24 flex flex-col gap-10 overflow-x-hidden">
-
-        {/* Title */}
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-white tracking-tight">Keşfet</h1>
-          <p className="text-sm text-white/40">Dizileri, profilleri ve topluluk listelerini tek yerden bul.</p>
+      <main className="md:ml-[200px] md:w-[calc(100%-200px)] w-full px-4 sm:px-6 md:px-8 py-6 max-w-7xl mx-auto space-y-6">
+        
+        {/* Header Title */}
+        <div className="text-center space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Keşfet & Arama</h1>
+          <p className="text-xs sm:text-sm text-white/40">Dizileri, profilleri ve topluluk listelerini tek yerden bul.</p>
         </div>
 
-        {/* Search + Filtre */}
+        {/* Search + Filtre Barı */}
         <div className="mx-auto w-full max-w-4xl flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-center sm:gap-6">
           <div className="w-full min-w-0 max-w-2xl sm:flex-1">
             <div className="flex h-10 items-center gap-3 border-b border-[#C91520]/75 bg-transparent px-1 transition-colors focus-within:border-[#C91520]">
@@ -390,7 +427,7 @@ export default function Search() {
                 placeholder="Dizi, film veya tür ara..."
                 type="text"
                 value={query}
-                onChange={e => handleSearch(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
               />
               {query && (
                 <button type="button" onClick={() => handleSearch('')} className="text-white/30 hover:text-white transition-colors shrink-0">
@@ -420,9 +457,53 @@ export default function Search() {
           </div>
         </div>
 
-        {/* Son Aramalarım (Recent Searches Chips - Masaüstü Ekranlarda) */}
+        {/* ⚡ Letterboxd Tarzı Hızlı Dönem ve Sıralama Filtre Çubuğu */}
+        {!query.trim() && (
+          <div className="mx-auto w-full max-w-7xl flex flex-wrap items-center justify-between gap-3 pt-2 pb-1 border-y border-white/[0.06]">
+            {/* Dönem / Yıl Çipleri */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+              {[
+                { id: 'all', label: 'Tümü' },
+                { id: '2020s', label: '2020\'ler' },
+                { id: '2010s', label: '2010\'lar' },
+                { id: '2000s', label: '2000\'ler' },
+                { id: '90s', label: '90\'lar' },
+                { id: 'top', label: 'Efsaneler (8.0+)' },
+              ].map((chip) => (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => setSelectedDecade(chip.id)}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    selectedDecade === chip.id
+                      ? 'bg-[#C91520] text-white shadow-md'
+                      : 'bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white border border-white/10'
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Sıralama Açılır Menüsü */}
+            <div className="flex items-center gap-2 text-xs text-white/60 shrink-0 ml-auto">
+              <span className="text-white/40 text-[11px] font-medium hidden sm:inline">Sıralama:</span>
+              <select
+                value={selectedSort}
+                onChange={(e) => setSelectedSort(e.target.value as 'popular' | 'rating' | 'newest')}
+                className="bg-[#121217] border border-white/15 rounded-lg px-2.5 py-1 text-xs text-white/90 focus:outline-none focus:border-[#C91520] cursor-pointer"
+              >
+                <option value="popular">Trend / Popüler</option>
+                <option value="rating">En Yüksek Puan</option>
+                <option value="newest">En Yeni Çıkanlar</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Son Aramalarım (Recent Searches Chips) */}
         {!query.trim() && recentSearches.length > 0 && (
-          <div className="hidden md:flex mx-auto w-full max-w-4xl items-center gap-2 flex-wrap -mt-5">
+          <div className="hidden md:flex mx-auto w-full max-w-7xl items-center gap-2 flex-wrap -mt-2">
             <span className="text-[11px] font-bold text-white/35 uppercase tracking-wider shrink-0">Son Aramalar:</span>
             {recentSearches.map((term) => (
               <button
@@ -446,14 +527,14 @@ export default function Search() {
         )}
 
         {filterError && (
-          <p className="text-xs text-[#C91520] max-w-4xl -mt-4">{filterError}</p>
+          <p className="text-xs text-[#C91520] max-w-7xl -mt-2">{filterError}</p>
         )}
 
-        {/* Results / Trending */}
+        {/* Results / Trending Grid */}
         <div>
           <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
             <p className="text-xs text-white/30 uppercase tracking-widest font-semibold">
-              {query.trim() ? `"${query}" sonuçları` : activeFilters ? 'Filtreye göre' : 'Trend'}
+              {query.trim() ? `"${query}" sonuçları` : activeFilters ? 'Filtreye göre' : 'Trend Diziler (İlk 18)'}
             </p>
             <div className="flex items-center gap-3">
               {activeFilters && !query.trim() && (
@@ -507,29 +588,30 @@ export default function Search() {
                   <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">
                     Bu Hafta Popüler Listeler
                   </p>
-                    {popularLists.length === 0 ? (
-                      <p className="text-sm text-white/30">Bu hafta henüz popüler liste yok.</p>
-                    ) : (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {popularLists.slice(0, 8).map((list) => (
-                          <ListPreviewCard
-                            key={list.id}
-                            id={list.id}
-                            name={list.name}
-                            description={list.description}
-                            visibility={list.visibility}
-                            posters={list.posters}
-                            itemCount={list.itemCount}
-                            likeCount={list.likeCount}
-                            creatorName={list.creatorName}
-                            creatorAvatar={list.creatorAvatar}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  {popularLists.length === 0 ? (
+                    <p className="text-sm text-white/30">Bu hafta henüz popüler liste yok.</p>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {popularLists.slice(0, 8).map((list) => (
+                        <ListPreviewCard
+                          key={list.id}
+                          id={list.id}
+                          name={list.name}
+                          description={list.description}
+                          visibility={list.visibility}
+                          posters={list.posters}
+                          itemCount={list.itemCount}
+                          likeCount={list.likeCount}
+                          creatorName={list.creatorName}
+                          creatorAvatar={list.creatorAvatar}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
 
+              {/* ⚡ Ana Dizi Izgarası: Mobilde 3 Kart, Bilgisayar/Tablette 6 Kart */}
               <div>
                 <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">
                   {discoverShowsLabel}
@@ -539,8 +621,15 @@ export default function Search() {
                     Bu filtreyle eşleşen dizi bulunamadı. Filtreyi veya yılı değiştirmeyi dene.
                   </p>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                    {displayed.map((show) => <ShowCard key={show.id} show={show} />)}
+                  <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
+                    {displayed.map((show) => (
+                      <ShowCard
+                        key={show.id}
+                        show={show}
+                        isWatched={watchedShowIds.has(Number(show.id))}
+                        onToggleWatch={currentUserId ? handleToggleWatch : undefined}
+                      />
+                    ))}
                   </div>
                 )}
               </div>

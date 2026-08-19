@@ -5,7 +5,17 @@ import type { Show } from '@/lib/tmdb';
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 const FALLBACK = 'https://placehold.co/342x513/141414/555?text=Poster+Yok';
 
-export default function ShowCard({ show, rank }: { show: Show; rank?: number }) {
+export default function ShowCard({
+  show,
+  rank,
+  isWatched,
+  onToggleWatch,
+}: {
+  show: Show;
+  rank?: number;
+  isWatched?: boolean;
+  onToggleWatch?: (show: Show, e: React.MouseEvent) => void;
+}) {
   const poster = show.poster_path ? `${POSTER_BASE}${show.poster_path}` : FALLBACK;
   const year = show.first_air_date?.slice(0, 4) ?? '';
   const rating = typeof show.vote_average === 'number' ? show.vote_average.toFixed(1) : null;
@@ -21,16 +31,38 @@ export default function ShowCard({ show, rank }: { show: Show; rank?: number }) 
         src={poster}
         alt={show.name}
         fill
-        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"
+        sizes="(max-width: 768px) 33vw, (max-width: 1024px) 16vw, 16vw"
         className="object-cover"
       />
 
       {/* Dark Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/35 to-transparent opacity-90" />
 
+      {/* Quick Watch Status Toggle (Letterboxd Style Eye Button) */}
+      {onToggleWatch && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleWatch(show, e);
+          }}
+          className={`absolute left-1.5 top-1.5 z-20 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full border transition-all cursor-pointer ${
+            isWatched
+              ? 'bg-[#C91520] border-[#C91520] text-white shadow-[0_0_10px_rgba(201,21,32,0.6)] scale-105'
+              : 'bg-black/60 border-white/20 text-white/50 hover:text-white hover:border-white/40 hover:scale-110'
+          }`}
+          title={isWatched ? 'İzleme Listenden Çıkar' : 'İzledim Olarak İşaretle'}
+        >
+          <span className="material-symbols-outlined text-[13px] sm:text-[15px]">
+            {isWatched ? 'visibility' : 'visibility_off'}
+          </span>
+        </button>
+      )}
+
       {/* Compact Rating Badge */}
       {rating && (
-        <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-md border border-white/10 bg-black/60 px-1.5 py-0.5 text-[9px] font-bold text-white/90 backdrop-blur-sm">
+        <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-md border border-white/10 bg-black/60 px-1.5 py-0.5 text-[9px] font-bold text-white/90 backdrop-blur-sm">
           <span className="material-symbols-outlined text-[10px] text-[#FFC107]" style={{ fontVariationSettings: "'FILL' 1" }}>
             star
           </span>
@@ -39,8 +71,8 @@ export default function ShowCard({ show, rank }: { show: Show; rank?: number }) 
       )}
 
       {/* Compact Rank Badge */}
-      {rank !== undefined && rank > 0 && (
-        <div className="absolute left-2 top-2 flex items-center justify-center rounded-md border border-white/10 bg-black/60 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-white/90 backdrop-blur-sm">
+      {rank !== undefined && rank > 0 && !onToggleWatch && (
+        <div className="absolute left-1.5 top-1.5 flex items-center justify-center rounded-md border border-white/10 bg-black/60 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-white/90 backdrop-blur-sm">
           #{rank}
         </div>
       )}
