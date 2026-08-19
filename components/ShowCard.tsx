@@ -49,8 +49,8 @@ export default function ShowCard({
           }}
           className={`absolute left-1.5 top-1.5 z-20 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full border transition-all cursor-pointer ${
             isWatched
-              ? 'bg-[#C91520] border-[#C91520] text-white shadow-[0_0_10px_rgba(201,21,32,0.6)] scale-105'
-              : 'bg-black/60 border-white/20 text-white/50 hover:text-white hover:border-white/40 hover:scale-110'
+              ? 'bg-[#C91520] border-[#C91520] text-white shadow-[0_0_10px_rgba(201,21,32,0.6)]'
+              : 'bg-black/60 border-white/20 text-white/50'
           }`}
           title={isWatched ? 'İzleme Listenden Çıkar' : 'İzledim Olarak İşaretle'}
         >
