@@ -60,10 +60,10 @@ export default function ShowCard({
         </button>
       )}
 
-      {/* Compact Rating Badge (Mobilde %25 küçültüldü) */}
+      {/* Compact Rating Badge (Tüm kutu, yıldız ve yazı mobilde orantılı %25 küçültüldü) */}
       {rating && (
-        <div className="absolute right-1 top-1 sm:right-1.5 sm:top-1.5 flex items-center gap-0.5 rounded-md border border-white/10 bg-black/60 px-1 py-0.5 text-[7.5px] sm:text-[9px] font-bold text-white/90 backdrop-blur-sm">
-          <span className="material-symbols-outlined text-[8px] sm:text-[10px] text-[#FFC107]" style={{ fontVariationSettings: "'FILL' 1" }}>
+        <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 rounded-md border border-white/10 bg-black/60 px-1.5 py-0.5 text-[9px] font-bold text-white/90 backdrop-blur-sm scale-75 sm:scale-100 origin-top-right">
+          <span className="material-symbols-outlined text-[10px] text-[#FFC107]" style={{ fontVariationSettings: "'FILL' 1" }}>
             star
           </span>
           <span>{rating}</span>

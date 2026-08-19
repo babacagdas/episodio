@@ -119,10 +119,13 @@ async function fetchDiscoverAllPages(opts: {
 }) {
   const merged: CatalogShowRow[] = [];
   const seen = new Set<number>();
-  const maxPages = opts.top === 10 ? 1 : opts.top === 50 ? 3 : 5;
-  for (let page = 1; page <= maxPages; page++) {
-    const batch = await fetchDiscoverPage(page, opts);
-    if (!batch.length) break;
+  const maxPages = opts.top === 10 ? 1 : 2;
+
+  const pages = await Promise.all(
+    Array.from({ length: maxPages }, (_, i) => fetchDiscoverPage(i + 1, opts))
+  );
+
+  for (const batch of pages) {
     for (const row of batch) {
       if (!seen.has(row.tmdb_id)) {
         seen.add(row.tmdb_id);
