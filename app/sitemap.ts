@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 
-const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || '4f3b798b31a26d70c48e8946e336b135';
+const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || 'd0e8d91e3b9f6091fc38629f10e2e049';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://episodio.com.tr';

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const API_KEY = process.env.TMDB_API_KEY || process.env.NEXT_PUBLIC_TMDB_API_KEY || '4f3b798b31a26d70c48e8946e336b135';
+const API_KEY = process.env.TMDB_API_KEY || process.env.NEXT_PUBLIC_TMDB_API_KEY || 'd0e8d91e3b9f6091fc38629f10e2e049';
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 
 function formatPosterUrl(path: string | null | undefined): string {
