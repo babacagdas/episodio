@@ -71,7 +71,7 @@ export interface TrailerItem {
 }
 
 function getTmdbApiKey(): string {
-  return process.env.TMDB_API_KEY ?? process.env.NEXT_PUBLIC_TMDB_API_KEY ?? '';
+  return process.env.TMDB_API_KEY ?? process.env.NEXT_PUBLIC_TMDB_API_KEY ?? '4f3b798b31a26d70c48e8946e336b135';
 }
 
 export async function getShowDetail(id: string): Promise<ShowDetail> {
