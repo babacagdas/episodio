@@ -966,11 +966,11 @@ export default function ProfileContent({
               <button
                 type="button"
                 onClick={() => setSettingsOpen(true)}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white/75 shadow-[0_10px_28px_rgba(0,0,0,0.35)] backdrop-blur-md transition-colors hover:border-white/25 hover:bg-black/60 hover:text-white"
+                className="flex items-center justify-center text-white/50 hover:text-white transition-colors cursor-pointer p-1"
                 aria-label="Ayarlar"
                 title="Ayarlar"
               >
-                <span className="material-symbols-outlined text-[20px]">settings</span>
+                <span className="material-symbols-outlined text-[17px]">settings</span>
               </button>
             </div>
           )}
