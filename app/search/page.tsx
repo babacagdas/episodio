@@ -33,22 +33,22 @@ interface PopularList {
 
 const CATEGORY_OPTIONS = [
   { id: 'all', label: 'Tüm Kütüphane', icon: 'grid_view' },
-  { id: 'top8', label: '⭐ 8.0+ Efsaneler', icon: 'star' },
+  { id: 'top8', label: '8.0+ Efsaneler', icon: 'star' },
   { id: '2020s', label: '2020\'ler', icon: 'calendar_today' },
   { id: '2010s', label: '2010\'lar', icon: 'calendar_today' },
   { id: '2000s', label: '2000\'ler', icon: 'calendar_today' },
   { id: '90s', label: '90\'lar', icon: 'calendar_today' },
   { id: '80s', label: '80\'ler & Öncesi', icon: 'history' },
-  { id: 'drama', label: '🎭 Dram', icon: 'theater_comedy' },
-  { id: 'action', label: '🔥 Aksiyon & Macera', icon: 'local_fire_department' },
-  { id: 'comedy', label: '😂 Komedi', icon: 'mood' },
-  { id: 'scifi', label: '🚀 Bilimkurgu & Gizem', icon: 'rocket_launch' },
-  { id: 'crime', label: '🔪 Suç & Polisiye', icon: 'local_police' },
-  { id: 'doc', label: '📜 Tarih & Belgesel', icon: 'auto_stories' },
-  { id: 'fantasy', label: '🔮 Fantastik & Animasyon', icon: 'auto_awesome' },
-  { id: 'horror', label: '👻 Korku & Gerilim', icon: 'skull' },
-  { id: 'tr', label: '🇹🇷 Türk Dizileri', icon: 'flag' },
-  { id: 'kr', label: '🇰🇷 K-Drama (Kore)', icon: 'subtitles' },
+  { id: 'drama', label: 'Dram', icon: 'theater_comedy' },
+  { id: 'action', label: 'Aksiyon & Macera', icon: 'local_fire_department' },
+  { id: 'comedy', label: 'Komedi', icon: 'mood' },
+  { id: 'scifi', label: 'Bilimkurgu & Gizem', icon: 'rocket_launch' },
+  { id: 'crime', label: 'Suç & Polisiye', icon: 'local_police' },
+  { id: 'doc', label: 'Tarih & Belgesel', icon: 'auto_stories' },
+  { id: 'fantasy', label: 'Fantastik & Animasyon', icon: 'auto_awesome' },
+  { id: 'horror', label: 'Korku & Gerilim', icon: 'skull' },
+  { id: 'tr', label: 'Türk Dizileri', icon: 'flag' },
+  { id: 'kr', label: 'Kore Dizileri (K-Drama)', icon: 'subtitles' },
 ];
 
 const SORT_OPTIONS = [
@@ -122,11 +122,12 @@ export default function Search() {
   // ⚡ Letterboxd Tarzı Hızlı İzledim İşaretleme
   const [watchedShowIds, setWatchedShowIds] = useState<Set<number>>(new Set());
 
-  // ⚡ Gelişmiş Kütüphane Durumu ve Çoklu Kategori Seçimi
+  // ⚡ Gelişmiş Kütüphane Durumu, Çoklu Kategori Seçimi ve Modallar
   const [libraryShows, setLibraryShows] = useState<Show[]>([]);
   const [libraryLoading, setLibraryLoading] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set(['all']));
   const [librarySort, setLibrarySort] = useState<'popularity.desc' | 'vote_average.desc' | 'first_air_date.desc'>('popularity.desc');
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [sortModalOpen, setSortModalOpen] = useState(false);
 
   useEffect(() => {
@@ -650,11 +651,11 @@ export default function Search() {
           )}
         </div>
 
-        {/* 3. YENİ SAYFA AŞAĞISINDA: GELİŞMİŞ DİZİ KÜTÜPHANESİ (ÖZEL TASARIM & ÇOKLU SEÇİM) */}
+        {/* 3. YENİ SAYFA AŞAĞISINDA: GELİŞMİŞ DİZİ KÜTÜPHANESİ (KATEGORİ & SIRALAMA MODAL DÜĞMELERİ) */}
         {!query.trim() && (
           <div className="pt-10 border-t border-white/10 space-y-6">
             
-            {/* Büyük Estetik Başlık + Özel Şık Sıralama Modalı */}
+            {/* Büyük Sade Başlık + Şık Yan Yana Kategori & Sıralama Modalları */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
@@ -665,75 +666,129 @@ export default function Search() {
                 </p>
               </div>
 
-              {/* Dizi Detay Sayfasındaki İzleme Durumu Gibi Şık Özel Sıralama Butonu & Modalı */}
-              <div className="relative shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setSortModalOpen((prev) => !prev)}
-                  className="px-4 py-2 text-xs font-bold rounded-full transition-all flex items-center gap-2 border border-white/15 bg-white/[0.08] hover:bg-white/[0.14] text-white active:scale-95 cursor-pointer backdrop-blur-md shadow-md"
-                >
-                  <span className="material-symbols-outlined text-base text-[#C91520]">{currentSortOption.icon}</span>
-                  <span>{currentSortOption.label}</span>
-                  <span className="material-symbols-outlined text-sm opacity-60 ml-0.5">expand_more</span>
-                </button>
-
-                {sortModalOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setSortModalOpen(false)} />
-                    <div className="absolute right-0 top-full mt-2 z-50 bg-[#0A0A0E]/95 border border-white/15 rounded-2xl p-1.5 shadow-2xl min-w-[210px] backdrop-blur-2xl space-y-1 animate-in fade-in zoom-in-95 duration-150">
-                      <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/10 mb-1">
-                        Sıralama Seçeneği
-                      </div>
-                      {SORT_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => {
-                            setLibrarySort(opt.value as any);
-                            setSortModalOpen(false);
-                            fetchLibraryShows(selectedCategories, opt.value);
-                          }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                            librarySort === opt.value
-                              ? 'bg-[#C91520] text-white shadow-lg shadow-[#C91520]/30'
-                              : 'text-white/70 hover:text-white hover:bg-white/10'
-                          }`}
-                        >
-                          <span className="material-symbols-outlined text-base">{opt.icon}</span>
-                          <span>{opt.label}</span>
-                          {librarySort === opt.value && (
-                            <span className="ml-auto material-symbols-outlined text-sm text-white font-bold">check</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Estetik Scroll Edilebilir Çoklu Kategori Çipleri (Multi-Select Support) */}
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-2 px-0.5 scroll-smooth">
-              {CATEGORY_OPTIONS.map((cat) => {
-                const isSelected = selectedCategories.has(cat.id);
-                return (
+              {/* Yan Yana Kategori & Sıralama Butonları */}
+              <div className="flex items-center gap-3 shrink-0">
+                
+                {/* 1. Kategori Seçim Butonu & Açılır Modalı */}
+                <div className="relative">
                   <button
-                    key={cat.id}
                     type="button"
-                    onClick={() => handleCategoryToggle(cat.id)}
-                    className={`px-3.5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 cursor-pointer flex items-center gap-1.5 active:scale-95 ${
-                      isSelected
-                        ? 'bg-gradient-to-r from-[#E50914] to-[#C91520] text-white shadow-[0_0_15px_rgba(201,21,32,0.4)] border border-red-500/50 scale-[1.02]'
-                        : 'bg-white/[0.05] hover:bg-white/[0.1] text-white/70 hover:text-white border border-white/10 hover:border-white/20 backdrop-blur-md'
+                    onClick={() => {
+                      setCategoryModalOpen((prev) => !prev);
+                      setSortModalOpen(false);
+                    }}
+                    className={`px-4 py-2 text-xs font-bold rounded-full transition-all flex items-center gap-2 border backdrop-blur-md shadow-md cursor-pointer active:scale-95 ${
+                      selectedCategories.size > 0 && !selectedCategories.has('all')
+                        ? 'bg-[#C91520] border-[#C91520] text-white shadow-[0_0_15px_rgba(201,21,32,0.4)]'
+                        : 'bg-white/[0.08] hover:bg-white/[0.14] border-white/15 text-white'
                     }`}
                   >
-                    <span>{cat.label}</span>
-                    {isSelected && cat.id !== 'all' && (
-                      <span className="material-symbols-outlined text-[13px] font-bold text-white bg-black/30 rounded-full p-0.5">check</span>
-                    )}
+                    <span className="material-symbols-outlined text-base">category</span>
+                    <span>
+                      {selectedCategories.has('all')
+                        ? 'Tüm Kategoriler'
+                        : `Kategoriler (${selectedCategories.size})`}
+                    </span>
+                    <span className="material-symbols-outlined text-sm opacity-60 ml-0.5">expand_more</span>
                   </button>
-                );
-              })}
+
+                  {categoryModalOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setCategoryModalOpen(false)} />
+                      <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 z-50 bg-[#0A0A0E]/95 border border-white/15 rounded-2xl p-2 shadow-2xl w-[260px] sm:w-[280px] backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150">
+                        <div className="px-3 py-1.5 flex items-center justify-between border-b border-white/10 mb-1">
+                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/40">
+                            Kategoriler & Türler
+                          </span>
+                          {!selectedCategories.has('all') && (
+                            <button
+                              type="button"
+                              onClick={() => handleCategoryToggle('all')}
+                              className="text-[10px] font-bold text-[#C91520] hover:underline"
+                            >
+                              Sıfırla
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="max-h-72 overflow-y-auto space-y-0.5 pr-1 no-scrollbar">
+                          {CATEGORY_OPTIONS.map((cat) => {
+                            const isSelected = selectedCategories.has(cat.id);
+                            return (
+                              <button
+                                key={cat.id}
+                                type="button"
+                                onClick={() => handleCategoryToggle(cat.id)}
+                                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                  isSelected
+                                    ? 'bg-[#C91520] text-white shadow-md'
+                                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-base text-white/60">{cat.icon}</span>
+                                <span className="truncate">{cat.label}</span>
+                                {isSelected && (
+                                  <span className="ml-auto material-symbols-outlined text-sm text-white font-bold">check</span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* 2. Sıralama Seçim Butonu & Açılır Modalı */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSortModalOpen((prev) => !prev);
+                      setCategoryModalOpen(false);
+                    }}
+                    className="px-4 py-2 text-xs font-bold rounded-full transition-all flex items-center gap-2 border border-white/15 bg-white/[0.08] hover:bg-white/[0.14] text-white active:scale-95 cursor-pointer backdrop-blur-md shadow-md"
+                  >
+                    <span className="material-symbols-outlined text-base text-[#C91520]">{currentSortOption.icon}</span>
+                    <span>{currentSortOption.label}</span>
+                    <span className="material-symbols-outlined text-sm opacity-60 ml-0.5">expand_more</span>
+                  </button>
+
+                  {sortModalOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setSortModalOpen(false)} />
+                      <div className="absolute right-0 top-full mt-2 z-50 bg-[#0A0A0E]/95 border border-white/15 rounded-2xl p-1.5 shadow-2xl min-w-[210px] backdrop-blur-2xl space-y-1 animate-in fade-in zoom-in-95 duration-150">
+                        <div className="px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-wider text-white/40 border-b border-white/10 mb-1">
+                          Sıralama Seçeneği
+                        </div>
+                        {SORT_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => {
+                              setLibrarySort(opt.value as any);
+                              setSortModalOpen(false);
+                              fetchLibraryShows(selectedCategories, opt.value);
+                            }}
+                            className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                              librarySort === opt.value
+                                ? 'bg-[#C91520] text-white shadow-lg shadow-[#C91520]/30'
+                                : 'text-white/70 hover:text-white hover:bg-white/10'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-base">{opt.icon}</span>
+                            <span>{opt.label}</span>
+                            {librarySort === opt.value && (
+                              <span className="ml-auto material-symbols-outlined text-sm text-white font-bold">check</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+              </div>
             </div>
 
             {/* Kütüphane Izgarası (Mobilde 3 Kart, Bilgisayar/Tablette 6 Kart) */}
