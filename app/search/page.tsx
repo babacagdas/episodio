@@ -705,13 +705,12 @@ export default function Search() {
                       setCategoryModalOpen((prev) => !prev);
                       setSortModalOpen(false);
                     }}
-                    className={`px-2.5 py-1 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-bold rounded-full transition-all flex items-center gap-1 sm:gap-2 border backdrop-blur-md shadow-md cursor-pointer active:scale-95 ${
+                    className={`px-2.5 py-1 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-bold rounded-full transition-all flex items-center gap-1 sm:gap-1.5 border backdrop-blur-md shadow-md cursor-pointer active:scale-95 ${
                       selectedCategories.size > 0 && !selectedCategories.has('all')
                         ? 'bg-[#C91520] border-[#C91520] text-white shadow-[0_0_15px_rgba(201,21,32,0.4)]'
                         : 'bg-white/[0.08] hover:bg-white/[0.14] border-white/15 text-white'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-xs sm:text-base">category</span>
                     <span>
                       {selectedCategories.has('all')
                         ? 'Tüm Kategoriler'
@@ -771,9 +770,8 @@ export default function Search() {
                       setSortModalOpen((prev) => !prev);
                       setCategoryModalOpen(false);
                     }}
-                    className="px-2.5 py-1 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-bold rounded-full transition-all flex items-center gap-1 sm:gap-2 border border-white/15 bg-white/[0.08] hover:bg-white/[0.14] text-white active:scale-95 cursor-pointer backdrop-blur-md shadow-md"
+                    className="px-2.5 py-1 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-bold rounded-full transition-all flex items-center gap-1 sm:gap-1.5 border border-white/15 bg-white/[0.08] hover:bg-white/[0.14] text-white active:scale-95 cursor-pointer backdrop-blur-md shadow-md"
                   >
-                    <span className="material-symbols-outlined text-xs sm:text-base text-[#C91520]">{currentSortOption.icon}</span>
                     <span>{currentSortOption.label}</span>
                     <span className="material-symbols-outlined text-[12px] sm:text-sm opacity-60 ml-0.5">expand_more</span>
                   </button>
