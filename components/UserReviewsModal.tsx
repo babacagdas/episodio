@@ -202,12 +202,12 @@ export default function UserReviewsModal({
         </div>
 
         {/* Sekmeler (Tümü / Dizi İncelemeleri / Bölüm Yorumları) */}
-        <div className="flex items-center gap-2 p-3 px-5 border-b border-white/10 bg-black/40">
+        <div className="flex items-center gap-1.5 p-2.5 px-4 border-b border-white/10 bg-black/40">
           <button
             onClick={() => setActiveTab('all')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
               activeTab === 'all'
-                ? 'bg-[#C91520] text-white shadow-lg'
+                ? 'bg-[#C91520] text-white shadow-md'
                 : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
             }`}
           >
@@ -215,9 +215,9 @@ export default function UserReviewsModal({
           </button>
           <button
             onClick={() => setActiveTab('shows')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
               activeTab === 'shows'
-                ? 'bg-[#C91520] text-white shadow-lg'
+                ? 'bg-[#C91520] text-white shadow-md'
                 : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
             }`}
           >
@@ -225,9 +225,9 @@ export default function UserReviewsModal({
           </button>
           <button
             onClick={() => setActiveTab('episodes')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
               activeTab === 'episodes'
-                ? 'bg-[#C91520] text-white shadow-lg'
+                ? 'bg-[#C91520] text-white shadow-md'
                 : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10'
             }`}
           >
@@ -288,22 +288,22 @@ export default function UserReviewsModal({
                 {/* Sağ Taraf: Detaylar & Yorum Metni */}
                 <div className="flex-1 min-w-0 flex flex-col justify-between">
                   <div>
-                    {/* Rozet ve Başlık Barı (Sade, Emojisiz, Renkli Arka Plan Olmadan) */}
-                    <div className="flex items-center justify-between gap-2 flex-wrap mb-1.5">
+                    {/* Rozet Sağ Üstte, Başlık Sol Tarafta */}
+                    <div className="flex items-start justify-between gap-2 mb-1.5">
                       <Link
                         href={`/show/${item.show_id}`}
                         onClick={onClose}
-                        className="text-sm sm:text-base font-extrabold text-white hover:text-[#C91520] transition-colors truncate"
+                        className="text-sm sm:text-base font-extrabold text-white hover:text-[#C91520] transition-colors truncate mr-1"
                       >
                         {item.show_name}
                       </Link>
 
                       {item.type === 'show_review' ? (
-                        <span className="text-[10px] font-semibold text-white/60 border border-white/10 px-2.5 py-0.5 rounded-full">
+                        <span className="shrink-0 text-[9px] font-medium text-white/50 border border-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">
                           Dizi İncelemesi
                         </span>
                       ) : (
-                        <span className="text-[10px] font-semibold text-white/75 border border-white/15 px-2.5 py-0.5 rounded-full">
+                        <span className="shrink-0 text-[9px] font-medium text-white/60 border border-white/10 px-2 py-0.5 rounded-full whitespace-nowrap">
                           {item.season_number}. Sezon {item.episode_number}. Bölüm
                         </span>
                       )}
@@ -328,7 +328,7 @@ export default function UserReviewsModal({
                       onClick={onClose}
                       className="text-[#C91520] hover:underline font-bold flex items-center gap-0.5"
                     >
-                      <span>İncele</span>
+                      <span>Git</span>
                       <span className="material-symbols-outlined text-xs">chevron_right</span>
                     </Link>
                   </div>
