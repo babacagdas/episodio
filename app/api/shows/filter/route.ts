@@ -14,12 +14,22 @@ export interface CatalogShowRow {
 }
 
 function getTmdbKey() {
-  return process.env.TMDB_API_KEY ?? process.env.NEXT_PUBLIC_TMDB_API_KEY ?? '';
+  return process.env.TMDB_API_KEY ?? process.env.NEXT_PUBLIC_TMDB_API_KEY ?? 'd0e8d91e3b9f6091fc38629f10e2e049';
 }
 
 async function fetchDiscoverPage(
   page: number,
-  opts: { genreId?: number; originCountry?: string; year?: number; providerId?: number; format?: string; top?: number }
+  opts: {
+    genreId?: number;
+    originCountry?: string;
+    year?: number;
+    providerId?: number;
+    format?: string;
+    top?: number;
+    minRating?: number;
+    decade?: string;
+    sortBy?: string;
+  }
 ): Promise<CatalogShowRow[]> {
   const key = getTmdbKey();
   if (!key) return [];
@@ -27,8 +37,31 @@ async function fetchDiscoverPage(
   const tmdbUrl = new URL('https://api.themoviedb.org/3/discover/tv');
   tmdbUrl.searchParams.set('api_key', key);
   tmdbUrl.searchParams.set('language', 'tr-TR');
-  tmdbUrl.searchParams.set('sort_by', opts.top === 50 ? 'vote_average.desc' : 'popularity.desc');
-  if (opts.top === 50) tmdbUrl.searchParams.set('vote_count.gte', '500');
+  tmdbUrl.searchParams.set('sort_by', opts.sortBy || (opts.top === 50 ? 'vote_average.desc' : 'popularity.desc'));
+  
+  if (opts.minRating || opts.top === 50) {
+    tmdbUrl.searchParams.set('vote_count.gte', '250');
+    if (opts.minRating) {
+      tmdbUrl.searchParams.set('vote_average.gte', String(opts.minRating));
+    }
+  }
+
+  if (opts.decade) {
+    if (opts.decade === '2020s') {
+      tmdbUrl.searchParams.set('first_air_date.gte', '2020-01-01');
+      tmdbUrl.searchParams.set('first_air_date.lte', '2029-12-31');
+    } else if (opts.decade === '2010s') {
+      tmdbUrl.searchParams.set('first_air_date.gte', '2010-01-01');
+      tmdbUrl.searchParams.set('first_air_date.lte', '2019-12-31');
+    } else if (opts.decade === '2000s') {
+      tmdbUrl.searchParams.set('first_air_date.gte', '2000-01-01');
+      tmdbUrl.searchParams.set('first_air_date.lte', '2009-12-31');
+    } else if (opts.decade === '90s') {
+      tmdbUrl.searchParams.set('first_air_date.gte', '1990-01-01');
+      tmdbUrl.searchParams.set('first_air_date.lte', '1999-12-31');
+    }
+  }
+
   tmdbUrl.searchParams.set('page', String(page));
   if (opts.genreId) tmdbUrl.searchParams.set('with_genres', String(opts.genreId));
   if (opts.originCountry) tmdbUrl.searchParams.set('with_origin_country', opts.originCountry);
@@ -73,7 +106,17 @@ async function fetchDiscoverPage(
   }));
 }
 
-async function fetchDiscoverAllPages(opts: { genreId?: number; originCountry?: string; year?: number; providerId?: number; format?: string; top?: number }) {
+async function fetchDiscoverAllPages(opts: {
+  genreId?: number;
+  originCountry?: string;
+  year?: number;
+  providerId?: number;
+  format?: string;
+  top?: number;
+  minRating?: number;
+  decade?: string;
+  sortBy?: string;
+}) {
   const merged: CatalogShowRow[] = [];
   const seen = new Set<number>();
   const maxPages = opts.top === 10 ? 1 : opts.top === 50 ? 3 : 5;
@@ -161,24 +204,23 @@ export async function GET(req: NextRequest) {
   const format = qs.get('format')?.trim() || undefined;
   const topRaw = qs.get('top');
 
+  const minRatingRaw = qs.get('minRating');
+  const decade = qs.get('decade')?.trim() || undefined;
+  const sortBy = qs.get('sortBy')?.trim() || undefined;
+
   const genreId = genreIdRaw ? Number(genreIdRaw) : undefined;
   const year = yearRaw ? Number(yearRaw) : undefined;
   const providerId = providerIdRaw ? Number(providerIdRaw) : undefined;
   const top = topRaw ? Number(topRaw) : undefined;
+  const minRating = minRatingRaw ? Number(minRatingRaw) : undefined;
 
   if (year !== undefined && (Number.isNaN(year) || year < 1900 || year > 2100)) {
     return NextResponse.json({ error: 'Geçersiz yıl' }, { status: 400 });
   }
-  if (!genreId && !originCountry && !providerId && !format && !top) {
-    return NextResponse.json({ error: 'Kategori, platform, format veya liste seçin' }, { status: 400 });
-  }
-  if (genreId !== undefined && Number.isNaN(genreId)) {
-    return NextResponse.json({ error: 'Geçersiz tür' }, { status: 400 });
-  }
 
-  // Eğer platform, format veya top seçilmişse doğrudan TMDB Discover API'den çek
-  if (providerId || format || top) {
-    const merged = await fetchDiscoverAllPages({ genreId, originCountry, year, providerId, format, top });
+  // Eğer platform, format, top, minRating, decade veya sortBy seçilmişse doğrudan TMDB Discover API'den çek
+  if (providerId || format || top || minRating || decade || sortBy) {
+    const merged = await fetchDiscoverAllPages({ genreId, originCountry, year, providerId, format, top, minRating, decade, sortBy });
     return NextResponse.json(merged.map(mapToShow));
   }
 

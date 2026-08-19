@@ -96,9 +96,11 @@ export default function Search() {
   // ⚡ Letterboxd Tarzı Hızlı İzledim İşaretleme
   const [watchedShowIds, setWatchedShowIds] = useState<Set<number>>(new Set());
 
-  // ⚡ Letterboxd Tarzı Hızlı Yıl ve Sıralama Filtreleri
-  const [selectedDecade, setSelectedDecade] = useState<string>('all');
-  const [selectedSort, setSelectedSort] = useState<'popular' | 'rating' | 'newest'>('popular');
+  // ⚡ Letterboxd Tarzı Gelişmiş Kütüphane Durumu
+  const [libraryShows, setLibraryShows] = useState<Show[]>([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
+  const [libraryFilter, setLibraryFilter] = useState<string>('all');
+  const [librarySort, setLibrarySort] = useState<'popularity.desc' | 'vote_average.desc' | 'first_air_date.desc'>('popularity.desc');
 
   useEffect(() => {
     try {
@@ -112,16 +114,54 @@ export default function Search() {
     }
   }, []);
 
+  // ⚡ Gelişmiş Letterboxd Kütüphane Dizilerini TMDB API'den Çekme
+  const fetchLibraryShows = useCallback(async (filterKey: string, sortKey: string) => {
+    setLibraryLoading(true);
+    try {
+      const qs = new URLSearchParams();
+      qs.set('sortBy', sortKey);
+
+      if (filterKey === 'top8') {
+        qs.set('minRating', '8.0');
+      } else if (filterKey === '2020s' || filterKey === '2010s' || filterKey === '2000s' || filterKey === '90s') {
+        qs.set('decade', filterKey);
+      } else if (filterKey === 'drama') {
+        qs.set('genreId', '18');
+      } else if (filterKey === 'action') {
+        qs.set('genreId', '10759');
+      } else if (filterKey === 'comedy') {
+        qs.set('genreId', '35');
+      } else if (filterKey === 'scifi') {
+        qs.set('genreId', '10765');
+      }
+
+      const res = await fetch(`/api/shows/filter?${qs.toString()}`);
+      if (res.ok) {
+        const data: Show[] = await res.json();
+        if (Array.isArray(data)) {
+          setLibraryShows(data);
+        }
+      }
+    } catch {
+      // fallback
+    } finally {
+      setLibraryLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
+    // 1. Trend Dizileri Çek (Tam 18 adet ile sınırla)
     fetch(`/api/trending`)
       .then(r => r.json())
       .then((data: Show[]) => {
         if (Array.isArray(data)) {
-          // Trend dizileri tam 18 adet ile sınırla
           setTrending(data.slice(0, 18));
         }
       })
       .catch(() => {});
+
+    // 2. İlk Gelişmiş Kütüphane Yüklemesi
+    fetchLibraryShows('all', 'popularity.desc');
 
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data }) => {
@@ -210,7 +250,7 @@ export default function Search() {
 
       setPopularLists(popular);
     });
-  }, []);
+  }, [fetchLibraryShows]);
 
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -366,50 +406,30 @@ export default function Search() {
     [currentUserId, watchedShowIds]
   );
 
-  // Liste için ana gösterilecek diziler
-  let rawDisplayed = query.trim()
+  // Gelişmiş filtre butonuna basılınca
+  const handleLibraryFilterChange = (filterKey: string) => {
+    setLibraryFilter(filterKey);
+    fetchLibraryShows(filterKey, librarySort);
+  };
+
+  // Sıralama değişince
+  const handleLibrarySortChange = (sortKey: 'popularity.desc' | 'vote_average.desc' | 'first_air_date.desc') => {
+    setLibrarySort(sortKey);
+    fetchLibraryShows(libraryFilter, sortKey);
+  };
+
+  const displayedTrending = query.trim()
     ? results
     : activeFilters
     ? filteredShows
-    : topPresetCount
-    ? filteredShows
     : trending.slice(0, 18);
-
-  // ⚡ Letterboxd Tarzı Yıl ve Sıralama Filtrelerini Uygulama
-  let displayed = [...rawDisplayed];
-
-  if (selectedDecade !== 'all') {
-    displayed = displayed.filter((show) => {
-      const year = Number(show.first_air_date?.slice(0, 4) || '0');
-      if (selectedDecade === '2020s') return year >= 2020;
-      if (selectedDecade === '2010s') return year >= 2010 && year <= 2019;
-      if (selectedDecade === '2000s') return year >= 2000 && year <= 2009;
-      if (selectedDecade === '90s') return year >= 1990 && year <= 1999;
-      if (selectedDecade === 'top') return Number(show.vote_average) >= 8.0;
-      return true;
-    });
-  }
-
-  if (selectedSort === 'rating') {
-    displayed.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0));
-  } else if (selectedSort === 'newest') {
-    displayed.sort(
-      (a, b) => new Date(b.first_air_date || 0).getTime() - new Date(a.first_air_date || 0).getTime()
-    );
-  }
-
-  const discoverShowsLabel = query.trim()
-    ? `Dizi Sonuçları (${displayed.length})`
-    : activeFilters
-    ? 'Filtrelenmiş Diziler'
-    : 'Keşfet & Trend Diziler';
 
   return (
     <div className="font-body-md text-body-md antialiased min-h-screen pb-24 md:pb-12 bg-[#07070A] text-white">
       <Sidebar />
       <MobileHeader />
 
-      <main className="md:ml-[200px] md:w-[calc(100%-200px)] w-full px-4 sm:px-6 md:px-8 py-6 max-w-7xl mx-auto space-y-6">
+      <main className="md:ml-[200px] md:w-[calc(100%-200px)] w-full px-4 sm:px-6 md:px-8 py-6 max-w-7xl mx-auto space-y-8">
         
         {/* Header Title */}
         <div className="text-center space-y-1">
@@ -417,7 +437,7 @@ export default function Search() {
           <p className="text-xs sm:text-sm text-white/40">Dizileri, profilleri ve topluluk listelerini tek yerden bul.</p>
         </div>
 
-        {/* Search + Filtre Barı */}
+        {/* 1. MEVCUT ARAMA + FİLTRE BARI (BOZULMADAN KORUNDU) */}
         <div className="mx-auto w-full max-w-4xl flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-center sm:gap-6">
           <div className="w-full min-w-0 max-w-2xl sm:flex-1">
             <div className="flex h-10 items-center gap-3 border-b border-[#C91520]/75 bg-transparent px-1 transition-colors focus-within:border-[#C91520]">
@@ -457,50 +477,6 @@ export default function Search() {
           </div>
         </div>
 
-        {/* ⚡ Letterboxd Tarzı Hızlı Dönem ve Sıralama Filtre Çubuğu */}
-        {!query.trim() && (
-          <div className="mx-auto w-full max-w-7xl flex flex-wrap items-center justify-between gap-3 pt-2 pb-1 border-y border-white/[0.06]">
-            {/* Dönem / Yıl Çipleri */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-              {[
-                { id: 'all', label: 'Tümü' },
-                { id: '2020s', label: '2020\'ler' },
-                { id: '2010s', label: '2010\'lar' },
-                { id: '2000s', label: '2000\'ler' },
-                { id: '90s', label: '90\'lar' },
-                { id: 'top', label: 'Efsaneler (8.0+)' },
-              ].map((chip) => (
-                <button
-                  key={chip.id}
-                  type="button"
-                  onClick={() => setSelectedDecade(chip.id)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                    selectedDecade === chip.id
-                      ? 'bg-[#C91520] text-white shadow-md'
-                      : 'bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white border border-white/10'
-                  }`}
-                >
-                  {chip.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Sıralama Açılır Menüsü */}
-            <div className="flex items-center gap-2 text-xs text-white/60 shrink-0 ml-auto">
-              <span className="text-white/40 text-[11px] font-medium hidden sm:inline">Sıralama:</span>
-              <select
-                value={selectedSort}
-                onChange={(e) => setSelectedSort(e.target.value as 'popular' | 'rating' | 'newest')}
-                className="bg-[#121217] border border-white/15 rounded-lg px-2.5 py-1 text-xs text-white/90 focus:outline-none focus:border-[#C91520] cursor-pointer"
-              >
-                <option value="popular">Trend / Popüler</option>
-                <option value="rating">En Yüksek Puan</option>
-                <option value="newest">En Yeni Çıkanlar</option>
-              </select>
-            </div>
-          </div>
-        )}
-
         {/* Son Aramalarım (Recent Searches Chips) */}
         {!query.trim() && recentSearches.length > 0 && (
           <div className="hidden md:flex mx-auto w-full max-w-7xl items-center gap-2 flex-wrap -mt-2">
@@ -530,7 +506,7 @@ export default function Search() {
           <p className="text-xs text-[#C91520] max-w-7xl -mt-2">{filterError}</p>
         )}
 
-        {/* Results / Trending Grid */}
+        {/* 2. MEVCUT TREND DİZİLER (İLK 18 DİZİ KORUNDU) */}
         <div>
           <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
             <p className="text-xs text-white/30 uppercase tracking-widest font-semibold">
@@ -547,24 +523,19 @@ export default function Search() {
                 </button>
               )}
               {loading && <span className="text-xs text-white/30 animate-pulse">Aranıyor...</span>}
-              {filterApplying && !query.trim() && (
-                <span className="text-xs text-white/30 animate-pulse">Filtreleniyor…</span>
-              )}
             </div>
           </div>
 
           {!loading && query.trim() && results.length === 0 && profiles.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-white/20">
+            <div className="flex flex-col items-center justify-center py-16 text-white/20">
               <span className="material-symbols-outlined text-5xl mb-3">search_off</span>
-              <p className="text-sm">Sonuç bulunamadı</p>
+              <p className="text-sm">Sonuc bulunamadı</p>
             </div>
           ) : (
             <div className="space-y-8">
               {query.trim() && (
                 <div>
-                  <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">
-                    Profiller
-                  </p>
+                  <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">Profiller</p>
                   {profiles.length === 0 ? (
                     <p className="text-sm text-white/30">Eşleşen profil bulunamadı.</p>
                   ) : (
@@ -585,9 +556,7 @@ export default function Search() {
 
               {!query.trim() && (
                 <div>
-                  <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">
-                    Bu Hafta Popüler Listeler
-                  </p>
+                  <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">Bu Hafta Popüler Listeler</p>
                   {popularLists.length === 0 ? (
                     <p className="text-sm text-white/30">Bu hafta henüz popüler liste yok.</p>
                   ) : (
@@ -611,31 +580,110 @@ export default function Search() {
                 </div>
               )}
 
-              {/* ⚡ Ana Dizi Izgarası: Mobilde 3 Kart, Bilgisayar/Tablette 6 Kart */}
+              {/* Trend Diziler 18 Kartlı Liste */}
               <div>
                 <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-3">
-                  {discoverShowsLabel}
+                  {query.trim() ? `Dizi Sonuçları (${displayedTrending.length})` : 'Trend Diziler'}
                 </p>
-                {activeFilters && !query.trim() && !filterApplying && displayed.length === 0 ? (
-                  <p className="text-sm text-white/35 py-12 text-center border border-white/10 rounded-xl">
-                    Bu filtreyle eşleşen dizi bulunamadı. Filtreyi veya yılı değiştirmeyi dene.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
-                    {displayed.map((show) => (
-                      <ShowCard
-                        key={show.id}
-                        show={show}
-                        isWatched={watchedShowIds.has(Number(show.id))}
-                        onToggleWatch={currentUserId ? handleToggleWatch : undefined}
-                      />
-                    ))}
-                  </div>
-                )}
+                <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
+                  {displayedTrending.map((show) => (
+                    <ShowCard
+                      key={show.id}
+                      show={show}
+                      isWatched={watchedShowIds.has(Number(show.id))}
+                      onToggleWatch={currentUserId ? handleToggleWatch : undefined}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           )}
         </div>
+
+        {/* 3. YENİ SAYFA AŞAĞISINDA: GELİŞMİŞ DİZİ KÜTÜPHANESİ (LETTERBOXD STYLE) */}
+        {!query.trim() && (
+          <div className="pt-8 border-t border-white/10 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+              <div>
+                <h2 className="text-lg sm:text-xl font-extrabold text-white flex items-center gap-2">
+                  <span>🍿 Gelişmiş Dizi Kütüphanesi</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C91520]/20 text-[#C91520] border border-[#C91520]/30">
+                    Letterboxd Style
+                  </span>
+                </h2>
+                <p className="text-xs text-white/40 mt-1">
+                  Tüm zamanların dizilerini puanlarına, yıllarına ve türlerine göre canlı filtrele
+                </p>
+              </div>
+
+              {/* Sıralama Açılır Menüsü */}
+              <div className="flex items-center gap-2 text-xs text-white/60 shrink-0">
+                <span className="text-white/40 text-[11px] font-medium">Sıralama:</span>
+                <select
+                  value={librarySort}
+                  onChange={(e) => handleLibrarySortChange(e.target.value as any)}
+                  className="bg-[#121217] border border-white/15 rounded-lg px-2.5 py-1 text-xs text-white/90 focus:outline-none focus:border-[#C91520] cursor-pointer"
+                >
+                  <option value="popularity.desc">En Popülerler</option>
+                  <option value="vote_average.desc">En Yüksek Puan (Vote)</option>
+                  <option value="first_air_date.desc">En Yeni Çıkanlar</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Letterboxd Tarzı Gelişmiş Filtre Çipleri */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+              {[
+                { id: 'all', label: 'Tüm Kütüphane' },
+                { id: 'top8', label: '⭐ 8.0+ Efsaneler' },
+                { id: '2020s', label: '2020\'ler' },
+                { id: '2010s', label: '2010\'lar' },
+                { id: '2000s', label: '2000\'ler' },
+                { id: '90s', label: '90\'lar' },
+                { id: 'drama', label: 'Dram' },
+                { id: 'action', label: 'Aksiyon & Macera' },
+                { id: 'comedy', label: 'Komedi' },
+                { id: 'scifi', label: 'Bilimkurgu' },
+              ].map((chip) => (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => handleLibraryFilterChange(chip.id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                    libraryFilter === chip.id
+                      ? 'bg-[#C91520] text-white shadow-lg shadow-[#C91520]/20'
+                      : 'bg-white/[0.04] hover:bg-white/[0.08] text-white/60 hover:text-white border border-white/10'
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Kütüphane Izgarası (Mobilde 3 Kart, Bilgisayar/Tablette 6 Kart) */}
+            {libraryLoading ? (
+              <div className="flex flex-col items-center justify-center py-16 text-white/40 gap-3">
+                <span className="w-8 h-8 border-2 border-[#C91520] border-t-transparent rounded-full animate-spin" />
+                <p className="text-xs font-semibold">Tüm Zamanların Dizileri Filtreleniyor...</p>
+              </div>
+            ) : libraryShows.length === 0 ? (
+              <div className="py-12 text-center text-white/30 border border-white/10 rounded-2xl text-xs">
+                Bu filtreyle eşleşen dizi bulunamadı.
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-6 gap-2.5 sm:gap-3.5">
+                {libraryShows.map((show) => (
+                  <ShowCard
+                    key={`lib_${show.id}`}
+                    show={show}
+                    isWatched={watchedShowIds.has(Number(show.id))}
+                    onToggleWatch={currentUserId ? handleToggleWatch : undefined}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
       </main>
 
@@ -650,7 +698,7 @@ export default function Search() {
       <RandomShowModal
         open={randomModalOpen}
         onClose={() => setRandomModalOpen(false)}
-        shows={displayed.length > 0 ? displayed : trending}
+        shows={displayedTrending.length > 0 ? displayedTrending : trending}
       />
 
       <BottomNav />
