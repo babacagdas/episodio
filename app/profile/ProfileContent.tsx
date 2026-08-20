@@ -9,9 +9,17 @@ import { useLists } from '@/lib/useLists';
 import ListPreviewCard from '@/components/ListPreviewCard';
 import ShowCard from '@/components/ShowCard';
 import { CardSkeleton } from '@/components/Skeletons';
+import Image from 'next/image';
+import FavoriteShowsModal, { FavoriteShowItem } from '@/components/FavoriteShowsModal';
 import FollowListsModal from '@/app/u/[username]/FollowListsModal';
 import UserReviewsModal from '@/components/UserReviewsModal';
 import type { User } from '@supabase/supabase-js';
+
+const getTmdbPosterUrl = (path: string | null, size = 'w185') => {
+  if (!path) return '/no-poster.png';
+  if (path.startsWith('http')) return path;
+  return `https://image.tmdb.org/t/p/${size}${path}`;
+};
 
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 const TMDB_BACKDROP = 'https://image.tmdb.org/t/p/w1280';
@@ -42,7 +50,7 @@ async function compressAvatar(file: File): Promise<File> {
 
   try {
     const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => resolve(img);
       img.onerror = reject;
       img.src = imageUrl;
@@ -155,6 +163,41 @@ export default function ProfileContent({
   const [watchedLoaded, setWatchedLoaded] = useState(false);
   const [favoriteActorsVisible, setFavoriteActorsVisible] = useState(initialProfile?.favorite_actors_visible ?? true);
   const [favoriteActorsVisibilityColumnAvailable, setFavoriteActorsVisibilityColumnAvailable] = useState(true);
+
+  const [favoriteShows, setFavoriteShows] = useState<FavoriteShowItem[]>([]);
+  const [favoriteShowsModalOpen, setFavoriteShowsModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const localSaved = localStorage.getItem(`episodio:favoriteShows:${user.id}`);
+      if (localSaved) {
+        try {
+          setFavoriteShows(JSON.parse(localSaved));
+        } catch (e) {
+          console.error('Failed to parse favorite shows from local storage', e);
+        }
+      }
+    }
+  }, [user]);
+
+  const handleSaveFavoriteShows = async (newFavorites: FavoriteShowItem[]) => {
+    setFavoriteShows(newFavorites);
+    if (user) {
+      localStorage.setItem(`episodio:favoriteShows:${user.id}`, JSON.stringify(newFavorites));
+      try {
+        const supabase = createClient();
+        await supabase
+          .from('profiles')
+          .update({
+            favorite_shows: newFavorites,
+            updated_at: new Date().toISOString(),
+          } as any)
+          .eq('id', user.id);
+      } catch (err) {
+        console.error('Failed to update favorite_shows in DB', err);
+      }
+    }
+  };
 
   useEffect(() => {
     const supabase = createClient();
@@ -1039,6 +1082,57 @@ export default function ProfileContent({
               {profile.username && <p className="text-sm sm:text-base font-medium text-white/75 mt-1 drop-shadow-sm">@{profile.username}</p>}
               {profile.bio && <p className="text-sm text-white/50 mt-2 max-w-md">{profile.bio}</p>}
             </div>
+
+            {/* Masaüstü & Tablet: FAVORİ DİZİLER VİTRİNİ (Sağ Köşede 4'lü Yan Yana) */}
+            <div className="hidden md:flex flex-col items-end shrink-0 ml-auto pb-1">
+              <div className="flex items-center justify-between w-full mb-1.5 px-0.5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/40">
+                  FAVORİ DİZİLERİM
+                </span>
+                {user && (
+                  <button
+                    type="button"
+                    onClick={() => setFavoriteShowsModalOpen(true)}
+                    className="text-[10px] font-bold text-[#C91520] hover:underline ml-3 cursor-pointer"
+                  >
+                    {favoriteShows.length === 0 ? 'Vitrinini Seç' : 'Düzenle'}
+                  </button>
+                )}
+              </div>
+
+              {favoriteShows.length > 0 ? (
+                <div className="flex items-center gap-2.5">
+                  {favoriteShows.slice(0, 4).map((show) => (
+                    <Link
+                      key={show.id}
+                      href={`/show/${show.id}`}
+                      className="group flex flex-col items-center w-[60px] cursor-pointer"
+                    >
+                      <div className="relative w-[60px] h-[88px] rounded-lg overflow-hidden bg-white/5 transition-transform duration-200 group-hover:scale-105">
+                        <Image
+                          src={getTmdbPosterUrl(show.poster_path, 'w185')}
+                          alt={show.name}
+                          fill
+                          className="object-cover"
+                          sizes="60px"
+                        />
+                      </div>
+                      <span className="text-[10px] font-semibold text-white/70 group-hover:text-white truncate w-full text-center mt-1.5 transition-colors">
+                        {show.name}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setFavoriteShowsModalOpen(true)}
+                  className="text-xs font-bold text-white/60 hover:text-white transition-colors cursor-pointer py-2 px-3.5 rounded-full border border-dashed border-white/20 hover:border-white/40 active:scale-95"
+                >
+                  Vitrinini Seç
+                </button>
+              )}
+            </div>
             <div className="hidden">
               <button
                 onClick={openEdit}
@@ -1499,13 +1593,22 @@ export default function ProfileContent({
       </section>
 
       {user && (
-        <UserReviewsModal
-          userId={user.id}
-          username={profile.username || displayName}
-          avatarUrl={avatar || undefined}
-          isOpen={reviewsModalOpen}
-          onClose={() => setReviewsModalOpen(false)}
-        />
+        <>
+          <UserReviewsModal
+            userId={user.id}
+            username={profile.username || displayName}
+            avatarUrl={avatar || undefined}
+            isOpen={reviewsModalOpen}
+            onClose={() => setReviewsModalOpen(false)}
+          />
+
+          <FavoriteShowsModal
+            isOpen={favoriteShowsModalOpen}
+            onClose={() => setFavoriteShowsModalOpen(false)}
+            currentFavorites={favoriteShows}
+            onSave={handleSaveFavoriteShows}
+          />
+        </>
       )}
     </main>
   );
