@@ -9,8 +9,6 @@ import { useLists } from '@/lib/useLists';
 import ListPreviewCard from '@/components/ListPreviewCard';
 import ShowCard from '@/components/ShowCard';
 import { CardSkeleton } from '@/components/Skeletons';
-import Image from 'next/image';
-import FavoriteShowsModal, { FavoriteShowItem } from '@/components/FavoriteShowsModal';
 import FollowListsModal from '@/app/u/[username]/FollowListsModal';
 import UserReviewsModal from '@/components/UserReviewsModal';
 import type { User } from '@supabase/supabase-js';
@@ -163,41 +161,6 @@ export default function ProfileContent({
   const [watchedLoaded, setWatchedLoaded] = useState(false);
   const [favoriteActorsVisible, setFavoriteActorsVisible] = useState(initialProfile?.favorite_actors_visible ?? true);
   const [favoriteActorsVisibilityColumnAvailable, setFavoriteActorsVisibilityColumnAvailable] = useState(true);
-
-  const [favoriteShows, setFavoriteShows] = useState<FavoriteShowItem[]>([]);
-  const [favoriteShowsModalOpen, setFavoriteShowsModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (user) {
-      const localSaved = localStorage.getItem(`episodio:favoriteShows:${user.id}`);
-      if (localSaved) {
-        try {
-          setFavoriteShows(JSON.parse(localSaved));
-        } catch (e) {
-          console.error('Failed to parse favorite shows from local storage', e);
-        }
-      }
-    }
-  }, [user]);
-
-  const handleSaveFavoriteShows = async (newFavorites: FavoriteShowItem[]) => {
-    setFavoriteShows(newFavorites);
-    if (user) {
-      localStorage.setItem(`episodio:favoriteShows:${user.id}`, JSON.stringify(newFavorites));
-      try {
-        const supabase = createClient();
-        await supabase
-          .from('profiles')
-          .update({
-            favorite_shows: newFavorites,
-            updated_at: new Date().toISOString(),
-          } as any)
-          .eq('id', user.id);
-      } catch (err) {
-        console.error('Failed to update favorite_shows in DB', err);
-      }
-    }
-  };
 
   useEffect(() => {
     const supabase = createClient();
@@ -1153,84 +1116,31 @@ export default function ProfileContent({
                 ))}
               </div>
 
-              <div className="hidden md:flex items-end justify-between w-full">
-                <div className="flex items-center gap-8 pb-1">
-                  {user && (
-                    <FollowListsModal
-                      profileId={user.id}
-                      currentUserId={user.id}
-                      followersCount={followersCount}
-                      followingCount={followingCount}
-                      order="following-first"
-                    />
-                  )}
-                  <div className="w-px h-8 bg-white/10" />
-                  {[
-                    { val: statsLoading ? '...' : watchedCount, label: 'İzlendi', onClick: undefined },
-                    { val: statsLoading ? '...' : reviewCount, label: 'Yorum', onClick: () => setReviewsModalOpen(true) },
-                    { val: formattedWatchTime, label: 'İzleme Süresi', onClick: undefined },
-                  ].map(({ val, label, onClick }) => (
-                    <div
-                      key={label}
-                      onClick={onClick}
-                      className={`text-center ${onClick ? 'cursor-pointer hover:opacity-80 active:scale-95 transition-all' : ''}`}
-                    >
-                      <span className={`block text-2xl font-extrabold ${label === 'İzleme Süresi' ? 'text-[#D4A017]' : 'text-white'}`}>{val}</span>
-                      <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Masaüstü & Tablet: FAVORİ DİZİLER VİTRİNİ (Sağ Köşede 4'lü Yan Yana) */}
-                <div className="hidden md:flex flex-col items-end shrink-0 ml-auto pb-1">
-                  <div className="flex items-center justify-between w-full mb-1 px-0.5">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/40">
-                      FAVORİ DİZİLERİM
-                    </span>
-                    {user && (
-                      <button
-                        type="button"
-                        onClick={() => setFavoriteShowsModalOpen(true)}
-                        className="text-[10px] font-bold text-[#C91520] hover:underline ml-3 cursor-pointer"
-                      >
-                        {favoriteShows.length === 0 ? 'Vitrinini Seç' : 'Düzenle'}
-                      </button>
-                    )}
+              <div className="hidden md:flex items-center gap-8">
+                {user && (
+                  <FollowListsModal
+                    profileId={user.id}
+                    currentUserId={user.id}
+                    followersCount={followersCount}
+                    followingCount={followingCount}
+                    order="following-first"
+                  />
+                )}
+                <div className="w-px h-8 bg-white/10" />
+                {[
+                  { val: statsLoading ? '...' : watchedCount, label: 'İzlendi', onClick: undefined },
+                  { val: statsLoading ? '...' : reviewCount, label: 'Yorum', onClick: () => setReviewsModalOpen(true) },
+                  { val: formattedWatchTime, label: 'İzleme Süresi', onClick: undefined },
+                ].map(({ val, label, onClick }) => (
+                  <div
+                    key={label}
+                    onClick={onClick}
+                    className={`text-center ${onClick ? 'cursor-pointer hover:opacity-80 active:scale-95 transition-all' : ''}`}
+                  >
+                    <span className={`block text-2xl font-extrabold ${label === 'İzleme Süresi' ? 'text-[#D4A017]' : 'text-white'}`}>{val}</span>
+                    <span className="text-[11px] text-white/30 uppercase tracking-wider">{label}</span>
                   </div>
-
-                  {favoriteShows.length > 0 ? (
-                    <div className="flex items-center gap-2.5">
-                      {favoriteShows.slice(0, 4).map((show) => (
-                        <Link
-                          key={show.id}
-                          href={`/show/${show.id}`}
-                          className="group flex flex-col items-center w-[60px] cursor-pointer"
-                        >
-                          <div className="relative w-[60px] h-[88px] rounded-lg overflow-hidden bg-white/5 transition-transform duration-200 group-hover:scale-105">
-                            <Image
-                              src={getTmdbPosterUrl(show.poster_path, 'w185')}
-                              alt={show.name}
-                              fill
-                              className="object-cover"
-                              sizes="60px"
-                            />
-                          </div>
-                          <span className="text-[10px] font-semibold text-white/70 group-hover:text-white truncate w-full text-center mt-1.5 transition-colors">
-                            {show.name}
-                          </span>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setFavoriteShowsModalOpen(true)}
-                      className="text-xs font-bold text-white/60 hover:text-white transition-colors cursor-pointer py-1.5 px-3 rounded-full border border-dashed border-white/20 hover:border-white/40 active:scale-95"
-                    >
-                      Vitrinini Seç
-                    </button>
-                  )}
-                </div>
+                ))}
               </div>
             </>
           );
@@ -1595,22 +1505,13 @@ export default function ProfileContent({
       </section>
 
       {user && (
-        <>
-          <UserReviewsModal
-            userId={user.id}
-            username={profile.username || displayName}
-            avatarUrl={avatar || undefined}
-            isOpen={reviewsModalOpen}
-            onClose={() => setReviewsModalOpen(false)}
-          />
-
-          <FavoriteShowsModal
-            isOpen={favoriteShowsModalOpen}
-            onClose={() => setFavoriteShowsModalOpen(false)}
-            currentFavorites={favoriteShows}
-            onSave={handleSaveFavoriteShows}
-          />
-        </>
+        <UserReviewsModal
+          userId={user.id}
+          username={profile.username || displayName}
+          avatarUrl={avatar || undefined}
+          isOpen={reviewsModalOpen}
+          onClose={() => setReviewsModalOpen(false)}
+        />
       )}
     </main>
   );

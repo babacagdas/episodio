@@ -318,9 +318,9 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                   </div>
                 )}
 
-                {/* Masaüstü: İstatistik Banner'ı ve Sağında Favori Dizi Vitrini */}
-                <div className="hidden md:flex items-end justify-between w-full">
-                  <div className="flex items-center gap-8 mb-2">
+                {/* Masaüstü: İstatistik Banner'ı ve Sağında Sade Dizi Zevk Uyumu Yazısı (Çerçevesiz, İkonsuz) */}
+                <div className="hidden md:flex items-center justify-between w-full">
+                  <div className="flex items-center gap-8">
                     <FollowListsModal
                       profileId={profile.id}
                       currentUserId={user?.id ?? null}
@@ -338,51 +338,16 @@ export default async function UserProfilePage({ params }: { params: Promise<Page
                       watchTimeStatValue={watchTimeStatValue}
                       isDesktop={true}
                     />
-
-                    {matchPercentage !== null && (
-                      <div className="text-sm font-bold text-emerald-400 ml-4 shrink-0">
-                        %{matchPercentage} Dizi Zevk Uyumu
-                        {sharedShowsCount > 0 && (
-                          <span className="text-xs font-semibold text-white/40 ml-1.5">({sharedShowsCount} Ortak Dizi)</span>
-                        )}
-                      </div>
-                    )}
                   </div>
 
-                  {/* BAŞKASININ PROFİLİ: FAVORİ DİZİLER VİTRİNİ (Sağ Köşede 4'lü Yan Yana) */}
-                  {(() => {
-                    const favShows = (profile as any).favorite_shows as { id: number; name: string; poster_path: string | null }[] | undefined;
-                    if (!favShows || favShows.length === 0) return null;
-                    return (
-                      <div className="hidden md:flex flex-col items-end shrink-0 ml-auto pb-1">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/40 mb-1.5 px-0.5">
-                          FAVORİ DİZİLER
-                        </span>
-                        <div className="flex items-center gap-2.5">
-                          {favShows.slice(0, 4).map((show) => (
-                            <Link
-                              key={show.id}
-                              href={`/show/${show.id}`}
-                              className="group flex flex-col items-center w-[60px] cursor-pointer"
-                            >
-                              <div className="relative w-[60px] h-[88px] rounded-lg overflow-hidden bg-white/5 transition-transform duration-200 group-hover:scale-105">
-                                <Image
-                                  src={show.poster_path ? (show.poster_path.startsWith('http') ? show.poster_path : `https://image.tmdb.org/t/p/w185${show.poster_path}`) : '/no-poster.png'}
-                                  alt={show.name}
-                                  fill
-                                  className="object-cover"
-                                  sizes="60px"
-                                />
-                              </div>
-                              <span className="text-[10px] font-semibold text-white/70 group-hover:text-white truncate w-full text-center mt-1.5 transition-colors">
-                                {show.name}
-                              </span>
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })()}
+                  {matchPercentage !== null && (
+                    <div className="text-sm font-bold text-emerald-400 ml-12 shrink-0">
+                      %{matchPercentage} Dizi Zevk Uyumu
+                      {sharedShowsCount > 0 && (
+                        <span className="text-xs font-semibold text-white/40 ml-1.5">({sharedShowsCount} Ortak Dizi)</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </>
             );
