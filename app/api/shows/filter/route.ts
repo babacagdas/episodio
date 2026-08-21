@@ -233,7 +233,9 @@ export async function GET(req: NextRequest) {
   /** TMDB yanıtı (Supabase yok / tablo yok ise) */
   const tmdbFallback = async () => {
     const merged = await fetchDiscoverAllPages({ genreId, originCountry, year });
-    return NextResponse.json(merged.map(mapToShow));
+    return NextResponse.json(merged.map(mapToShow), {
+      headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600' },
+    });
   };
 
   if (!supabaseUrl || !serviceRoleKey) return tmdbFallback();
@@ -251,5 +253,7 @@ export async function GET(req: NextRequest) {
 
   if (rows.length === 0) return tmdbFallback();
 
-  return NextResponse.json(rows.map(mapToShow));
+  return NextResponse.json(rows.map(mapToShow), {
+    headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=3600' },
+  });
 }

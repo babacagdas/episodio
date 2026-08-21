@@ -65,5 +65,7 @@ export async function GET(request: Request) {
     })
   );
 
-  return NextResponse.json(resultMap);
+  return NextResponse.json(resultMap, {
+    headers: { 'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800' },
+  });
 }

@@ -10,5 +10,7 @@ export async function GET() {
   );
   if (!res.ok) return NextResponse.json([]);
   const data = await res.json();
-  return NextResponse.json(data.results ?? []);
+  return NextResponse.json(data.results ?? [], {
+    headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' },
+  });
 }
