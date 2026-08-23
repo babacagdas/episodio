@@ -228,7 +228,7 @@ export async function GET(req: NextRequest) {
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
   /** TMDB yanıtı (Supabase yok / tablo yok ise) */
   const tmdbFallback = async () => {
@@ -238,9 +238,9 @@ export async function GET(req: NextRequest) {
     });
   };
 
-  if (!supabaseUrl || !serviceRoleKey) return tmdbFallback();
+  if (!supabaseUrl || !supabaseKey) return tmdbFallback();
 
-  const admin = createClient(supabaseUrl, serviceRoleKey, {
+  const admin = createClient(supabaseUrl, supabaseKey, {
     auth: { persistSession: false },
   }) as LooseSupabase;
 

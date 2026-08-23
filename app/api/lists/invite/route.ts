@@ -18,10 +18,10 @@ export async function POST(req: NextRequest) {
   if (invitedUserId === me.id) return NextResponse.json({ error: 'Kendini davet edemezsin.' }, { status: 400 });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceRoleKey) return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
 
-  const admin = createAdminClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+  const admin = createAdminClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
   // Liste gerçekten bende mi?
   const { data: list } = await admin

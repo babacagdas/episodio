@@ -13,10 +13,10 @@ export async function POST(req: NextRequest) {
   if (!listId) return NextResponse.json({ error: 'Bad request' }, { status: 400 });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !serviceRoleKey) return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  if (!supabaseUrl || !supabaseKey) return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
 
-  const admin = createAdminClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+  const admin = createAdminClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
   const { data: list } = await admin
     .from('lists')
@@ -45,12 +45,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Bu liste için geçerli davetin yok.' }, { status: 403 });
   }
 
-  const { error } = await admin
+  const { error: updateError } = await admin
     .from('lists')
     .update({ shared_with_user_id: me.id })
     .eq('id', listId);
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }
-
