@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { createClient as createServerClient } from '@/lib/supabase/server';
 
 type TabType = 'followers' | 'following';
 
@@ -11,12 +12,16 @@ export async function GET(req: NextRequest) {
   if (!profileId) return NextResponse.json([]);
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  if (!supabaseUrl || !supabaseKey) return NextResponse.json([]);
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const supabase = createClient(supabaseUrl, supabaseKey, {
-    auth: { persistSession: false },
-  });
+  let supabase: any;
+  if (supabaseUrl && serviceRoleKey) {
+    supabase = createAdminClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    });
+  } else {
+    supabase = await createServerClient();
+  }
 
   const relationField = tab === 'followers' ? 'follower_id' : 'following_id';
   const filterField = tab === 'followers' ? 'following_id' : 'follower_id';
@@ -29,7 +34,7 @@ export async function GET(req: NextRequest) {
 
   if (relationError) return NextResponse.json([]);
 
-  const ids = (relations ?? [])
+  const ids: string[] = (relations ?? [])
     .map((row: Record<string, string>) => row[relationField])
     .filter(Boolean);
 
@@ -43,7 +48,7 @@ export async function GET(req: NextRequest) {
   if (profileError) return NextResponse.json([]);
 
   const ordered = ids
-    .map((id) => (profiles ?? []).find((profile) => profile.id === id))
+    .map((id: string) => (profiles ?? []).find((profile: any) => profile.id === id))
     .filter(Boolean);
 
   return NextResponse.json(ordered);
