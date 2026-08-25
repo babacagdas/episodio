@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Sidebar from '@/components/Sidebar';
 
-export const runtime = 'edge';
+
 import { BottomNav, MobileHeader } from '@/components/Nav';
 import ShowCard from '@/components/ShowCard';
 import { CardGridSkeleton } from '@/components/Skeletons';

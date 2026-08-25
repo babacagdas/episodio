@@ -3,7 +3,7 @@ import Sidebar from '@/components/Sidebar';
 import { MobileHeader } from '@/components/Nav';
 import ProfileContent from './ProfileContent';
 
-export const runtime = 'edge';
+
 import NotificationsBell from '@/app/home/NotificationsBell';
 import { createClient } from '@/lib/supabase/server';
 

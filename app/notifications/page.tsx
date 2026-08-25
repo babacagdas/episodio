@@ -4,7 +4,7 @@ import Sidebar from '@/components/Sidebar';
 import { MobileHeader, BottomNav } from '@/components/Nav';
 import { createClient } from '@/lib/supabase/server';
 
-export const runtime = 'edge';
+
 
 function formatTimeAgo(date: string) {
   const diffMs = Date.now() - new Date(date).getTime();

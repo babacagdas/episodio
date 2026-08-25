@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 
-export const runtime = 'edge';
+
 import { createAdminClient, isAdminEmail } from '@/lib/supabase/admin';
 
 import ManagerPinAuth from './ManagerPinAuth';

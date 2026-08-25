@@ -3,7 +3,7 @@ import Sidebar from '@/components/Sidebar';
 import { BottomNav } from '@/components/Nav';
 import { getSeasonEpisodes, getShowDetail } from '@/lib/tmdb';
 
-export const runtime = 'edge';
+
 import EpisodeDiscussion from './EpisodeDiscussion';
 import BackButton from '@/components/BackButton';
 

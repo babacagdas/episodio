@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient, isAdminEmail } from '@/lib/supabase/admin';
 
-export const runtime = 'edge';
+
 
 const ALLOWED_TABLES = [
   'watch_status',

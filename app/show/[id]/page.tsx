@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { BottomNav } from '@/components/Nav';
 
-export const runtime = 'edge';
+
 import BackButton from '@/components/BackButton';
 import { getShowDetail, getSeasonEpisodes, getSimilarShows, getTvWatchProviders, getShowCredits, type Episode } from '@/lib/tmdb';
 import WatchlistButton from './WatchlistButton';

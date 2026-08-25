@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 
-export const runtime = 'edge';
+
 import { BottomNav, MobileHeader } from '@/components/Nav';
 import { getPersonDetail, getPersonCredits } from '@/lib/tmdb';
 

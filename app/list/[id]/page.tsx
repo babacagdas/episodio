@@ -3,7 +3,7 @@ import Sidebar from '@/components/Sidebar';
 import { MobileHeader, BottomNav } from '@/components/Nav';
 import { createClient } from '@/lib/supabase/server';
 
-export const runtime = 'edge';
+
 import ListDetailClient from './ListDetailClient';
 
 interface ListPageParams {
