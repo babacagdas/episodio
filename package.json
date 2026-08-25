@@ -7,7 +7,7 @@
     "build": "next build",
     "pages:build": "npx @opennextjs/cloudflare build",
     "deploy": "npx @opennextjs/cloudflare build && npx wrangler deploy",
-    "start": "next start",
+    "start": "next start -p ${PORT:-3000}",
     "lint": "next lint"
   },
   "dependencies": {
