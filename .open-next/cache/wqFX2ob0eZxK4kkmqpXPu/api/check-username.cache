@@ -1,1 +1,0 @@
-{"type":"route","meta":{"status":200,"headers":{"content-type":"application/json","x-next-cache-tags":"_N_T_/layout,_N_T_/api/layout,_N_T_/api/check-username/layout,_N_T_/api/check-username/route,_N_T_/api/check-username"}},"body":"{\"available\":false,\"message\":\"Kullanıcı adı en az 3 karakter olmalı.\"}"}
