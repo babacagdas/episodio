@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'edge';
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string; seasonNumber: string }> }) {
   const { id, seasonNumber } = await params;
   const showId = Number(id);

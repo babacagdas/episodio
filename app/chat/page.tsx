@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import ChatClient from './ChatClient';
 
+export const runtime = 'edge';
+
 export const metadata = {
   title: 'Mesajlar - Episodio',
   description: 'Takipçileriniz ve arkadaşlarınızla gerçek zamanlı sohbet edin.',

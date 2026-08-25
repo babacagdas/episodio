@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import SplashClient from './SplashClient';
 
+export const runtime = 'edge';
+
 export default async function Splash({
   searchParams,
 }: {

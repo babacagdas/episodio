@@ -4,6 +4,8 @@ import Sidebar from '@/components/Sidebar';
 import { MobileHeader, BottomNav } from '@/components/Nav';
 import { createClient } from '@/lib/supabase/server';
 
+export const runtime = 'edge';
+
 function formatTimeAgo(date: string) {
   const diffMs = Date.now() - new Date(date).getTime();
   const minutes = Math.max(1, Math.floor(diffMs / (1000 * 60)));

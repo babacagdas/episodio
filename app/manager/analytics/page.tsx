@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient, isAdminEmail } from '@/lib/supabase/admin';
 
+export const runtime = 'edge';
+
 import ManagerPinAuth from '../ManagerPinAuth';
 import WeeklyAnalyticsClient, { WeeklyData } from './WeeklyAnalyticsClient';
 

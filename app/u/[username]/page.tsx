@@ -2,6 +2,8 @@ import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { MobileHeader, BottomNav } from '@/components/Nav';
 import { createClient } from '@/lib/supabase/server';
+
+export const runtime = 'edge';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import FollowButton from './FollowButton';
 import FollowListsModal from './FollowListsModal';

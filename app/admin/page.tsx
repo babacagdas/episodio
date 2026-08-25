@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+
+export const runtime = 'edge';
 import { createAdminClient, isAdminEmail } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
