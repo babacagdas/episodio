@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
 
+export const runtime = 'edge';
+
 export const viewport: Viewport = {
   themeColor: '#000000',
   width: 'device-width',
