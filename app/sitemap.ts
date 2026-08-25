@@ -1,5 +1,7 @@
 import { MetadataRoute } from 'next';
 
+export const dynamic = 'force-static';
+
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || 'd0e8d91e3b9f6091fc38629f10e2e049';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
