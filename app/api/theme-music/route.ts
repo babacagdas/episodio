@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-static';
+
 function normalizeText(str: string): string {
   if (!str) return '';
   return str

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-static';
+
 export interface ProviderItem {
   provider_id: number;
   provider_name: string;

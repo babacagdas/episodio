@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-static';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 type LooseSupabase = SupabaseClient<any, any, any, any>;

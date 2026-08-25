@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 
+export const dynamic = 'force-static';
+
 type TabType = 'followers' | 'following';
 
 export async function GET(req: NextRequest) {

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const dynamic = 'force-static';
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const rawUsername = searchParams.get('username') || '';
