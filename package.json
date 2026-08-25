@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "pages:build": "npx @opennextjs/cloudflare build",
+    "deploy": "npx @opennextjs/cloudflare build && npx wrangler deploy",
     "start": "next start",
     "lint": "next lint"
   },
