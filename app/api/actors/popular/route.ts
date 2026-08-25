@@ -114,7 +114,9 @@ export async function GET(request: Request) {
       actors.push(...pageActors);
     }
 
-    return NextResponse.json(actors.slice(0, 24));
+    return NextResponse.json(actors.slice(0, 24), {
+      headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' },
+    });
   } catch (error) {
     console.error('Popular actors API error:', error);
     return NextResponse.json([]);
