@@ -9,4 +9,5 @@ yarn-debug.log*
 yarn-error.log*
 *.tsbuildinfo
 tmp/
-
+.open-next
+out
