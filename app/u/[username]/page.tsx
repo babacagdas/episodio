@@ -1,7 +1,48 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { MobileHeader, BottomNav } from '@/components/Nav';
 import { createClient } from '@/lib/supabase/server';
+
+export async function generateMetadata({ params }: { params: Promise<{ username: string }> }): Promise<Metadata> {
+  const { username } = await params;
+  try {
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username, full_name, bio, avatar_url')
+      .ilike('username', username)
+      .maybeSingle();
+
+    if (!profile) return { title: 'Kullanıcı Bulunamadı | Episodio' };
+
+    const name = profile.full_name || `@${profile.username}`;
+    const title = `${name} (${profile.username}) Profil | Episodio`;
+    const description = profile.bio || `${name} kullanıcısının dizi listeleri, takip ettikleri ve incelemeleri Episodio'da!`;
+    const avatar = profile.avatar_url || 'https://episodio.com.tr/icon.png';
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: `https://episodio.com.tr/u/${profile.username}`,
+        siteName: 'Episodio',
+        images: [{ url: avatar, width: 600, height: 600, alt: name }],
+        type: 'profile',
+      },
+      twitter: {
+        card: 'summary',
+        title,
+        description,
+        images: [avatar],
+      },
+    };
+  } catch {
+    return { title: 'Profil | Episodio' };
+  }
+}
 
 
 import { createClient as createAdminClient } from '@supabase/supabase-js';

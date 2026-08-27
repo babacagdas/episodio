@@ -1,7 +1,54 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import { MobileHeader, BottomNav } from '@/components/Nav';
 import { createClient } from '@/lib/supabase/server';
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const supabase = await createClient();
+    const { data: list } = await supabase
+      .from('lists')
+      .select('name, description')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (!list) return { title: 'Liste Bulunamadı | Episodio' };
+
+    const { data: firstItem } = await supabase
+      .from('list_items')
+      .select('poster_path')
+      .eq('list_id', id)
+      .limit(1)
+      .maybeSingle();
+
+    const title = `${list.name} | Dizi Listesi - Episodio`;
+    const description = list.description || `${list.name} özel dizi listesi Episodio'da!`;
+    const poster = firstItem?.poster_path ? `https://image.tmdb.org/t/p/w500${firstItem.poster_path}` : 'https://episodio.com.tr/icon.png';
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: `https://episodio.com.tr/list/${id}`,
+        siteName: 'Episodio',
+        images: [{ url: poster, width: 800, height: 1200, alt: list.name }],
+        type: 'website',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: [poster],
+      },
+    };
+  } catch {
+    return { title: 'Dizi Listesi | Episodio' };
+  }
+}
 
 
 import ListDetailClient from './ListDetailClient';
