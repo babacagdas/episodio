@@ -195,13 +195,21 @@ export default async function ManagerDashboardPage() {
     db.from('episode_comment_replies').select('id, user_id, comment_id, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
   ]);
 
-  let rawProfiles = (profilesRes.data ?? []) as UserItem[];
-  if (rawProfiles.length === 0) {
-    const { data: fallbackProfiles } = await supabase
-      .from('profiles')
-      .select('id, username, full_name, avatar_url, created_at');
-    if (fallbackProfiles) rawProfiles = fallbackProfiles as UserItem[];
-  }
+  // 1. Supabase Profiles tablosundaki TÜM GERÇEK kullanıcıları çekme
+  const { data: directProfilesData, count: directProfilesCount } = await (admin || supabase)
+    .from('profiles')
+    .select('id, username, full_name, avatar_url, created_at', { count: 'exact' })
+    .order('created_at', { ascending: false });
+
+  const rawProfiles = (directProfilesData ?? []) as any[];
+
+  const [listsRes, reviewsRes, notesRes, epDiscussionsRes, epRepliesRes] = await Promise.all([
+    db.from('lists').select('id, name, visibility, user_id, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
+    db.from('reviews').select('id, user_id, show_id, rating, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
+    db.from('show_notes').select('id, user_id, show_id, show_name, content, is_public, updated_at', { count: 'exact' }).order('updated_at', { ascending: false }),
+    db.from('episode_discussions').select('id, user_id, show_id, season_number, episode_number, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
+    db.from('episode_comment_replies').select('id, user_id, comment_id, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
+  ]);
 
   const lists = (listsRes.data ?? []) as ListRow[];
   const reviews = (reviewsRes.data ?? []) as ReviewRow[];
@@ -209,87 +217,27 @@ export default async function ManagerDashboardPage() {
   const epDiscussions = (epDiscussionsRes.data ?? []) as EpisodeDiscussionRow[];
   const epReplies = (epRepliesRes.data ?? []) as EpisodeReplyRow[];
 
-  // Auth Users + Profiles Tablosunu Birleştirme (Mevcut kullanıcı adları öncelikli)
+  // Auth verilerinden e-posta ve ban bilgilerini alma
+  const emailMap = new Map<string, string>();
+  const bannedMap = new Map<string, boolean>();
+  authUsersList.forEach((u) => {
+    if (u.email) emailMap.set(u.id, u.email);
+    if (u.user_metadata?.is_banned) bannedMap.set(u.id, true);
+  });
+
+  // Profiles tablosundaki TÜM kullanıcıları haritaya ekleme (Primary Source)
   const userMap = new Map<string, UserItem>();
 
-  authUsersList.forEach((u) => {
-    userMap.set(u.id, {
-      id: u.id,
-      email: u.email ?? null,
-      username: u.user_metadata?.username ?? (u.email ? u.email.split('@')[0] : null),
-      full_name: u.user_metadata?.full_name || u.user_metadata?.name || null,
-      avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
-      created_at: u.created_at,
-      is_banned: !!u.user_metadata?.is_banned,
-    });
-  });
-
   rawProfiles.forEach((p: any) => {
-    const existing = userMap.get(p.id);
-    const updatedUsername = (p.username && p.username.trim()) ? p.username : (existing?.username || null);
-    const updatedFullName = (p.full_name && p.full_name.trim()) ? p.full_name : (existing?.full_name || null);
-
     userMap.set(p.id, {
       id: p.id,
-      email: existing?.email ?? null,
-      username: updatedUsername,
-      full_name: updatedFullName,
-      avatar_url: p.avatar_url || existing?.avatar_url || null,
-      created_at: p.created_at || existing?.created_at || null,
-      is_banned: p.is_banned !== undefined ? !!p.is_banned : (existing?.is_banned || false),
+      email: emailMap.get(p.id) ?? null,
+      username: p.username ?? `user_${p.id.slice(0, 6)}`,
+      full_name: p.full_name ?? p.username ?? `Kullanıcı (${p.id.slice(0, 6)})`,
+      avatar_url: p.avatar_url ?? null,
+      created_at: p.created_at ?? null,
+      is_banned: bannedMap.get(p.id) ?? false,
     });
-  });
-
-  // Liste, yorum ve etkinliklerdeki tüm kullanıcıların ilk hareket tarihlerini haritalama
-  const userFirstActivityMap = new Map<string, string>();
-  const trackActivityDate = (uid?: string | null, dateStr?: string | null) => {
-    if (!uid || !dateStr) return;
-    const current = userFirstActivityMap.get(uid);
-    if (!current || dateStr < current) {
-      userFirstActivityMap.set(uid, dateStr);
-    }
-  };
-
-  lists.forEach((l) => trackActivityDate(l.user_id, l.created_at));
-  reviews.forEach((r) => trackActivityDate(r.user_id, r.created_at));
-  notes.forEach((n) => trackActivityDate(n.user_id, n.updated_at));
-  epDiscussions.forEach((d) => trackActivityDate(d.user_id, d.created_at));
-  epReplies.forEach((rp) => trackActivityDate(rp.user_id, rp.created_at));
-
-  const missingUserIds = Array.from(activeUserIds).filter((uid) => !userMap.has(uid));
-  if (missingUserIds.length > 0) {
-    const { data: missingProfiles } = await supabase
-      .from('profiles')
-      .select('id, username, full_name, avatar_url, created_at')
-      .in('id', missingUserIds);
-
-    (missingProfiles ?? []).forEach((p: any) => {
-      const firstDate = userFirstActivityMap.get(p.id) || p.created_at || null;
-      userMap.set(p.id, {
-        id: p.id,
-        email: null,
-        username: p.username || `user_${p.id.slice(0, 6)}`,
-        full_name: p.full_name || p.username || `Kullanıcı (${p.id.slice(0, 6)})`,
-        avatar_url: p.avatar_url || null,
-        created_at: firstDate,
-        is_banned: false,
-      });
-    });
-  }
-
-  activeUserIds.forEach((uid) => {
-    if (!userMap.has(uid)) {
-      const firstDate = userFirstActivityMap.get(uid) || null;
-      userMap.set(uid, {
-        id: uid,
-        email: null,
-        username: `user_${uid.slice(0, 6)}`,
-        full_name: `Kullanıcı (${uid.slice(0, 6)})`,
-        avatar_url: null,
-        created_at: firstDate,
-        is_banned: false,
-      });
-    }
   });
 
   const allUsers = Array.from(userMap.values());
