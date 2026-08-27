@@ -240,23 +240,34 @@ export default async function ManagerDashboardPage() {
     });
   });
 
-  // Liste, yorum ve etkinliklerdeki tüm kullanıcı kimliklerinin de eksiksiz dahil edilmesi
-  const activeUserIds = new Set<string>();
-  lists.forEach((l) => l.user_id && activeUserIds.add(l.user_id));
-  reviews.forEach((r) => r.user_id && activeUserIds.add(r.user_id));
-  notes.forEach((n) => n.user_id && activeUserIds.add(n.user_id));
-  epDiscussions.forEach((d) => d.user_id && activeUserIds.add(d.user_id));
-  epReplies.forEach((rp) => rp.user_id && activeUserIds.add(rp.user_id));
+  // Liste, yorum ve etkinliklerdeki tüm kullanıcıların ilk hareket tarihlerini haritalama
+  const userFirstActivityMap = new Map<string, string>();
+  const trackActivityDate = (uid?: string | null, dateStr?: string | null) => {
+    if (!uid || !dateStr) return;
+    const current = userFirstActivityMap.get(uid);
+    if (!current || dateStr < current) {
+      userFirstActivityMap.set(uid, dateStr);
+    }
+  };
+
+  lists.forEach((l) => trackActivityDate(l.user_id, l.created_at));
+  reviews.forEach((r) => trackActivityDate(r.user_id, r.created_at));
+  notes.forEach((n) => trackActivityDate(n.user_id, n.updated_at));
+  epDiscussions.forEach((d) => trackActivityDate(d.user_id, d.created_at));
+  epReplies.forEach((rp) => trackActivityDate(rp.user_id, rp.created_at));
+
+  const activeUserIds = new Set<string>(userFirstActivityMap.keys());
 
   activeUserIds.forEach((uid) => {
     if (!userMap.has(uid)) {
+      const firstDate = userFirstActivityMap.get(uid) || null;
       userMap.set(uid, {
         id: uid,
         email: null,
-        username: `Kullanıcı (${uid.slice(0, 6)})`,
+        username: `user_${uid.slice(0, 6)}`,
         full_name: 'Episodio Üyesi',
         avatar_url: null,
-        created_at: new Date().toISOString(),
+        created_at: firstDate,
         is_banned: false,
       });
     }
