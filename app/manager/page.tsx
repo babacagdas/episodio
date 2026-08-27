@@ -195,7 +195,14 @@ export default async function ManagerDashboardPage() {
     db.from('episode_comment_replies').select('id, user_id, comment_id, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
   ]);
 
-  const profilesList = (profilesRes.data ?? []) as UserItem[];
+  let rawProfiles = (profilesRes.data ?? []) as UserItem[];
+  if (rawProfiles.length === 0) {
+    const { data: fallbackProfiles } = await supabase
+      .from('profiles')
+      .select('id, username, full_name, avatar_url, created_at');
+    if (fallbackProfiles) rawProfiles = fallbackProfiles as UserItem[];
+  }
+
   const lists = (listsRes.data ?? []) as ListRow[];
   const reviews = (reviewsRes.data ?? []) as ReviewRow[];
   const notes = (notesRes.data ?? []) as ShowNoteRow[];
@@ -217,7 +224,7 @@ export default async function ManagerDashboardPage() {
     });
   });
 
-  profilesList.forEach((p: any) => {
+  rawProfiles.forEach((p: any) => {
     const existing = userMap.get(p.id);
     const updatedUsername = (p.username && p.username.trim()) ? p.username : (existing?.username || null);
     const updatedFullName = (p.full_name && p.full_name.trim()) ? p.full_name : (existing?.full_name || null);
@@ -233,8 +240,30 @@ export default async function ManagerDashboardPage() {
     });
   });
 
+  // Liste, yorum ve etkinliklerdeki tüm kullanıcı kimliklerinin de eksiksiz dahil edilmesi
+  const activeUserIds = new Set<string>();
+  lists.forEach((l) => l.user_id && activeUserIds.add(l.user_id));
+  reviews.forEach((r) => r.user_id && activeUserIds.add(r.user_id));
+  notes.forEach((n) => n.user_id && activeUserIds.add(n.user_id));
+  epDiscussions.forEach((d) => d.user_id && activeUserIds.add(d.user_id));
+  epReplies.forEach((rp) => rp.user_id && activeUserIds.add(rp.user_id));
+
+  activeUserIds.forEach((uid) => {
+    if (!userMap.has(uid)) {
+      userMap.set(uid, {
+        id: uid,
+        email: null,
+        username: `Kullanıcı (${uid.slice(0, 6)})`,
+        full_name: 'Episodio Üyesi',
+        avatar_url: null,
+        created_at: new Date().toISOString(),
+        is_banned: false,
+      });
+    }
+  });
+
   const allUsers = Array.from(userMap.values());
-  const totalUserCount = allUsers.length > 0 ? allUsers.length : (profilesRes.count ?? profilesList.length);
+  const totalUserCount = allUsers.length > 0 ? allUsers.length : (profilesRes.count ?? rawProfiles.length);
   const totalListCount = listsRes.count ?? lists.length;
   
   // TÜM YORUM VE YANIT TİPLERİNİN TOPLAMI (Eksiksiz %100 Gerçek Yorum Sayısı)
