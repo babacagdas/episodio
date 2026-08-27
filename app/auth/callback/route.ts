@@ -67,7 +67,13 @@ async function ensureProfile(supabase: any) {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  const proto = request.headers.get('x-forwarded-proto') || 'https';
+  const siteOrigin = (host && !host.includes('localhost:10000'))
+    ? `${proto}://${host}`
+    : 'https://episodio.com.tr';
+
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const token_hash = searchParams.get('token_hash');
   const type = searchParams.get('type') as any;
@@ -86,7 +92,7 @@ export async function GET(request: NextRequest) {
       if (!otpError) {
         await ensureProfile(supabase);
         const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/home';
-        return NextResponse.redirect(`${origin}${safeNext}`);
+        return NextResponse.redirect(`${siteOrigin}${safeNext}`);
       }
     } catch {
       // continue
@@ -101,11 +107,11 @@ export async function GET(request: NextRequest) {
       if (exchangeError) {
         const { data: currentUser } = await supabase.auth.getUser();
         if (currentUser?.user) {
-          return NextResponse.redirect(`${origin}/home`);
+          return NextResponse.redirect(`${siteOrigin}/home`);
         }
 
         const friendlyInfo = 'E-posta doğrulaması tamamlandı. Lütfen e-posta ve şifrenizle giriş yapın.';
-        return NextResponse.redirect(`${origin}/signin?msg=${encodeURIComponent(friendlyInfo)}`);
+        return NextResponse.redirect(`${siteOrigin}/signin?msg=${encodeURIComponent(friendlyInfo)}`);
       }
 
       await ensureProfile(supabase);
@@ -115,5 +121,5 @@ export async function GET(request: NextRequest) {
   }
 
   const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/home';
-  return NextResponse.redirect(`${origin}${safeNext}`);
+  return NextResponse.redirect(`${siteOrigin}${safeNext}`);
 }

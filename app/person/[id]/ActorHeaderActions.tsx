@@ -72,16 +72,25 @@ export function ActorFavoriteButton({ actorId, actorName, actorProfilePath }: Pr
     setSaving(true);
     const newFavoriteState = !isFavorite;
 
-    const { error } = await supabase.from('actor_swipes').upsert(
-      {
+    let error: any = null;
+
+    if (newFavoriteState) {
+      // Önce varsa eski kaydı temizle
+      await supabase.from('actor_swipes').delete().eq('user_id', user.id).eq('actor_id', actorId);
+      // Temiz yeni favori ekle
+      const res = await supabase.from('actor_swipes').insert({
         user_id: user.id,
         actor_id: actorId,
         actor_name: actorName,
         actor_profile_path: actorProfilePath,
-        action: newFavoriteState ? 'like' : 'pass',
-      },
-      { onConflict: 'user_id,actor_id' }
-    );
+        action: 'like',
+        created_at: new Date().toISOString(),
+      });
+      error = res.error;
+    } else {
+      const res = await supabase.from('actor_swipes').delete().eq('user_id', user.id).eq('actor_id', actorId);
+      error = res.error;
+    }
 
     if (!error) {
       setIsFavorite(newFavoriteState);
