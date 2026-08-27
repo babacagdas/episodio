@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 
-export const dynamic = 'force-static';
+export const revalidate = 86400;
 
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY || 'd0e8d91e3b9f6091fc38629f10e2e049';
 
