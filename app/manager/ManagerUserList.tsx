@@ -120,7 +120,9 @@ export default function ManagerUserList({ users }: { users: UserItem[] }) {
                 </tr>
               ) : (
                 filteredUsers.map((u) => {
-                  const name = u.full_name || u.username || u.email || 'Kullanıcı';
+                  const name = (u.full_name && u.full_name !== 'Episodio Üyesi')
+                    ? u.full_name
+                    : (u.username ? `@${u.username}` : (u.email ? u.email.split('@')[0] : 'Kullanıcı'));
                   const dateStr = u.created_at
                     ? new Date(u.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' })
                     : 'Bilinmiyor';

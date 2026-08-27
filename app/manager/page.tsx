@@ -256,7 +256,26 @@ export default async function ManagerDashboardPage() {
   epDiscussions.forEach((d) => trackActivityDate(d.user_id, d.created_at));
   epReplies.forEach((rp) => trackActivityDate(rp.user_id, rp.created_at));
 
-  const activeUserIds = new Set<string>(userFirstActivityMap.keys());
+  const missingUserIds = Array.from(activeUserIds).filter((uid) => !userMap.has(uid));
+  if (missingUserIds.length > 0) {
+    const { data: missingProfiles } = await supabase
+      .from('profiles')
+      .select('id, username, full_name, avatar_url, created_at')
+      .in('id', missingUserIds);
+
+    (missingProfiles ?? []).forEach((p: any) => {
+      const firstDate = userFirstActivityMap.get(p.id) || p.created_at || null;
+      userMap.set(p.id, {
+        id: p.id,
+        email: null,
+        username: p.username || `user_${p.id.slice(0, 6)}`,
+        full_name: p.full_name || p.username || `Kullanıcı (${p.id.slice(0, 6)})`,
+        avatar_url: p.avatar_url || null,
+        created_at: firstDate,
+        is_banned: false,
+      });
+    });
+  }
 
   activeUserIds.forEach((uid) => {
     if (!userMap.has(uid)) {
@@ -265,7 +284,7 @@ export default async function ManagerDashboardPage() {
         id: uid,
         email: null,
         username: `user_${uid.slice(0, 6)}`,
-        full_name: 'Episodio Üyesi',
+        full_name: `Kullanıcı (${uid.slice(0, 6)})`,
         avatar_url: null,
         created_at: firstDate,
         is_banned: false,
