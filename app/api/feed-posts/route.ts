@@ -75,6 +75,12 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
+      if (error.message?.includes('admin_feed_posts')) {
+        return NextResponse.json(
+          { error: 'Supabase SQL tablosu henüz oluşturulmadı. Lütfen Supabase SQL Editor alanında "admin_feed_posts" SQL kodunu 1 kez çalıştırın.' },
+          { status: 500 }
+        );
+      }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
