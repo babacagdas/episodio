@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Image from 'next/image';
 
 export interface FeedPost {
   id: string;
@@ -14,6 +15,7 @@ export interface FeedPost {
 export default function HomeInstagramFeed() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -40,11 +42,13 @@ export default function HomeInstagramFeed() {
 
   const nextSlide = useCallback(() => {
     if (posts.length === 0) return;
+    setImageLoaded(false);
     setCurrentIndex((prevIndex) => (prevIndex + 1) % posts.length);
   }, [posts.length]);
 
   const prevSlide = useCallback(() => {
     if (posts.length === 0) return;
+    setImageLoaded(false);
     setCurrentIndex((prevIndex) => (prevIndex - 1 + posts.length) % posts.length);
   }, [posts.length]);
 
@@ -62,8 +66,27 @@ export default function HomeInstagramFeed() {
 
   if (loading) {
     return (
-      <section className="relative mb-8 w-full select-none overflow-hidden rounded-3xl bg-transparent">
-        <div className="h-[460px] sm:h-[520px] w-full rounded-3xl bg-white/5 animate-pulse" />
+      <section className="relative mb-8 w-full select-none bg-transparent">
+        <div className="relative w-full flex flex-col items-center justify-center min-h-[440px] sm:min-h-[500px]">
+          {/* Episodio Logosu Parlayıp Sönen Efekt + Gündem Yükleniyor Metni */}
+          <div className="flex flex-col items-center justify-center text-center p-8">
+            <div className="relative mb-4 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-[#C91520]/20 blur-2xl animate-pulse" />
+              <Image
+                src="/logo.png"
+                alt="Episodio"
+                width={160}
+                height={45}
+                priority
+                className="relative z-10 h-9 w-auto object-contain animate-pulse drop-shadow-[0_0_25px_rgba(201,21,32,0.5)]"
+              />
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-white/60 tracking-wider">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#C91520] animate-ping" />
+              <span>Gündem Yükleniyor...</span>
+            </div>
+          </div>
+        </div>
       </section>
     );
   }
@@ -78,11 +101,33 @@ export default function HomeInstagramFeed() {
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* 🖼️ Arka Plansız, Buz Efektsiz, Siyahlıkla Karışan Ortalanmış Afiş Görseli */}
+      {/* 🖼️ Arka Plansız, Siyahlıkla Karışan Ortalanmış Afiş Görseli */}
       <div className="relative w-full flex flex-col items-center justify-center py-2 overflow-hidden">
         
         {/* Ortada Duran Görsel Afiş Container */}
-        <div className="relative shrink-0 w-full sm:w-[340px] md:w-[400px] lg:w-[440px] aspect-[4/5] overflow-hidden rounded-2xl flex items-center justify-center">
+        <div className="relative shrink-0 w-full sm:w-[340px] md:w-[400px] lg:w-[440px] aspect-[4/5] overflow-hidden rounded-2xl flex items-center justify-center bg-black/40">
+          
+          {/* Görsel Yüklenene Kadar Gösterilecek Episodio Parlama Yükleme Ekranı */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#07070A] p-6 text-center transition-opacity duration-500">
+              <div className="relative mb-3 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-[#C91520]/25 blur-2xl animate-pulse" />
+                <Image
+                  src="/logo.png"
+                  alt="Episodio"
+                  width={150}
+                  height={40}
+                  priority
+                  className="relative z-10 h-8 w-auto object-contain animate-pulse drop-shadow-[0_0_20px_rgba(201,21,32,0.6)]"
+                />
+              </div>
+              <p className="text-[11px] font-bold text-white/60 tracking-widest uppercase flex items-center gap-1.5 mt-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#C91520] animate-ping" />
+                <span>Gündem Yükleniyor...</span>
+              </p>
+            </div>
+          )}
+
           {posts.map((post, idx) => {
             const isActive = idx === currentIndex;
             return (
@@ -90,8 +135,13 @@ export default function HomeInstagramFeed() {
                 key={post.id}
                 src={post.image_url}
                 alt=""
+                loading="lazy"
+                decoding="async"
+                onLoad={() => {
+                  if (isActive) setImageLoaded(true);
+                }}
                 className={`absolute inset-0 h-full w-full object-contain transition-all duration-700 ${
-                  isActive ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-95 z-0 pointer-events-none'
+                  isActive && imageLoaded ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-95 z-0 pointer-events-none'
                 }`}
               />
             );
@@ -133,7 +183,10 @@ export default function HomeInstagramFeed() {
                 {posts.map((_, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setCurrentIndex(idx)}
+                    onClick={() => {
+                      setImageLoaded(false);
+                      setCurrentIndex(idx);
+                    }}
                     className={`h-1.5 rounded-full transition-all duration-500 ${
                       idx === currentIndex
                         ? 'w-5 bg-[#C91520]'
