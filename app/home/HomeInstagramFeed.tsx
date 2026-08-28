@@ -62,7 +62,7 @@ export default function HomeInstagramFeed() {
 
   if (loading) {
     return (
-      <section className="relative mb-8 w-full select-none overflow-hidden rounded-3xl bg-[#000000]">
+      <section className="relative mb-8 w-full select-none overflow-hidden rounded-3xl bg-transparent">
         <div className="h-[460px] sm:h-[520px] w-full rounded-3xl bg-white/5 animate-pulse" />
       </section>
     );
@@ -74,41 +74,22 @@ export default function HomeInstagramFeed() {
 
   return (
     <section
-      className="relative mb-9 w-full select-none overflow-hidden rounded-3xl bg-[#07070A]"
+      className="relative mb-8 w-full select-none bg-transparent"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* 📸 Çerçevesiz, Boyutuna Göre Adapte Olan Hero Banner */}
-      <div className="relative w-full flex flex-col md:flex-row items-stretch justify-start p-4 sm:p-6 md:p-8 min-h-[460px] sm:min-h-[520px] overflow-hidden">
+      {/* 🖼️ Arka Plansız, Buz Efektsiz, Siyahlıkla Karışan Ortalanmış Afiş Görseli */}
+      <div className="relative w-full flex flex-col items-center justify-center py-2 overflow-hidden">
         
-        {/* Sinematik Arka Plan Blur Işığı */}
-        {posts.map((post, idx) => {
-          const isActive = idx === currentIndex;
-          return (
-            <div
-              key={post.id}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out pointer-events-none ${
-                isActive ? 'opacity-100 z-0' : 'opacity-0 z-0'
-              }`}
-            >
-              <img
-                src={post.image_url}
-                alt=""
-                className="h-full w-full object-cover blur-3xl opacity-25 scale-125"
-              />
-            </div>
-          );
-        })}
-
-        {/* 1. SOL TARAF: FOTOĞRAF (Her zaman sol tarafa sabit, kırpmasız, tam boyut) */}
-        <div className="relative z-20 shrink-0 w-full sm:w-[320px] md:w-[380px] lg:w-[420px] aspect-[4/5] overflow-hidden rounded-2xl">
+        {/* Ortada Duran Görsel Afiş Container */}
+        <div className="relative shrink-0 w-full sm:w-[340px] md:w-[400px] lg:w-[440px] aspect-[4/5] overflow-hidden rounded-2xl flex items-center justify-center">
           {posts.map((post, idx) => {
             const isActive = idx === currentIndex;
             return (
               <img
                 key={post.id}
                 src={post.image_url}
-                alt={post.title || 'Episodio Afiş'}
+                alt=""
                 className={`absolute inset-0 h-full w-full object-contain transition-all duration-700 ${
                   isActive ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-95 z-0 pointer-events-none'
                 }`}
@@ -117,81 +98,75 @@ export default function HomeInstagramFeed() {
           })}
         </div>
 
-        {/* 2. SAĞ TARAF / ALT ALAN: BAŞLIK, AÇIKLAMA (Fotoğrafı kapamaz) & MİNİCİK INSTAGRAM BUTONU */}
-        <div className="relative z-20 flex-1 flex flex-col justify-end pt-5 md:pt-0 md:pl-8 pb-1">
+        {/* Alt Alan: Sol Tarafta Sol Menü İkonu Gibi Minicik Şık Instagram Butonu & Sağda Slayt Okları */}
+        <div className="w-full flex items-center justify-between gap-4 pt-3 mt-2 px-1">
           
-          {/* Başlık ve Açıklama Metni (Banner alt çizgisinin hemen üstünde, fotoğrafı kapamadan) */}
-          <div className="mb-4">
-            {currentPost.title && (
-              <h2 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight text-white drop-shadow-xl leading-tight mb-2">
-                {currentPost.title}
-              </h2>
-            )}
-
-            {currentPost.caption && (
-              <p className="text-xs sm:text-sm font-medium leading-relaxed text-white/80 line-clamp-3 max-w-xl drop-shadow">
-                {currentPost.caption}
-              </p>
-            )}
-          </div>
-
-          {/* Sol Alt Köşede Minicik Instagram Butonu + Kontroller */}
-          <div className="flex items-center justify-between gap-4 pt-3 border-t border-white/10">
-            
-            {/* Minicik Instagram İkon Butonu (Sol Alt Köşede) */}
-            <div className="flex items-center gap-3">
-              <a
-                href={currentPost.instagram_url || 'https://instagram.com'}
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Instagram'da Aç"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] text-white shadow-lg transition-transform hover:scale-110 active:scale-95 shrink-0"
+          {/* Sol Alt Köşe: Sol Menüdeki İkon Gibi Minicik Estetik Instagram Butonu */}
+          <div className="flex items-center gap-3">
+            <a
+              href={currentPost.instagram_url || 'https://www.instagram.com/episodiotr/'}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Episodio Instagram"
+              title="Instagram'da Aç"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/60 transition-all duration-200 hover:border-[#C91520]/50 hover:bg-[#C91520]/15 hover:text-white"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.8"
               >
-                <span className="material-symbols-outlined text-base">photo_camera</span>
-              </a>
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="0.7" fill="currentColor" stroke="none" />
+              </svg>
+            </a>
 
-              {/* Slayt Noktaları */}
-              {posts.length > 1 && (
-                <div className="flex items-center gap-1.5">
-                  {posts.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setCurrentIndex(idx)}
-                      className={`h-1.5 rounded-full transition-all duration-500 ${
-                        idx === currentIndex
-                          ? 'w-6 bg-gradient-to-r from-[#f09433] to-[#bc1888]'
-                          : 'w-1.5 bg-white/20 hover:bg-white/40'
-                      }`}
-                      aria-label={`Slide ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Slayt Navigasyon Okları */}
+            {/* Slayt Noktaları */}
             {posts.length > 1 && (
               <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={prevSlide}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all active:scale-90"
-                  aria-label="Önceki"
-                >
-                  <span className="material-symbols-outlined text-base">chevron_left</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={nextSlide}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-all active:scale-90"
-                  aria-label="Sonraki"
-                >
-                  <span className="material-symbols-outlined text-base">chevron_right</span>
-                </button>
+                {posts.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-500 ${
+                      idx === currentIndex
+                        ? 'w-5 bg-[#C91520]'
+                        : 'w-1.5 bg-white/20 hover:bg-white/40'
+                    }`}
+                    aria-label={`Slide ${idx + 1}`}
+                  />
+                ))}
               </div>
             )}
-
           </div>
+
+          {/* Sağ Alt Köşe: Slayt Okları */}
+          {posts.length > 1 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={prevSlide}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                aria-label="Önceki"
+              >
+                <span className="material-symbols-outlined text-base">chevron_left</span>
+              </button>
+              <button
+                type="button"
+                onClick={nextSlide}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                aria-label="Sonraki"
+              >
+                <span className="material-symbols-outlined text-base">chevron_right</span>
+              </button>
+            </div>
+          )}
 
         </div>
 
