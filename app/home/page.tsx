@@ -25,6 +25,7 @@ import WelcomeOnboardingModal from './WelcomeOnboardingModal';
 import DeferredClientSection from './DeferredClientSection';
 import WhatsAppInviteCard from './WhatsAppInviteCard';
 import RandomDiceStrip from './RandomDiceStrip';
+import HomeInstagramFeed from './HomeInstagramFeed';
 
 function TopBarFallback() {
   return (
@@ -104,6 +105,8 @@ export default function Home() {
             <Suspense fallback={<HomeHeroFallback />}>
               <HomeHero />
             </Suspense>
+
+            <HomeInstagramFeed />
 
             <Suspense fallback={<SectionFallback />}>
               <CurrentlyWatchingCard />

@@ -10,6 +10,7 @@ import ManagerPinAuth from './ManagerPinAuth';
 import ManagerUserList from './ManagerUserList';
 import AnnouncementForm from './AnnouncementForm';
 import ManagerDailyFeed, { DailyUserFeedItem, DailyListFeedItem, DailyCommentFeedItem } from './ManagerDailyFeed';
+import ManagerFeedSection from './ManagerFeedSection';
 
 export const dynamic = 'force-dynamic';
 
@@ -428,7 +429,10 @@ export default async function ManagerDashboardPage() {
             />
           </section>
 
-          {/* 3. Sitede Canlı Duyuru / Banner Yönetimi */}
+          {/* 3. Episodio Vitrin & Instagram Akışı Yönetimi */}
+          <ManagerFeedSection />
+
+          {/* 4. Sitede Canlı Duyuru / Banner Yönetimi */}
           <AnnouncementForm />
 
           {/* 4. Kayıtlı Üyeler Tablosu (Arama Çubuğu & Max 15 Satır Scroll Özellikli) */}
