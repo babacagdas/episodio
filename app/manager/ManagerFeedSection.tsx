@@ -241,6 +241,7 @@ export default function ManagerFeedSection() {
             ))}
           </div>
         )}
-      </section>
+      </div>
+    </section>
   );
 }
