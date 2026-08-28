@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface FeedPost {
   id: string;
@@ -22,6 +22,8 @@ export default function ManagerFeedSection() {
   const [instagramUrl, setInstagramUrl] = useState('');
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     fetchPosts();
   }, []);
@@ -40,10 +42,35 @@ export default function ManagerFeedSection() {
     }
   }
 
+  // 📁 Doğrudan Cihazdan Resim Dosyası Seçme & Okuma
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Lütfen geçerli bir resim dosyası seçin (PNG, JPG, WEBP).' });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Resim boyutu 5 MB\'dan küçük olmalıdır.' });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        setImageUrl(event.target.result as string);
+        setMessage({ type: 'success', text: 'Görsel dosyası başarıyla yüklendi!' });
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!imageUrl.trim()) {
-      setMessage({ type: 'error', text: 'Lütfen bir görsel bağlantısı (URL) girin.' });
+      setMessage({ type: 'error', text: 'Lütfen cihazınızdan bir resim seçin veya URL girin.' });
       return;
     }
 
@@ -64,11 +91,12 @@ export default function ManagerFeedSection() {
 
       const data = await res.json();
       if (res.ok) {
-        setMessage({ type: 'success', text: 'Gönderi Episodio Vitrin\'e başarıyla eklendi!' });
+        setMessage({ type: 'success', text: 'Hero Vitrin görseli başarıyla yayınlandı!' });
         setImageUrl('');
         setTitle('');
         setCaption('');
         setInstagramUrl('');
+        if (fileInputRef.current) fileInputRef.current.value = '';
         fetchPosts();
       } else {
         setMessage({ type: 'error', text: data.error || 'Gönderi eklenirken hata oluştu.' });
@@ -100,13 +128,13 @@ export default function ManagerFeedSection() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
         <div>
           <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] text-white text-base shadow">
-              photo_camera
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#C91520] text-white text-base shadow">
+              view_carousel
             </span>
-            <span>Episodio Vitrin & Instagram Akışı Yönetimi</span>
+            <span>Ana Sayfa Hero Vitrin Slider Yönetimi</span>
           </h2>
           <p className="text-xs text-white/40 mt-1">
-            Ana sayfadaki 4:5 Instagram dikey akışına yeni görseller ve haberler yayınlayın.
+            Cihazınızdan doğrudan dikey/yatay resim seçin veya Instagram linki ekleyerek Hero Slider'da yayınlayın.
           </p>
         </div>
       </div>
@@ -126,102 +154,131 @@ export default function ManagerFeedSection() {
             </div>
           )}
 
+          {/* 📁 Cihazdan Görsel Seçme Butonu */}
           <div>
-            <label className="block text-xs font-bold text-white/70 mb-1.5">
-              Görsel Bağlantısı / URL (4:5 Format Tavsiye Edilir) *
+            <label className="block text-xs font-bold text-white/80 mb-2">
+              1. Cihazınızdan Resim Dosyası Seçin *
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="hero-file-upload"
+              />
+              <label
+                htmlFor="hero-file-upload"
+                className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-[#C91520] px-5 py-2.5 text-xs font-bold text-white shadow-lg transition-all hover:bg-[#E50914] active:scale-95"
+              >
+                <span className="material-symbols-outlined text-base">upload_file</span>
+                <span>Resim Dosyası Seç (Bilgisayar / Telefon)</span>
+              </label>
+              {imageUrl && (
+                <span className="text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-xs">check_circle</span>
+                  <span>Görsel Yüklendi</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-white/60 mb-1">
+              Veya Alternatif Görsel Bağlantısı (URL)
             </label>
             <input
               type="text"
-              required
-              value={imageUrl}
+              value={imageUrl.startsWith('data:') ? '' : imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
               placeholder="https://gorsel-adresi.com/resim.jpg"
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder:text-white/30 focus:border-[#e6683c] focus:bg-white/10 focus:outline-none transition-all"
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder:text-white/30 focus:border-[#C91520] focus:bg-white/10 focus:outline-none transition-all"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-white/70 mb-1.5">Başlık (İsteğe Bağlı)</label>
+              <label className="block text-xs font-bold text-white/70 mb-1.5">Afiş / Görsel Başlığı (İsteğe Bağlı)</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Örn: Eylül Ayında Yayınlanacak Diziler 🍿"
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder:text-white/30 focus:border-[#e6683c] focus:bg-white/10 focus:outline-none transition-all"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder:text-white/30 focus:border-[#C91520] focus:bg-white/10 focus:outline-none transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-white/70 mb-1.5">Instagram Gönderi Linki (İsteğe Bağlı)</label>
+              <label className="block text-xs font-bold text-white/70 mb-1.5">Instagram / Hedef Link (İsteğe Bağlı)</label>
               <input
                 type="text"
                 value={instagramUrl}
                 onChange={(e) => setInstagramUrl(e.target.value)}
                 placeholder="https://instagram.com/p/..."
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder:text-white/30 focus:border-[#e6683c] focus:bg-white/10 focus:outline-none transition-all"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder:text-white/30 focus:border-[#C91520] focus:bg-white/10 focus:outline-none transition-all"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-white/70 mb-1.5">Açıklama Metni (İsteğe Bağlı)</label>
+            <label className="block text-xs font-bold text-white/70 mb-1.5">Açıklama Yazısı (İsteğe Bağlı)</label>
             <textarea
               rows={3}
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
-              placeholder="Gönderinin altında görünecek açıklama yazısı..."
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder:text-white/30 focus:border-[#e6683c] focus:bg-white/10 focus:outline-none transition-all resize-none"
+              placeholder="Hero afişinin altında görünecek açıklama yazısı..."
+              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs text-white placeholder:text-white/30 focus:border-[#C91520] focus:bg-white/10 focus:outline-none transition-all resize-none"
             />
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#f09433] via-[#e6683c] to-[#bc1888] px-6 py-3 text-xs font-bold text-white shadow-lg shadow-[#bc1888]/20 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 mt-1"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#C91520] hover:bg-[#E50914] px-6 py-3 text-xs font-bold text-white shadow-lg transition-all active:scale-[0.99] disabled:opacity-50 mt-1"
           >
             {submitting ? (
               <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
                 <span className="material-symbols-outlined text-base">send</span>
-                <span>Vitrin'de Yayınla</span>
+                <span>Hero Slider'da Yayınla</span>
               </>
             )}
           </button>
         </form>
 
-        {/* 📸 Canlı 4:5 Önizleme */}
+        {/* 📸 Canlı Hero Önizleme */}
         <div className="lg:col-span-5 flex flex-col items-center justify-center border-t lg:border-t-0 lg:border-l border-white/10 pt-5 lg:pt-0 lg:pl-7">
-          <p className="text-xs font-bold text-white/50 mb-3 self-start">Canlı 4:5 Önizleme:</p>
+          <p className="text-xs font-bold text-white/50 mb-3 self-start">Hero Slider Önizlemesi:</p>
 
-          <div className="relative w-[220px] aspect-[4/5] rounded-2xl border border-white/15 bg-black overflow-hidden shadow-2xl">
+          <div className="relative w-full aspect-[4/5] max-w-[260px] rounded-3xl border border-white/15 bg-black overflow-hidden shadow-2xl">
             {imageUrl ? (
               <img src={imageUrl} alt="" className="h-full w-full object-cover" />
             ) : (
               <div className="h-full w-full flex flex-col items-center justify-center text-white/20 p-4 text-center">
-                <span className="material-symbols-outlined text-3xl mb-1">image</span>
-                <span className="text-[10px]">Görsel URL girildiğinde önizleme burada belirecek</span>
+                <span className="material-symbols-outlined text-4xl mb-2">add_photo_alternate</span>
+                <span className="text-[11px] font-semibold">Cihazınızdan resim seçtiğinizde canlı önizleme burada görünecektir</span>
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent pointer-events-none" />
-            <div className="absolute bottom-0 inset-x-0 p-3 z-10">
-              <p className="text-xs font-bold text-white line-clamp-1">{title || 'Başlık Örneği'}</p>
-              <p className="text-[10px] text-white/70 line-clamp-2 mt-0.5">{caption || 'Açıklama örneği...'}</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 inset-x-0 p-4 z-10">
+              <p className="text-sm font-black text-white line-clamp-1">{title || 'Afiş Başlığı'}</p>
+              <p className="text-xs text-white/70 line-clamp-2 mt-0.5">{caption || 'Açıklama metni...'}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Yayınlanmış Gönderiler Listesi */}
+      {/* Yayınlanmış Hero Gönderileri Listesi */}
       <div className="mt-9 border-t border-white/10 pt-6">
         <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-          <span className="material-symbols-outlined text-xs text-[#e6683c]">view_carousel</span>
-          Yayındaki Gönderiler ({posts.length})
+          <span className="material-symbols-outlined text-xs text-[#C91520]">view_carousel</span>
+          Hero Slider'da Yayındaki Gönderiler ({posts.length})
         </h3>
 
         {posts.length === 0 ? (
-          <p className="text-xs text-white/40 italic py-4">Henüz yayınlanmış bir vitrin gönderisi bulunmuyor.</p>
+          <p className="text-xs text-white/40 italic py-4">Henüz yayınlanmış bir vitrin görseli bulunmuyor.</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {posts.map((p) => (
@@ -235,7 +292,7 @@ export default function ManagerFeedSection() {
                   >
                     <span className="material-symbols-outlined text-xs block">delete</span>
                   </button>
-                  <p className="text-[10px] font-bold text-white line-clamp-2">{p.title || 'Başlıksız'}</p>
+                  <p className="text-[10px] font-bold text-white line-clamp-2">{p.title || 'Başlıksız Afiş'}</p>
                 </div>
               </div>
             ))}

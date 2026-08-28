@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 export interface FeedPost {
   id: string;
@@ -14,8 +14,9 @@ export interface FeedPost {
 export default function HomeInstagramFeed() {
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const sliderRef = useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     async function loadFeedPosts() {
@@ -37,150 +38,186 @@ export default function HomeInstagramFeed() {
     loadFeedPosts();
   }, []);
 
-  const handleScroll = () => {
-    if (!sliderRef.current) return;
-    const scrollLeft = sliderRef.current.scrollLeft;
-    const itemWidth = sliderRef.current.firstElementChild?.clientWidth || 300;
-    const index = Math.round(scrollLeft / (itemWidth + 16));
-    setActiveIndex(index);
-  };
+  const nextSlide = useCallback(() => {
+    if (posts.length === 0) return;
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % posts.length);
+  }, [posts.length]);
 
-  const scrollTo = (index: number) => {
-    if (!sliderRef.current) return;
-    const itemWidth = sliderRef.current.firstElementChild?.clientWidth || 300;
-    sliderRef.current.scrollTo({
-      left: index * (itemWidth + 16),
-      behavior: 'smooth',
-    });
-    setActiveIndex(index);
-  };
+  const prevSlide = useCallback(() => {
+    if (posts.length === 0) return;
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + posts.length) % posts.length);
+  }, [posts.length]);
+
+  useEffect(() => {
+    if (isPaused || posts.length <= 1) return;
+
+    timerRef.current = setInterval(() => {
+      nextSlide();
+    }, 6000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isPaused, posts.length, nextSlide]);
 
   if (loading) {
     return (
-      <section className="mb-8">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="h-6 w-44 rounded-full border border-white/10 bg-white/5 animate-pulse" />
-        </div>
-        <div className="flex gap-4 overflow-hidden">
-          <div className="w-[280px] sm:w-[340px] aspect-[4/5] rounded-3xl bg-white/5 animate-pulse border border-white/10 shrink-0" />
-          <div className="w-[280px] sm:w-[340px] aspect-[4/5] rounded-3xl bg-white/5 animate-pulse border border-white/10 shrink-0 hidden sm:block" />
-        </div>
+      <section className="relative mb-8 w-full select-none overflow-hidden rounded-3xl bg-[#000000]">
+        <div className="h-[420px] sm:h-[460px] md:h-[500px] w-full rounded-3xl bg-white/5 animate-pulse border border-white/10" />
       </section>
     );
   }
 
-  if (posts.length === 0) return null;
+  if (!posts || posts.length === 0) return null;
+
+  const currentPost = posts[currentIndex];
 
   return (
-    <section className="mb-9">
-      {/* Üst Başlık & Rozet */}
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] text-white shadow-md">
-            <span className="material-symbols-outlined text-base">photo_camera</span>
-          </div>
-          <div>
-            <h2 className="text-lg sm:text-xl font-black text-white tracking-tight flex items-center gap-2">
+    <section
+      className="relative mb-8 w-full select-none overflow-hidden rounded-3xl bg-[#000000] border border-white/10 shadow-2xl"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+    >
+      {/* Hero Container with Crossfade Transition */}
+      <div className="relative h-[420px] w-full sm:h-[460px] md:h-[500px]">
+        {posts.map((post, idx) => {
+          const isActive = idx === currentIndex;
+
+          return (
+            <div
+              key={post.id}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+              }`}
+            >
+              <img
+                src={post.image_url}
+                alt={post.title || 'Episodio Vitrin'}
+                className="h-full w-full object-cover object-center transition-transform duration-10000 ease-linear scale-105"
+              />
+            </div>
+          );
+        })}
+
+        {/* Sinematik Arka Plan Gradyanları */}
+        <div className="absolute inset-0 z-20 bg-gradient-to-r from-[#000000] via-[#000000]/85 via-40% md:via-35% to-transparent" />
+        <div className="absolute inset-0 z-20 bg-gradient-to-t from-[#000000] via-[#000000]/50 via-25% to-transparent" />
+        <div className="absolute inset-0 z-20 bg-gradient-to-b from-[#000000]/60 via-transparent to-transparent" />
+
+        {/* Hero Ön Plan İçeriği */}
+        <div className="relative z-30 flex h-full flex-col justify-end p-6 sm:p-8 md:p-10">
+          
+          {/* Sol Metin ve Buton Alanı */}
+          <div className="relative z-10 max-w-2xl flex flex-col justify-end h-full">
+
+            {/* Üst Rozet */}
+            <div className="mb-3 inline-flex items-center gap-2 self-start rounded-full bg-gradient-to-r from-[#f09433]/20 via-[#e6683c]/20 to-[#bc1888]/20 border border-[#e6683c]/30 backdrop-blur-md px-3 py-1 text-xs font-bold text-[#f09433] shadow-lg">
+              <span className="h-2 w-2 rounded-full bg-[#e6683c] animate-pulse" />
               <span>Episodio Vitrin</span>
-              <span className="rounded-full bg-gradient-to-r from-[#f09433]/20 to-[#bc1888]/20 border border-[#e6683c]/30 px-2 py-0.5 text-[10px] font-bold text-[#f09433]">
-                Instagram
-              </span>
-            </h2>
-            <p className="text-xs text-white/40 font-medium">Öne çıkan gönderiler, dizi haberleri ve editlemeler</p>
-          </div>
-        </div>
-
-        {posts.length > 1 && (
-          <div className="hidden sm:flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => scrollTo(Math.max(0, activeIndex - 1))}
-              disabled={activeIndex === 0}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 hover:bg-white/15 hover:text-white disabled:opacity-30 transition-all"
-            >
-              <span className="material-symbols-outlined text-sm">chevron_left</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollTo(Math.min(posts.length - 1, activeIndex + 1))}
-              disabled={activeIndex >= posts.length - 1}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 hover:bg-white/15 hover:text-white disabled:opacity-30 transition-all"
-            >
-              <span className="material-symbols-outlined text-sm">chevron_right</span>
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* 📸 4:5 Instagram Dikey Format Slider */}
-      <div
-        ref={sliderRef}
-        onScroll={handleScroll}
-        className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {posts.map((post) => (
-          <div
-            key={post.id}
-            className="group relative snap-start shrink-0 w-[270px] sm:w-[320px] md:w-[340px] aspect-[4/5] rounded-3xl border border-white/10 bg-[#0c0c10] overflow-hidden shadow-2xl transition-all duration-300 hover:border-white/20 hover:shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
-          >
-            {/* Arka Plan 4:5 Görseli */}
-            <img
-              src={post.image_url}
-              alt={post.title || 'Episodio Vitrin'}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-
-            {/* Derinlik Gradyanı */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent opacity-90 transition-opacity group-hover:opacity-95" />
-
-            {/* Üst Logo Rozeti */}
-            <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between z-10">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 text-[11px] font-bold text-white shadow-lg">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Episodio</span>
-              </div>
-
-              {post.instagram_url && (
-                <a
-                  href={post.instagram_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-white/80 hover:bg-[#bc1888] hover:text-white transition-all shadow-lg"
-                >
-                  <span className="material-symbols-outlined text-sm">open_in_new</span>
-                </a>
-              )}
             </div>
 
-            {/* Alt Metin ve Buton Alanı */}
-            <div className="absolute bottom-0 inset-x-0 p-5 z-10 flex flex-col justify-end">
-              {post.title && (
-                <h3 className="text-base sm:text-lg font-black text-white tracking-tight leading-snug drop-shadow-md mb-1.5">
-                  {post.title}
-                </h3>
-              )}
+            {/* Afiş Başlığı */}
+            <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl md:text-5xl drop-shadow-xl leading-none">
+              {currentPost.title || 'Episodio Öne Çıkanlar'}
+            </h1>
 
-              {post.caption && (
-                <p className="text-xs text-white/80 line-clamp-3 leading-relaxed font-normal mb-3 drop-shadow">
-                  {post.caption}
-                </p>
-              )}
+            {/* Açıklama Yazısı */}
+            {currentPost.caption && (
+              <p className="mt-3 line-clamp-2 max-w-xl text-xs sm:text-sm font-medium leading-relaxed text-white/80 sm:line-clamp-3 drop-shadow">
+                {currentPost.caption}
+              </p>
+            )}
 
-              {post.instagram_url && (
+            {/* Aksiyon Butonları */}
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              {currentPost.instagram_url ? (
                 <a
-                  href={post.instagram_url}
+                  href={currentPost.instagram_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#f09433] via-[#e6683c] to-[#bc1888] px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-[#bc1888]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  className="group/btn inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#f09433] via-[#e6683c] to-[#bc1888] px-5 py-2.5 text-xs font-bold text-white shadow-xl shadow-[#bc1888]/20 transition-all duration-200 hover:scale-[1.02] active:scale-95"
                 >
-                  <span>Instagram'da Göre Git</span>
+                  <span>Instagram'da İncele</span>
+                  <span className="material-symbols-outlined text-sm transition-transform duration-200 group-hover/btn:translate-x-0.5">
+                    open_in_new
+                  </span>
+                </a>
+              ) : (
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group/btn inline-flex items-center gap-2 rounded-full bg-[#C91520] hover:bg-[#E50914] px-5 py-2.5 text-xs font-bold text-white shadow-xl transition-all duration-200 active:scale-95"
+                >
+                  <span>Instagram Sayfamız</span>
                   <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 </a>
               )}
             </div>
           </div>
-        ))}
+
+          {/* Alt Kontroller: Slider Noktaları & Oklar */}
+          <div className="mt-6 flex items-center justify-between gap-4 pt-2">
+            
+            {/* Sayfalama Noktaları */}
+            <div className="flex items-center gap-2">
+              {posts.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentIndex(idx)}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    idx === currentIndex
+                      ? 'w-8 bg-[#e6683c]'
+                      : 'w-2 bg-white/20 hover:bg-white/40'
+                  }`}
+                  aria-label={`Slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+
+            {/* Sağ Oklar ve Minyatür Önizlemeler */}
+            <div className="flex items-center gap-3">
+              {/* Mini Slide Önizlemeleri (Masaüstünde) */}
+              <div className="hidden lg:flex items-center gap-2 mr-2">
+                {posts.map((post, idx) => (
+                  <button
+                    key={post.id}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`relative h-12 w-9 overflow-hidden rounded-lg border transition-all duration-300 ${
+                      idx === currentIndex
+                        ? 'border-[#e6683c] scale-110 shadow-md ring-2 ring-[#e6683c]/40'
+                        : 'border-white/10 opacity-50 hover:opacity-100 hover:scale-105'
+                    }`}
+                  >
+                    <img src={post.image_url} alt="" className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+
+              {/* Önceki / Sonraki Oklar */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={prevSlide}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white backdrop-blur-md transition-all duration-200 hover:bg-white/20 hover:border-white/30 active:scale-90"
+                  aria-label="Önceki Afiş"
+                >
+                  <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={nextSlide}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white backdrop-blur-md transition-all duration-200 hover:bg-white/20 hover:border-white/30 active:scale-90"
+                  aria-label="Sonraki Afiş"
+                >
+                  <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
       </div>
     </section>
   );
