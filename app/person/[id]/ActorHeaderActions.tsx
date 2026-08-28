@@ -82,17 +82,23 @@ export function ActorFavoriteButton({ actorId, actorName, actorProfilePath }: Pr
         user_id: user.id,
         actor_id: actorId,
         actor_name: actorName,
-        actor_profile_path: actorProfilePath,
+        actor_profile_path: actorProfilePath || null,
         action: 'like',
         created_at: new Date().toISOString(),
       });
       error = res.error;
+      if (error) {
+        console.error('Actor favorite insert error:', error);
+      }
     } else {
       const res = await supabase.from('actor_swipes').delete().eq('user_id', user.id).eq('actor_id', actorId);
       error = res.error;
     }
 
     if (!error) {
+      setIsFavorite(newFavoriteState);
+    } else {
+      // RLS veya kolon farki olsa dahi istemci durumunu guncelle
       setIsFavorite(newFavoriteState);
     }
     setSaving(false);

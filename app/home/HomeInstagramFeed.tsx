@@ -82,7 +82,6 @@ export default function HomeInstagramFeed() {
               />
             </div>
             <div className="flex items-center gap-2 text-xs font-bold text-white/60 tracking-wider">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#C91520] animate-ping" />
               <span>Gündem Yükleniyor...</span>
             </div>
           </div>
@@ -122,7 +121,6 @@ export default function HomeInstagramFeed() {
                 />
               </div>
               <p className="text-[11px] font-bold text-white/60 tracking-widest uppercase flex items-center gap-1.5 mt-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#C91520] animate-ping" />
                 <span>Gündem Yükleniyor...</span>
               </p>
             </div>

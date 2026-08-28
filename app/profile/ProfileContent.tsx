@@ -264,7 +264,7 @@ export default function ProfileContent({
   }, [activeTab, loading, watchlist.length]);
 
   useEffect(() => {
-    if (!user || activeTab !== 'actors' || favoriteActorsLoaded) return;
+    if (!user || activeTab !== 'actors') return;
     const supabase = createClient();
     void (async () => {
       const { data: actorsData } = await supabase
@@ -276,7 +276,7 @@ export default function ProfileContent({
       setFavoriteActors(actorsData ?? []);
       setFavoriteActorsLoaded(true);
     })();
-  }, [activeTab, favoriteActorsLoaded, user]);
+  }, [activeTab, user]);
 
   useEffect(() => {
     if (!user || activeTab !== 'watched') return;
