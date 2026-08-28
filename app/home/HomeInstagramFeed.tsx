@@ -28,6 +28,13 @@ export default function HomeInstagramFeed() {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
             setPosts(data);
+            // Tüm resimleri önceden tarayıcı belleğine (Cache) yükle
+            data.forEach((p: FeedPost) => {
+              if (p.image_url) {
+                const img = new window.Image();
+                img.src = p.image_url;
+              }
+            });
           }
         }
       } catch (err) {
@@ -42,13 +49,11 @@ export default function HomeInstagramFeed() {
 
   const nextSlide = useCallback(() => {
     if (posts.length === 0) return;
-    setImageLoaded(false);
     setCurrentIndex((prevIndex) => (prevIndex + 1) % posts.length);
   }, [posts.length]);
 
   const prevSlide = useCallback(() => {
     if (posts.length === 0) return;
-    setImageLoaded(false);
     setCurrentIndex((prevIndex) => (prevIndex - 1 + posts.length) % posts.length);
   }, [posts.length]);
 
@@ -106,7 +111,7 @@ export default function HomeInstagramFeed() {
         {/* Ortada Duran Görsel Afiş Container */}
         <div className="relative shrink-0 w-full sm:w-[340px] md:w-[400px] lg:w-[440px] aspect-[4/5] overflow-hidden rounded-2xl flex items-center justify-center bg-black/40">
           
-          {/* Görsel Yüklenene Kadar Gösterilecek Episodio Parlama Yükleme Ekranı */}
+          {/* Görsel Yüklenene Kadar Sadece 1 DEFA Gösterilecek Episodio Parlama Yükleme Ekranı */}
           {!imageLoaded && (
             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#07070A] p-6 text-center transition-opacity duration-500">
               <div className="relative mb-3 flex items-center justify-center">
@@ -133,13 +138,13 @@ export default function HomeInstagramFeed() {
                 key={post.id}
                 src={post.image_url}
                 alt=""
-                loading="lazy"
+                loading="eager"
                 decoding="async"
                 onLoad={() => {
-                  if (isActive) setImageLoaded(true);
+                  if (isActive && !imageLoaded) setImageLoaded(true);
                 }}
                 className={`absolute inset-0 h-full w-full object-contain transition-all duration-700 ${
-                  isActive && imageLoaded ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-95 z-0 pointer-events-none'
+                  isActive ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-95 z-0 pointer-events-none'
                 }`}
               />
             );
@@ -181,10 +186,7 @@ export default function HomeInstagramFeed() {
                 {posts.map((_, idx) => (
                   <button
                     key={idx}
-                    onClick={() => {
-                      setImageLoaded(false);
-                      setCurrentIndex(idx);
-                    }}
+                    onClick={() => setCurrentIndex(idx)}
                     className={`h-1.5 rounded-full transition-all duration-500 ${
                       idx === currentIndex
                         ? 'w-5 bg-[#C91520]'
