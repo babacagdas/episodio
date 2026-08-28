@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import Image from 'next/image';
 
 export interface FeedPost {
   id: string;
@@ -75,15 +74,15 @@ export default function HomeInstagramFeed() {
 
   return (
     <section
-      className="relative mb-9 w-full select-none bg-transparent"
+      className="relative mb-8 w-full select-none bg-transparent"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* 🖼️ Bilgisayar & Tablette Sol Taraf Görsel, Sağ Taraf Şık Logo ve Davet Metni */}
-      <div className="relative w-full flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10 py-2 overflow-hidden">
+      {/* 🖼️ Arka Plansız, Buz Efektsiz, Siyahlıkla Karışan Ortalanmış Afiş Görseli */}
+      <div className="relative w-full flex flex-col items-center justify-center py-2 overflow-hidden">
         
-        {/* 1. SOL TARAF: Görsel Afiş (Bilgisayar ve tablette sola kaydırılmış, tam boyut) */}
-        <div className="relative shrink-0 w-full sm:w-[320px] md:w-[380px] lg:w-[420px] aspect-[4/5] overflow-hidden rounded-2xl flex items-center justify-center">
+        {/* Ortada Duran Görsel Afiş Container */}
+        <div className="relative shrink-0 w-full sm:w-[340px] md:w-[400px] lg:w-[440px] aspect-[4/5] overflow-hidden rounded-2xl flex items-center justify-center">
           {posts.map((post, idx) => {
             const isActive = idx === currentIndex;
             return (
@@ -99,88 +98,75 @@ export default function HomeInstagramFeed() {
           })}
         </div>
 
-        {/* 2. SAĞ TARAF: Episodio Logosu + Çoklu Yazı Stilli Davet Yazısı */}
-        <div className="relative z-20 flex-1 flex flex-col items-center md:items-start text-center md:text-left justify-center px-2 py-4">
+        {/* Alt Alan: Sol Tarafta Sol Menü İkonu Gibi Minicik Şık Instagram Butonu & Sağda Slayt Okları */}
+        <div className="w-full flex items-center justify-between gap-4 pt-3 mt-2 px-1">
           
-          {/* Episodio Logosu */}
-          <div className="mb-5">
-            <Image
-              src="/logo.png"
-              alt="Episodio"
-              width={180}
-              height={50}
-              priority
-              className="h-9 md:h-11 w-auto object-contain"
-            />
-          </div>
-
-          {/* Şık ve Çoklu Tipografili Yazı Stili */}
-          <div className="max-w-md space-y-2">
-            <p className="text-xs uppercase tracking-[0.25em] font-extrabold text-[#C91520] flex items-center justify-center md:justify-start gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#C91520] animate-ping" />
-              <span>Resmi Sosyal Medya</span>
-            </p>
-
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-snug drop-shadow-md">
-              Güncel Haberler, <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#f09433] via-[#e6683c] to-[#bc1888]">Kesitler</span> &amp; İçerikler
-            </h2>
-
-            <p className="text-sm sm:text-base font-serif italic text-white/80 tracking-wide pt-1">
-              için bizi takip et.
-            </p>
-          </div>
-
-          {/* Sosyal Medya İkon Butonu + Slayt Kontrolleri */}
-          <div className="mt-7 flex items-center gap-4">
+          {/* Sol Alt Köşe: Sol Menüdeki İkon Gibi Minicik Estetik Instagram Butonu */}
+          <div className="flex items-center gap-3">
             <a
               href={currentPost.instagram_url || 'https://www.instagram.com/episodiotr/'}
               target="_blank"
               rel="noreferrer"
               aria-label="Episodio Instagram"
-              title="Instagram'da Bizi Takip Et"
-              className="group flex items-center gap-2.5 rounded-full border border-white/15 bg-white/[0.05] px-4 py-2 text-xs font-bold text-white transition-all duration-300 hover:border-[#C91520]/60 hover:bg-[#C91520]/15 hover:scale-105 active:scale-95 shadow-lg"
+              title="Instagram'da Aç"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/60 transition-all duration-200 hover:border-[#C91520]/50 hover:bg-[#C91520]/15 hover:text-white"
             >
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-[#f09433] via-[#e6683c] to-[#bc1888] text-white">
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  className="h-3.5 w-3.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                >
-                  <rect x="3" y="3" width="18" height="18" rx="5" />
-                  <circle cx="12" cy="12" r="4" />
-                  <circle cx="17.5" cy="6.5" r="0.7" fill="currentColor" stroke="none" />
-                </svg>
-              </div>
-              <span>@episodiotr Takip Et</span>
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.8"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="0.7" fill="currentColor" stroke="none" />
+              </svg>
             </a>
 
-            {/* Slayt Okları */}
+            {/* Slayt Noktaları */}
             {posts.length > 1 && (
-              <div className="flex items-center gap-1.5 ml-2">
-                <button
-                  type="button"
-                  onClick={prevSlide}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                  aria-label="Önceki"
-                >
-                  <span className="material-symbols-outlined text-base">chevron_left</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={nextSlide}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                  aria-label="Sonraki"
-                >
-                  <span className="material-symbols-outlined text-base">chevron_right</span>
-                </button>
+              <div className="flex items-center gap-1.5">
+                {posts.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-500 ${
+                      idx === currentIndex
+                        ? 'w-5 bg-[#C91520]'
+                        : 'w-1.5 bg-white/20 hover:bg-white/40'
+                    }`}
+                    aria-label={`Slide ${idx + 1}`}
+                  />
+                ))}
               </div>
             )}
           </div>
+
+          {/* Sağ Alt Köşe: Slayt Okları */}
+          {posts.length > 1 && (
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={prevSlide}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                aria-label="Önceki"
+              >
+                <span className="material-symbols-outlined text-base">chevron_left</span>
+              </button>
+              <button
+                type="button"
+                onClick={nextSlide}
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-white/60 hover:bg-white/10 hover:text-white transition-all active:scale-90"
+                aria-label="Sonraki"
+              >
+                <span className="material-symbols-outlined text-base">chevron_right</span>
+              </button>
+            </div>
+          )}
 
         </div>
 
