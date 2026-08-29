@@ -189,12 +189,12 @@ export default async function ManagerDashboardPage() {
 
   // 1. Supabase Profiles tablosundaki TÜM GERÇEK kullanıcıları çekme
   const [profilesRes, listsRes, reviewsRes, notesRes, epDiscussionsRes, epRepliesRes] = await Promise.all([
-    db.from('profiles').select('id, username, full_name, avatar_url, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
-    db.from('lists').select('id, name, visibility, user_id, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
-    db.from('reviews').select('id, user_id, show_id, rating, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
-    db.from('show_notes').select('id, user_id, show_id, show_name, content, is_public, updated_at', { count: 'exact' }).order('updated_at', { ascending: false }),
-    db.from('episode_discussions').select('id, user_id, show_id, season_number, episode_number, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
-    db.from('episode_comment_replies').select('id, user_id, comment_id, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }),
+    db.from('profiles').select('id, username, full_name, avatar_url, created_at', { count: 'exact' }).order('created_at', { ascending: false }).range(0, 9999),
+    db.from('lists').select('id, name, visibility, user_id, created_at', { count: 'exact' }).order('created_at', { ascending: false }).range(0, 9999),
+    db.from('reviews').select('id, user_id, show_id, rating, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }).range(0, 9999),
+    db.from('show_notes').select('id, user_id, show_id, show_name, content, is_public, updated_at', { count: 'exact' }).order('updated_at', { ascending: false }).range(0, 9999),
+    db.from('episode_discussions').select('id, user_id, show_id, season_number, episode_number, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }).range(0, 9999),
+    db.from('episode_comment_replies').select('id, user_id, comment_id, content, created_at', { count: 'exact' }).order('created_at', { ascending: false }).range(0, 9999),
   ]);
 
   const rawProfiles = (profilesRes.data ?? []) as any[];
