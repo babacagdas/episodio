@@ -10,6 +10,7 @@ import ShowCard from '@/components/ShowCard';
 import ListPreviewCard from '@/components/ListPreviewCard';
 import DiscoverFilterPanel, { type AppliedFilters } from './DiscoverFilterPanel';
 import RandomShowModal from './RandomShowModal';
+import HomeTrailersSection from '@/app/home/HomeTrailersSection';
 
 interface UserSearchProfile {
   id: string;
@@ -678,6 +679,13 @@ export default function Search() {
             </div>
           )}
         </div>
+
+        {/* 🎬 Trend Diziler ile Gelişmiş Kütüphane Arasındaki Fragman Banner'ı */}
+        {!query.trim() && (
+          <div className="pt-4">
+            <HomeTrailersSection />
+          </div>
+        )}
 
         {/* 3. YENİ SAYFA AŞAĞISINDA: GELİŞMİŞ DİZİ KÜTÜPHANESİ (KATEGORİ & SIRALAMA MODAL DÜĞMELERİ) */}
         {!query.trim() && (

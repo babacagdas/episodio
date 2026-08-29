@@ -6,11 +6,37 @@ import type { TrailerItem } from '@/lib/tmdb';
 const BACKDROP_BASE = 'https://image.tmdb.org/t/p/w1280';
 const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 
-export default function HomeTrailersSection({ trailers = [] }: { trailers: TrailerItem[] }) {
+export default function HomeTrailersSection({ trailers: initialTrailers = [] }: { trailers?: TrailerItem[] }) {
+  const [trailers, setTrailers] = useState<TrailerItem[]>(initialTrailers);
+  const [loading, setLoading] = useState(initialTrailers.length === 0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [activeModalTrailer, setActiveModalTrailer] = useState<TrailerItem | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (initialTrailers.length > 0) {
+      setTrailers(initialTrailers);
+      setLoading(false);
+      return;
+    }
+
+    async function fetchTrailers() {
+      try {
+        const res = await fetch('/api/trailers');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) setTrailers(data);
+        }
+      } catch {
+        // fallback
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchTrailers();
+  }, [initialTrailers]);
 
   const nextSlide = useCallback(() => {
     if (trailers.length === 0) return;
@@ -34,6 +60,17 @@ export default function HomeTrailersSection({ trailers = [] }: { trailers: Trail
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isPaused, trailers.length, nextSlide]);
+
+  if (loading) {
+    return (
+      <div className="relative mb-8 w-full h-[340px] sm:h-[380px] md:h-[420px] rounded-3xl bg-[#0a0a0d] border border-white/5 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2 text-white/30 text-xs animate-pulse">
+          <span className="material-symbols-outlined text-3xl text-[#C91520]">movie</span>
+          <span>Fragmanlar Yükleniyor...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!trailers || trailers.length === 0) return null;
 

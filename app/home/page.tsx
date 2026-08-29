@@ -1,13 +1,11 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import Sidebar from '@/components/Sidebar';
-
 
 import { BottomNav, MobileHeader } from '@/components/Nav';
 import ShowCard from '@/components/ShowCard';
 import { CardGridSkeleton } from '@/components/Skeletons';
-import { getTrendingShows, getLatestTvTrailers } from '@/lib/tmdb';
+import { getTrendingShows } from '@/lib/tmdb';
 
 import FriendsActivitySection from './FriendsActivitySection';
 import NotificationsBell from './NotificationsBell';
@@ -18,7 +16,6 @@ import HomeTopBar from './HomeTopBar';
 import HomeHero from './HomeHero';
 import HomeListRail from './HomeListRail';
 import HomeRightRail from './HomeRightRail';
-import HomeTrailersSection from './HomeTrailersSection';
 
 import HomeFeatureBanners from './HomeFeatureBanners';
 import WelcomeOnboardingModal from './WelcomeOnboardingModal';
@@ -81,11 +78,6 @@ async function TrendingGrid() {
   );
 }
 
-async function TrailersContainer() {
-  const trailers = await getLatestTvTrailers();
-  return <HomeTrailersSection trailers={trailers} />;
-}
-
 export default function Home() {
   return (
     <div className="font-body-md text-body-md antialiased pb-32 md:pb-0 pt-[calc(3.5rem+env(safe-area-inset-top,0px))] md:pt-0 bg-[#000000] min-h-screen">
@@ -127,10 +119,6 @@ export default function Home() {
             </Suspense>
 
             <RandomDiceStrip />
-
-            <Suspense fallback={<SectionFallback tall />}>
-              <TrailersContainer />
-            </Suspense>
 
             <section className="mb-8">
               <div className="mb-4 flex items-center justify-between gap-4">
