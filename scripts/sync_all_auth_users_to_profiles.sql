@@ -1,5 +1,9 @@
--- Supabase Paneli SQL Editor Ekranında 1 Defa Çalıştırılacak Kod
--- 1. auth.users Tablosundaki TÜM 30 Kullanıcıyı public.profiles Tablosuna Aktarır / Senkronize Eder
+-- Supabase Paneli SQL Editor Ekranında 1 Defa Çalıştırılacak Düzeltilmiş Kod
+-- 1. Profiles tablosuna created_at kolonunu ekle (eğer daha önce yoksa)
+ALTER TABLE public.profiles 
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+
+-- 2. auth.users Tablosundaki TÜM 30 Kullanıcıyı public.profiles Tablosuna Aktarır ve Senkronize Eder
 INSERT INTO public.profiles (id, username, full_name, avatar_url, created_at)
 SELECT 
   id,
@@ -25,7 +29,7 @@ ON CONFLICT (id) DO UPDATE SET
   full_name = COALESCE(public.profiles.full_name, EXCLUDED.full_name),
   created_at = COALESCE(public.profiles.created_at, EXCLUDED.created_at);
 
--- 2. Gelecekte Üye Olacak Herkes İçin Otomatik Tetikleyici (Trigger)
+-- 3. Gelecekte Üye Olacak Herkes İçin Otomatik Profil Oluşturucu Tetikleyici (Trigger)
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -47,7 +51,7 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 3. Profiles Tablosu Okuma İzni (RLS)
+-- 4. Profiles Tablosu Okuma İzni (RLS)
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "profiles_select_public" ON public.profiles;
 CREATE POLICY "profiles_select_public" ON public.profiles FOR SELECT USING (true);
