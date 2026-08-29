@@ -215,7 +215,7 @@ export default async function ManagerDashboardPage() {
     if (u.user_metadata?.is_banned) bannedMap.set(u.id, true);
 
     const nick = u.user_metadata?.username || (u.email ? u.email.split('@')[0] : null);
-    const name = u.user_metadata?.full_name || u.user_metadata?.name || nick || 'Kullanıcı';
+    const name = u.user_metadata?.full_name || u.user_metadata?.name || nick || 'Episodio Üyesi';
 
     userMap.set(u.id, {
       id: u.id,
@@ -232,7 +232,7 @@ export default async function ManagerDashboardPage() {
   rawProfiles.forEach((p: any) => {
     const existing = userMap.get(p.id);
     const realUsername = (p.username && p.username.trim()) ? p.username : (existing?.username || null);
-    const realFullName = (p.full_name && p.full_name.trim()) ? p.full_name : (p.username || existing?.full_name || 'Kullanıcı');
+    const realFullName = (p.full_name && p.full_name.trim()) ? p.full_name : (p.username || existing?.full_name || 'Episodio Üyesi');
 
     userMap.set(p.id, {
       id: p.id,
@@ -245,8 +245,52 @@ export default async function ManagerDashboardPage() {
     });
   });
 
+  // Evrensel Kullanıcı Keşfi: 7 Veritabanı tablosundaki tüm aktif kullanıcı ID'lerini topla
+  const allDiscoveredUserIds = new Set<string>();
+  rawProfiles.forEach((p: any) => p.id && allDiscoveredUserIds.add(p.id));
+  lists.forEach((l: any) => l.user_id && allDiscoveredUserIds.add(l.user_id));
+  reviews.forEach((r: any) => r.user_id && allDiscoveredUserIds.add(r.user_id));
+  notes.forEach((n: any) => n.user_id && allDiscoveredUserIds.add(n.user_id));
+  epDiscussions.forEach((d: any) => d.user_id && allDiscoveredUserIds.add(d.user_id));
+  epReplies.forEach((rp: any) => rp.user_id && allDiscoveredUserIds.add(rp.user_id));
+  authUsersList.forEach((u: any) => u.id && allDiscoveredUserIds.add(u.id));
+
+  const missingUserIds = Array.from(allDiscoveredUserIds).filter((id) => !userMap.has(id));
+  if (missingUserIds.length > 0) {
+    try {
+      const { data: missingProfiles } = await db.from('profiles').select('id, username, full_name, avatar_url, created_at').in('id', missingUserIds);
+      (missingProfiles || []).forEach((p: any) => {
+        userMap.set(p.id, {
+          id: p.id,
+          email: emailMap.get(p.id) || null,
+          username: p.username || null,
+          full_name: p.full_name || p.username || `Kullanıcı (${p.id.slice(0, 6)})`,
+          avatar_url: p.avatar_url || null,
+          created_at: p.created_at || null,
+          is_banned: bannedMap.get(p.id) || false,
+        });
+      });
+    } catch {
+      // continue
+    }
+
+    missingUserIds.forEach((id) => {
+      if (!userMap.has(id)) {
+        userMap.set(id, {
+          id,
+          email: emailMap.get(id) || null,
+          username: null,
+          full_name: `Kullanıcı (${id.slice(0, 6)})`,
+          avatar_url: null,
+          created_at: null,
+          is_banned: bannedMap.get(id) || false,
+        });
+      }
+    });
+  }
+
   const allUsers = Array.from(userMap.values());
-  const totalUserCount = allUsers.length > 0 ? allUsers.length : (profilesRes.count ?? rawProfiles.length);
+  const totalUserCount = Math.max(allUsers.length, rawProfiles.length, profilesRes.count ?? 0);
   const totalListCount = listsRes.count ?? lists.length;
   
   // TÜM YORUM VE YANIT TİPLERİNİN TOPLAMI (Eksiksiz %100 Gerçek Yorum Sayısı)

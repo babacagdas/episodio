@@ -94,7 +94,7 @@ export default async function WeeklyAnalyticsPage() {
 
   authUsersList.forEach((u) => {
     const nick = u.user_metadata?.username || (u.email ? u.email.split('@')[0] : null);
-    const fullName = u.user_metadata?.full_name || u.user_metadata?.name || nick || 'Kullanıcı';
+    const fullName = u.user_metadata?.full_name || u.user_metadata?.name || nick || 'Episodio Üyesi';
 
     userMap.set(u.id, {
       id: u.id,
@@ -109,7 +109,7 @@ export default async function WeeklyAnalyticsPage() {
   profilesList.forEach((p: any) => {
     const existing = userMap.get(p.id);
     const updatedUsername = (p.username && p.username.trim()) ? p.username : (existing?.username || null);
-    const updatedName = (p.full_name && p.full_name.trim()) ? p.full_name : (p.username || existing?.name || 'Kullanıcı');
+    const updatedName = (p.full_name && p.full_name.trim()) ? p.full_name : (p.username || existing?.name || 'Episodio Üyesi');
 
     userMap.set(p.id, {
       id: p.id,
@@ -120,6 +120,48 @@ export default async function WeeklyAnalyticsPage() {
       created_at: p.created_at || existing?.created_at || null,
     });
   });
+
+  // Evrensel Kullanıcı Keşfi: Tüm 7 veritabanı tablosundaki aktif kullanıcı ID'lerini topla
+  const allDiscoveredUserIds = new Set<string>();
+  profilesList.forEach((p: any) => p.id && allDiscoveredUserIds.add(p.id));
+  listsList.forEach((l: any) => l.user_id && allDiscoveredUserIds.add(l.user_id));
+  reviewsList.forEach((r: any) => r.user_id && allDiscoveredUserIds.add(r.user_id));
+  notesList.forEach((n: any) => n.user_id && allDiscoveredUserIds.add(n.user_id));
+  (epDiscussionsRes.data ?? []).forEach((d: any) => d.user_id && allDiscoveredUserIds.add(d.user_id));
+  (epRepliesRes.data ?? []).forEach((rp: any) => rp.user_id && allDiscoveredUserIds.add(rp.user_id));
+  authUsersList.forEach((u: any) => u.id && allDiscoveredUserIds.add(u.id));
+
+  const missingUserIds = Array.from(allDiscoveredUserIds).filter((id) => !userMap.has(id));
+  if (missingUserIds.length > 0) {
+    try {
+      const { data: missingProfiles } = await db.from('profiles').select('id, username, full_name, avatar_url, created_at').in('id', missingUserIds);
+      (missingProfiles || []).forEach((p: any) => {
+        userMap.set(p.id, {
+          id: p.id,
+          name: p.full_name || p.username || `Kullanıcı (${p.id.slice(0, 6)})`,
+          username: p.username || null,
+          email: null,
+          avatar_url: p.avatar_url || null,
+          created_at: p.created_at || null,
+        });
+      });
+    } catch {
+      // continue
+    }
+
+    missingUserIds.forEach((id) => {
+      if (!userMap.has(id)) {
+        userMap.set(id, {
+          id,
+          name: `Kullanıcı (${id.slice(0, 6)})`,
+          username: null,
+          email: null,
+          avatar_url: null,
+          created_at: null,
+        });
+      }
+    });
+  }
 
   const allUsers = Array.from(userMap.values());
 
