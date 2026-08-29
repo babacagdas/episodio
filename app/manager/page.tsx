@@ -205,26 +205,43 @@ export default async function ManagerDashboardPage() {
   const epDiscussions = (epDiscussionsRes.data ?? []) as EpisodeDiscussionRow[];
   const epReplies = (epRepliesRes.data ?? []) as EpisodeReplyRow[];
 
-  // Auth verilerinden e-posta ve ban bilgilerini alma
+  // Auth verilerinden e-posta ve ban bilgilerini haritaya alma
   const emailMap = new Map<string, string>();
   const bannedMap = new Map<string, boolean>();
+  const userMap = new Map<string, UserItem>();
+
   authUsersList.forEach((u) => {
     if (u.email) emailMap.set(u.id, u.email);
     if (u.user_metadata?.is_banned) bannedMap.set(u.id, true);
+
+    const nick = u.user_metadata?.username || (u.email ? u.email.split('@')[0] : null);
+    const name = u.user_metadata?.full_name || u.user_metadata?.name || nick || 'Kullanıcı';
+
+    userMap.set(u.id, {
+      id: u.id,
+      email: u.email ?? null,
+      username: nick,
+      full_name: name,
+      avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
+      created_at: u.created_at || null,
+      is_banned: u.user_metadata?.is_banned ?? false,
+    });
   });
 
-  // Profiles tablosundaki TÜM kullanıcıları haritaya ekleme (Primary Source)
-  const userMap = new Map<string, UserItem>();
-
+  // Profiles tablosundaki TÜM GERÇEK kullanıcıları haritaya ekleme (Primary Source of Truth)
   rawProfiles.forEach((p: any) => {
+    const existing = userMap.get(p.id);
+    const realUsername = (p.username && p.username.trim()) ? p.username : (existing?.username || null);
+    const realFullName = (p.full_name && p.full_name.trim()) ? p.full_name : (p.username || existing?.full_name || 'Kullanıcı');
+
     userMap.set(p.id, {
       id: p.id,
-      email: emailMap.get(p.id) ?? null,
-      username: p.username ?? `user_${p.id.slice(0, 6)}`,
-      full_name: p.full_name ?? p.username ?? `Kullanıcı (${p.id.slice(0, 6)})`,
-      avatar_url: p.avatar_url ?? null,
-      created_at: p.created_at ?? null,
-      is_banned: bannedMap.get(p.id) ?? false,
+      email: existing?.email || emailMap.get(p.id) || null,
+      username: realUsername,
+      full_name: realFullName,
+      avatar_url: p.avatar_url || existing?.avatar_url || null,
+      created_at: p.created_at || existing?.created_at || null,
+      is_banned: existing?.is_banned || bannedMap.get(p.id) || false,
     });
   });
 

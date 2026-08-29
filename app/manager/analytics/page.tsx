@@ -93,20 +93,23 @@ export default async function WeeklyAnalyticsPage() {
   const userMap = new Map<string, UnifiedUser>();
 
   authUsersList.forEach((u) => {
+    const nick = u.user_metadata?.username || (u.email ? u.email.split('@')[0] : null);
+    const fullName = u.user_metadata?.full_name || u.user_metadata?.name || nick || 'Kullanıcı';
+
     userMap.set(u.id, {
       id: u.id,
-      name: u.user_metadata?.full_name || u.user_metadata?.name || u.username || u.email || 'Kullanıcı',
-      username: u.user_metadata?.username ?? (u.email ? u.email.split('@')[0] : null),
+      name: fullName,
+      username: nick,
       email: u.email ?? null,
       avatar_url: u.user_metadata?.avatar_url || u.user_metadata?.picture || null,
-      created_at: u.created_at,
+      created_at: u.created_at || null,
     });
   });
 
   profilesList.forEach((p: any) => {
     const existing = userMap.get(p.id);
     const updatedUsername = (p.username && p.username.trim()) ? p.username : (existing?.username || null);
-    const updatedName = (p.full_name && p.full_name.trim()) ? p.full_name : (existing?.name || 'Kullanıcı');
+    const updatedName = (p.full_name && p.full_name.trim()) ? p.full_name : (p.username || existing?.name || 'Kullanıcı');
 
     userMap.set(p.id, {
       id: p.id,
