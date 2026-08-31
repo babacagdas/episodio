@@ -103,30 +103,22 @@ export default function ListDetailClient({
   }
 
   async function saveListMeta() {
-    if (!name.trim()) {
-      setMessage('Liste adı boş olamaz.');
-      return;
-    }
     setSaving(true);
     setMessage('');
     const supabase = createClient();
     const { error } = await supabase
       .from('lists')
-      .update({
-        name: name.trim(),
-        description: description.trim() || null,
-      })
+      .update({ name, description: description.trim() ? description : null })
       .eq('id', listId);
 
+    setSaving(false);
     if (error) {
       setMessage(`Kaydedilemedi: ${error.message}`);
-      setSaving(false);
       return;
     }
 
     setEditing(false);
-    setSaving(false);
-    setMessage('Liste güncellendi.');
+    setMessage('Güncellendi.');
     setTimeout(() => setMessage(''), 2000);
     router.refresh();
   }
@@ -178,6 +170,7 @@ export default function ListDetailClient({
       list_id: listId,
       user_id: user.id,
     });
+
     if (!error) {
       setLikedByMe(true);
       setLikesCount((prev) => prev + 1);
@@ -204,7 +197,7 @@ export default function ListDetailClient({
         </div>
       )}
       <section className="mb-8">
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4">
           <div className="flex-1">
             <p className="text-xs text-white/30 uppercase tracking-widest font-semibold mb-2">
               {visibility === 'public' ? 'Public Liste' : 'Private Liste'}
@@ -254,21 +247,32 @@ export default function ListDetailClient({
             {message && <p className="text-xs text-[#D4A017] mt-3">{message}</p>}
           </div>
 
-          <div className="flex items-center gap-2">
-            <ShareListButton title={name} />
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Spotify Tarzı Premium Instagram Story Paylaşım Butonu */}
+            <ShareListButton
+              listId={listId}
+              listName={name}
+              description={description}
+              ownerName={ownerName}
+              itemCount={items.length}
+              likesCount={likesCount}
+              posters={items.map((i) => i.poster_path).filter((p): p is string => Boolean(p))}
+            />
+
             <button
               type="button"
               onClick={toggleLike}
               disabled={likeLoading}
-              className={`h-8 px-2.5 rounded-full border flex items-center gap-1 transition-colors ${
+              className={`h-8 px-3 rounded-full border flex items-center gap-1.5 transition-all ${
                 likedByMe
                   ? 'bg-[#C91520]/20 border-[#C91520]/60 text-[#F2A8AE]'
                   : 'bg-white/10 border-white/15 text-white hover:bg-white/20'
-              } disabled:opacity-50`}
+              } disabled:opacity-50 active:scale-95`}
             >
               <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: likedByMe ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
-              <span className="text-xs font-semibold">{likesCount}</span>
+              <span className="text-xs font-bold">{likesCount}</span>
             </button>
+
             {isOwner && !editing && (
               <>
                 <button
@@ -317,19 +321,20 @@ export default function ListDetailClient({
                     : <div className="w-full h-full flex items-center justify-center"><span className="material-symbols-outlined text-white/20 text-4xl">movie</span></div>
                   }
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-70 group-hover:opacity-90 transition-opacity" />
-                  <div className="absolute bottom-0 left-0 w-full p-3">
-                    <h3 className="text-xs font-semibold text-white truncate">{item.show_name}</h3>
+
+                  <div className="absolute bottom-0 inset-x-0 p-3">
+                    <p className="text-xs font-bold text-white leading-snug line-clamp-2">{item.show_name}</p>
                   </div>
                 </Link>
 
-                {isOwner && (
+                {(isOwner || isSharedWithMe) && (
                   <button
                     type="button"
                     onClick={() => removeItem(item.show_id)}
-                    className="absolute top-2 right-2 z-10 bg-black/70 border border-white/20 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-[#C91520]/70 hover:border-[#C91520] transition-colors"
-                    title="Listeden kaldır"
+                    className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/70 border border-white/10 text-white/50 hover:text-red-400 hover:border-red-500/50 flex items-center justify-center backdrop-blur-md transition-colors z-10"
+                    title="Listeden çıkar"
                   >
-                    <span className="material-symbols-outlined text-base">close</span>
+                    <span className="material-symbols-outlined text-xs">close</span>
                   </button>
                 )}
               </div>
