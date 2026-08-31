@@ -247,17 +247,8 @@ export default function ListDetailClient({
             {message && <p className="text-xs text-[#D4A017] mt-3">{message}</p>}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Spotify Tarzı Premium Instagram Story Paylaşım Butonu */}
-            <ShareListButton
-              listId={listId}
-              listName={name}
-              description={description}
-              ownerName={ownerName}
-              itemCount={items.length}
-              likesCount={likesCount}
-              posters={items.map((i) => i.poster_path).filter((p): p is string => Boolean(p))}
-            />
+          <div className="flex items-center gap-2">
+            <ShareListButton title={name} />
 
             <button
               type="button"
